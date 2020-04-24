@@ -6,7 +6,7 @@ import "@aragon/os/contracts/common/IsContract.sol";
 import "@aragon/os/contracts/common/SafeERC20.sol";
 import "@aragon/os/contracts/lib/math/SafeMath.sol";
 import "@aragon/os/contracts/lib/token/ERC20.sol";
-import "@aragon/apps-agent/contracts/Agent.sol";
+import "@aragon/apps-vault/contracts/Vault.sol";
 import "@ablack/fundraising-batched-bancor-market-maker/contracts/BatchedBancorMarketMaker.sol";
 import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
 import "@ablack/fundraising-shared-interfaces/contracts/ITap.sol";
@@ -58,7 +58,7 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
 
     IPresale                 public presale;
     BatchedBancorMarketMaker public marketMaker;
-    Agent                    public reserve;
+    Vault                    public reserve;
     ITap                     public tap;
     address[]                public toReset;
 
@@ -76,7 +76,7 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
     function initialize(
         IPresale                 _presale,
         BatchedBancorMarketMaker _marketMaker,
-        Agent                    _reserve,
+        Vault                    _reserve,
         ITap                     _tap,
         address[]                _toReset
     )
@@ -233,9 +233,6 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
         auth(ADD_COLLATERAL_TOKEN_ROLE)
     {
         marketMaker.addCollateralToken(_collateral, _virtualSupply, _virtualBalance, _reserveRatio, _slippage);
-        if (_collateral != ETH) {
-            reserve.addProtectedToken(_collateral);
-        }
         if (_rate > 0) {
             tap.addTappedToken(_collateral, _rate, _floor);
         }

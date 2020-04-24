@@ -3,8 +3,8 @@ module.exports = {
     fundraisingName: 'curv-fundraising.open.aragonpm.eth',
     templateName: 'curv-fundraising-template.open.aragonpm.eth',
 
-    defaultTokenSymbol: 'CUR',
-    defaultTokenName: 'CUR',
+    defaultTokenSymbol: 'HNY',
+    defaultTokenName: 'Honey',
 
     orgBoardTokenSymbol: 'CURB',
     orgBoardTokenName: 'CURB Token',
