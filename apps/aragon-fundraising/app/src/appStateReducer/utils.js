@@ -17,28 +17,6 @@ export const ready = state => {
   return synced && hasCollaterals && hasTaps && presaleStateIsKnown
 }
 
-/**
- * DAI and ANT are the only collaterals accepted to start the app on rinkeby or mainnet
- * @param {Map} collaterals - collaterals found in the app
- * @param {Object} network - id and type of the network
- * @returns {boolean} true if network is rinkeby or mainnet and collaterals are the good ones, true no matter what on any other networks
- */
-export const checkCollaterals = (collaterals, { type }) => {
-  if (type === 'main' || type === 'rinkeby') {
-    // verified addresses
-    const realDaiAddress = Tokens[type].DAI.toLowerCase()
-    const realAntAddress = Tokens[type].ANT.toLowerCase()
-    // get DAI and ANT addresses from the fundraising app
-    const currentCollaterals = Array.from(collaterals).map(([address, { symbol }]) => ({ address, symbol }))
-    console.log('currentCollaterals', currentCollaterals);
-    const daiAddress = currentCollaterals.find(c => c.symbol === defaultTokenSymbol).address
-    const antAddress = currentCollaterals.find(c => c.symbol === 'ANT').address
-    // check they are the same
-    const sameDai = daiAddress?.toLowerCase() === realDaiAddress
-    const sameAnt = antAddress?.toLowerCase() === realAntAddress
-    return sameDai && sameAnt
-  } else return true
-}
 
 /**
  * Converts constants to big numbers
@@ -114,10 +92,8 @@ export const computeCollaterals = collaterals => {
   const computedCollaterals = Array.from(cloneDeep(collaterals))
   console.log('currentCollaterals', computedCollaterals);
   const [daiAddress, daiData] = computedCollaterals.find(([_, data]) => data.symbol === defaultTokenSymbol)
-  const [antAddress, antData] = computedCollaterals.find(([_, data]) => data.symbol === 'ANT')
   return {
     dai: transformCollateral(daiAddress, daiData),
-    ant: transformCollateral(antAddress, antData),
   }
 }
 
@@ -127,7 +103,7 @@ export const computeCollaterals = collaterals => {
  * @param {Object} collaterals - fundraising collaterals
  * @returns {Object} the computed bondedToken
  */
-export const computeBondedToken = (bondedToken, { dai, ant }) => {
+export const computeBondedToken = (bondedToken, { dai }) => {
   const totalSupply = new BigNumber(bondedToken.totalSupply)
   const toBeMinted = new BigNumber(bondedToken.toBeMinted)
   const realSupply = totalSupply.plus(toBeMinted)
@@ -138,7 +114,6 @@ export const computeBondedToken = (bondedToken, { dai, ant }) => {
     realSupply,
     overallSupply: {
       dai: realSupply.plus(dai.virtualSupply),
-      ant: realSupply.plus(ant.virtualSupply),
     },
   }
 }

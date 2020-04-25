@@ -18,11 +18,9 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
     bondedToken: { overallSupply },
     collaterals: {
       dai: { slippage: daiSlippage },
-      ant: { slippage: antSlippage },
     },
   } = useAppState()
   const daiSlippageDec = daiSlippage.div(PCT_BASE)
-  const antSlippageDec = antSlippage.div(PCT_BASE)
 
   // *****************************
   // aragon api
@@ -33,7 +31,7 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
   // *****************************
   // context state
   // *****************************
-  const { price, daiBalance, antBalance, userDaiBalance, userAntBalance, userBondedTokenBalance } = useContext(MainViewContext)
+  const { price, daiBalance, antBalance, userDaiBalance, userBondedTokenBalance } = useContext(MainViewContext)
 
   // *****************************
   // internal state
@@ -64,10 +62,10 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
       // supply, balance, weight, amount
       const currentSymbol = isBuyOrder ? symbol : conversionSymbol
       const { defaultTokenSymbol } = require('../../../../../../config')
-      const supply = currentSymbol === defaultTokenSymbol ? overallSupply.dai : overallSupply.ant
-      const balance = currentSymbol === defaultTokenSymbol ? daiBalance : antBalance
+      const supply = currentSymbol === defaultTokenSymbol ? overallSupply.dai : overallSupply.dai
+      const balance = currentSymbol === defaultTokenSymbol ? daiBalance : daiBalance
       // slippage
-      const currentSlippage = currentSymbol === defaultTokenSymbol ? daiSlippageDec : antSlippageDec
+      const currentSlippage = currentSymbol === defaultTokenSymbol ? daiSlippageDec : daiSlippageDec
       // unit prices
       const maxPrice = new BigNumber(price).times(new BigNumber(1).plus(currentSlippage))
       const minPrice = new BigNumber(price).times(new BigNumber(1).minus(currentSlippage))
@@ -93,7 +91,7 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
     }
 
     const { defaultTokenSymbol } = require('../../../../../../config')
-    const userBalance = symbol === defaultTokenSymbol ? userDaiBalance : userAntBalance
+    const userBalance = symbol === defaultTokenSymbol ? userDaiBalance : userDaiBalance
     if (isBuyOrder && userBalance.lt(toDecimals(value, decimals))) {
       // cannot buy more than your own balance
       setFormattedAmount(formatBigNumber(value, 0))

@@ -86,7 +86,6 @@ export default ({ myOrders }) => {
     orders,
     collaterals: {
       dai: { decimals: daiDecimals },
-      ant: { decimals: antDecimals },
     },
     bondedToken: { decimals: tokenDecimals },
   } = useAppState()

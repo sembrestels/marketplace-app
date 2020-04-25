@@ -15,7 +15,7 @@ const App = () => {
   // *****************************
   // background script state
   // *****************************
-  const { isReady, collateralsAreOk, addresses, presale } = useAppState()
+  const { isReady, addresses, presale } = useAppState()
 
   // *****************************
   // aragon api
@@ -60,9 +60,8 @@ const App = () => {
   return (
     <Main theme={appearance} assetsUrl="./aragon-ui">
       <SyncIndicator visible={!isReady || isPresale === null} />
-      {isPresale && isReady && collateralsAreOk && <PresaleView />}
-      {!isPresale && isReady && collateralsAreOk && <MainView />}
-      {isReady && !collateralsAreOk && <CollateralError />}
+      {isPresale && isReady && <PresaleView />}
+      {!isPresale && isReady && <MainView />}
     </Main>
   )
 }
