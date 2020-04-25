@@ -175,7 +175,7 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
      * @param _collateral The address of the collateral token to be spent
      * @param _value      The amount of collateral token to be spent
     */
-    function openBuyOrder(address _collateral, uint256 _value) external payable auth(OPEN_BUY_ORDER_ROLE) {
+    function openBuyOrder(address _collateral, uint256 _value) external payable authP(OPEN_BUY_ORDER_ROLE, arr(msg.sender)) {
         marketMaker.openBuyOrder.value(msg.value)(msg.sender, _collateral, _value);
     }
 
@@ -184,7 +184,7 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
      * @param _collateral The address of the collateral token to be returned
      * @param _amount     The amount of bonded token to be spent
     */
-    function openSellOrder(address _collateral, uint256 _amount) external auth(OPEN_SELL_ORDER_ROLE) {
+    function openSellOrder(address _collateral, uint256 _amount) external authP(OPEN_SELL_ORDER_ROLE, arr(msg.sender)) {
         marketMaker.openSellOrder(msg.sender, _collateral, _amount);
     }
 
