@@ -75,7 +75,6 @@ export default () => {
         decimals: daiDecimals,
         tap: { rate, floor, timestamp },
       },
-      ant: { reserveRatio: antReserveRatio, symbol: antSymbol },
     },
     bondedToken: { name, symbol, decimals: tokenDecimals, address, realSupply },
   } = useAppState()
@@ -97,7 +96,6 @@ export default () => {
   const displayRateIncrease = formatBigNumber(adjustedRateIncrease.times(100), 0, 0)
   const displayFloorIncrease = formatBigNumber(adjustedFloorDecrease.times(100), 0, 0)
   const daiRatio = formatBigNumber(daiReserveRatio.div(PPM).times(100), 0)
-  const antRatio = formatBigNumber(antReserveRatio.div(PPM).times(100), 0)
   const adjustedMaxRate = formatBigNumber(adjustedRate.plus(adjustedRate.times(maximumTapRateIncreasePct).div(PCT_BASE)), daiDecimals)
   const adjustedMinFloor = formatBigNumber(floor.minus(floor.times(maximumTapFloorDecreasePct).div(PCT_BASE)), daiDecimals)
 

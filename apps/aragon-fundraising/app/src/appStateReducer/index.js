@@ -1,6 +1,5 @@
 import {
   ready,
-  checkCollaterals,
   computeConstants,
   computeValues,
   computePresale,
@@ -32,7 +31,6 @@ const appStateReducer = state => {
       isReady,
       constants: computedConstants,
       values: computedValues,
-      collateralsAreOk: checkCollaterals(collaterals, network),
       presale: computedPresale,
       // we don't compute BigNumbers on contributions, since it's only necessary if the presale state is refund
       // we will compute the BigNumbers on the newRefund panel
