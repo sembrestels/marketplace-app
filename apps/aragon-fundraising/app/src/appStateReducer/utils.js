@@ -2,7 +2,6 @@ import cloneDeep from 'lodash/cloneDeep'
 import BigNumber from 'bignumber.js'
 import { Order, Tokens } from '../constants'
 
-const {defaultTokenSymbol} = require('../../../../../config');
 /**
  * Checks whether we have enough data to start the fundraising app
  * @param {Object} state - the background script state
@@ -90,6 +89,7 @@ const transformCollateral = (address, data) => {
  */
 export const computeCollaterals = collaterals => {
   const computedCollaterals = Array.from(cloneDeep(collaterals))
+  const defaultTokenSymbol = computedCollaterals[0][1].symbol
   console.log('currentCollaterals', computedCollaterals);
   const [daiAddress, daiData] = computedCollaterals.find(([_, data]) => data.symbol === defaultTokenSymbol)
   return {

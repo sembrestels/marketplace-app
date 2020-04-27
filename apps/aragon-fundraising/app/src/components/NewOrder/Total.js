@@ -61,10 +61,10 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
       const valueBn = toDecimals(value, decimals)
       // supply, balance, weight, amount
       const currentSymbol = isBuyOrder ? symbol : conversionSymbol
-      const supply = currentSymbol === overallSupply.dai
-      const balance = currentSymbol === daiBalance
+      const supply = overallSupply.dai
+      const balance = daiBalance
       // slippage
-      const currentSlippage = currentSymbol === daiSlippageDec
+      const currentSlippage = daiSlippageDec
       // unit prices
       const maxPrice = new BigNumber(price).times(new BigNumber(1).plus(currentSlippage))
       const minPrice = new BigNumber(price).times(new BigNumber(1).minus(currentSlippage))
@@ -89,7 +89,7 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
       }
     }
 
-    const userBalance = symbol === userDaiBalance
+    const userBalance = userDaiBalance
     if (isBuyOrder && userBalance.lt(toDecimals(value, decimals))) {
       // cannot buy more than your own balance
       setFormattedAmount(formatBigNumber(value, 0))

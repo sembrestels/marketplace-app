@@ -8,10 +8,6 @@ import Chart from '../components/Chart'
 import { formatBigNumber, toMonthlyAllocation } from '../utils/bn-utils'
 import { MainViewContext } from '../context'
 
-const { defaultTokenSymbol } = require('../../../../../config');
-
-const numberSuffix = ' ' + defaultTokenSymbol;
-
 export default () => {
   // *****************************
   // background script state
@@ -22,6 +18,7 @@ export default () => {
       dai: {
         address: daiAddress,
         decimals: daiDecimals,
+        symbol: daiSymbol,
         toBeClaimed,
         tap: { rate },
       },
@@ -65,6 +62,7 @@ export default () => {
   // human readable values
   // *****************************
   // numbers
+  const numberSuffix = ' ' + daiSymbol;
   const adjustedPrice = price ? formatBigNumber(price, 0, { numberSuffix }) : '...'
   const marketCap = price ? price.times(realSupply) : null
   const adjustedMarketCap = price && marketCap ? formatBigNumber(marketCap, daiDecimals, { numberSuffix }) : '...'
