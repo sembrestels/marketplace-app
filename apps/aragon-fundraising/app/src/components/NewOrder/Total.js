@@ -61,11 +61,10 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
       const valueBn = toDecimals(value, decimals)
       // supply, balance, weight, amount
       const currentSymbol = isBuyOrder ? symbol : conversionSymbol
-      const { defaultTokenSymbol } = require('../../../../../../config')
-      const supply = currentSymbol === defaultTokenSymbol ? overallSupply.dai : overallSupply.dai
-      const balance = currentSymbol === defaultTokenSymbol ? daiBalance : daiBalance
+      const supply = currentSymbol === overallSupply.dai
+      const balance = currentSymbol === daiBalance
       // slippage
-      const currentSlippage = currentSymbol === defaultTokenSymbol ? daiSlippageDec : daiSlippageDec
+      const currentSlippage = currentSymbol === daiSlippageDec
       // unit prices
       const maxPrice = new BigNumber(price).times(new BigNumber(1).plus(currentSlippage))
       const minPrice = new BigNumber(price).times(new BigNumber(1).minus(currentSlippage))
@@ -90,8 +89,7 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
       }
     }
 
-    const { defaultTokenSymbol } = require('../../../../../../config')
-    const userBalance = symbol === defaultTokenSymbol ? userDaiBalance : userDaiBalance
+    const userBalance = symbol === userDaiBalance
     if (isBuyOrder && userBalance.lt(toDecimals(value, decimals))) {
       // cannot buy more than your own balance
       setFormattedAmount(formatBigNumber(value, 0))
