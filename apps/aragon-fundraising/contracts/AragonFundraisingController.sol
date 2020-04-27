@@ -142,7 +142,7 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
      * @notice Contribute to the presale up to `@tokenAmount(self.contributionToken(): address, _value)`
      * @param _value The amount of contribution token to be spent
     */
-    function contribute(uint256 _value) external payable auth(CONTRIBUTE_ROLE) {
+    function contribute(uint256 _value) external payable authP(CONTRIBUTE_ROLE, arr(msg.sender)) {
         presale.contribute.value(msg.value)(msg.sender, _value);
     }
 
