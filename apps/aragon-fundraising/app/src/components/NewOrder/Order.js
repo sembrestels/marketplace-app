@@ -13,6 +13,8 @@ const Order = ({ isBuyOrder }) => {
   // background script state
   // *****************************
   const {
+    constants: { PCT_BASE },
+    values: { buyFeePct, sellFeePct },
     addresses: { marketMaker },
     collaterals,
     bondedToken: { decimals: bondedDecimals, symbol: bondedSymbol },
@@ -34,6 +36,7 @@ const Order = ({ isBuyOrder }) => {
   // *****************************
   const [selectedCollateral, setSelectedCollateral] = useState(0)
   const [amount, setAmount] = useState('')
+  const [evaluatedReturn, setEvaluatedReturn] = useState('')
   const [valid, setValid] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
   const amountInput = useRef(null)
@@ -110,6 +113,28 @@ const Order = ({ isBuyOrder }) => {
     return formatBigNumber(balance, decimals)
   }
 
+  const percentageOf = (numberWithDecimals) => {
+    return numberWithDecimals.div(PCT_BASE).times(100).toFixed(2, 1)
+  }
+
+  const getFeePercentage = () => {
+    return isBuyOrder ? percentageOf(buyFeePct) : percentageOf(sellFeePct)
+  }
+
+  const getFeeAmount = () => {
+    return isBuyOrder ? getBuyFeeAmount() : getSellFeeAmount()
+  } 
+
+  const getBuyFeeAmount = () => {
+    const inputAmount = amount > 0 && errorMessage === null ? amount : 0
+    return buyFeePct.div(PCT_BASE).times(inputAmount)
+  }
+
+  const getSellFeeAmount = () => {
+    const finalEvaluatedReturn = evaluatedReturn > 0 ? evaluatedReturn : 0
+    return sellFeePct.div(PCT_BASE).times(finalEvaluatedReturn)
+  }
+
   return (
     <form onSubmit={handleSubmit}>
       <InputsWrapper>
@@ -148,6 +173,7 @@ const Order = ({ isBuyOrder }) => {
         amount={{ value: amount, decimals: getDecimals(), symbol: getSymbol(), reserveRatio: getReserveRatio() }}
         conversionSymbol={getConversionSymbol()}
         onError={validate}
+        setEvaluatedReturn={setEvaluatedReturn}
       />
       <div
         css={`
@@ -172,7 +198,20 @@ const Order = ({ isBuyOrder }) => {
         >
           {getUserBalance()} {getSymbol()}
         </Info>
+
         <Info_ isBuyOrder={isBuyOrder} slippage={collateralItems[selectedCollateral].slippage} />
+
+        {getFeePercentage() > 0 && <Info
+          title={`Fee (${getFeePercentage()}%)`}
+          css={`
+            margin-top: ${2 * GU}px;
+          `}
+        >
+          <p>
+            {`A fee of ${getFeeAmount()} ${collateralItems[selectedCollateral].symbol} will be sent directly to the organisation's funding pool.`}
+          </p>
+        </Info>}
+
       </div>
     </form>
   )

@@ -144,6 +144,8 @@ const initialize = async (poolAddress, tapAddress, marketMakerAddress, presaleAd
           return updateMaximumTapRateIncreasePct(nextState, returnValues)
         case 'UpdateMaximumTapFloorDecreasePct':
           return updateMaximumTapFloorDecreasePct(nextState, returnValues)
+        case 'UpdateFees':
+          return updateFees(nextState, returnValues)
         case 'SetOpenDate':
           return setOpenDate(nextState, returnValues, settings)
         case 'Contribute':
@@ -201,6 +203,8 @@ const loadContractsData = async (state, { bondedToken, marketMaker, tap, presale
     totalSupply,
     toBeMinted,
     PPM,
+    buyFeePct,
+    sellFeePct,
     maximumTapRateIncreasePct,
     maximumTapFloorDecreasePct,
     PCT_BASE,
@@ -223,6 +227,8 @@ const loadContractsData = async (state, { bondedToken, marketMaker, tap, presale
     // market maker data
     marketMaker.contract.tokensToBeMinted().toPromise(),
     marketMaker.contract.PPM().toPromise(),
+    marketMaker.contract.buyFeePct().toPromise(),
+    marketMaker.contract.sellFeePct().toPromise(),
     // tap data
     tap.contract.maximumTapRateIncreasePct().toPromise(),
     tap.contract.maximumTapFloorDecreasePct().toPromise(),
@@ -264,6 +270,8 @@ const loadContractsData = async (state, { bondedToken, marketMaker, tap, presale
       ...state.values,
       maximumTapRateIncreasePct,
       maximumTapFloorDecreasePct,
+      buyFeePct,
+      sellFeePct,
     },
     presale: {
       state: Object.values(Presale.state)[presaleState],
@@ -534,6 +542,17 @@ const updateMaximumTapFloorDecreasePct = (state, { maximumTapFloorDecreasePct })
     values: {
       ...state.values,
       maximumTapFloorDecreasePct,
+    },
+  }
+}
+
+const updateFees = (state, { buyFeePct, sellFeePct }) => {
+  return {
+    ...state,
+    values: {
+      ...state.values,
+      buyFeePct,
+      sellFeePct
     },
   }
 }

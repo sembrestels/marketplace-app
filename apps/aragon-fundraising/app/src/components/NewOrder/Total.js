@@ -7,7 +7,7 @@ import { MainViewContext } from '../../context'
 import BancorFormulaAbi from '../../abi/BancorFormula.json'
 import { formatBigNumber, toDecimals } from '../../utils/bn-utils'
 
-const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
+const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedReturn }) => {
   const { value, decimals, symbol, reserveRatio } = amount
   // *****************************
   // background script state
@@ -44,6 +44,7 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
   // *****************************
   const errorCb = (msg = null) => {
     setEvaluatedPrice(null)
+    setEvaluatedReturn(null)
     onError(false, msg)
   }
 
@@ -78,6 +79,7 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
           const resultBn = new BigNumber(result)
           const price = formatBigNumber(resultBn, decimals)
           setEvaluatedPrice(price)
+          setEvaluatedReturn(price)
           if (isBuyOrder && resultBn.lte(valueBn.div(maxPrice))) {
             errorCb('This buy order will break the price slippage')
           } else if (!isBuyOrder && resultBn.lte(valueBn.times(minPrice))) {
@@ -94,11 +96,13 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError }) => {
       // cannot buy more than your own balance
       setFormattedAmount(formatBigNumber(value, 0))
       setEvaluatedPrice(null)
+      setEvaluatedReturn(null)
       onError(false, `Your ${symbol} balance is not sufficient`)
     } else if (!isBuyOrder && userBondedTokenBalance.lt(toDecimals(value, decimals))) {
       // cannot sell more than your own balance
       setFormattedAmount(formatBigNumber(value, 0))
       setEvaluatedPrice(null)
+      setEvaluatedReturn(null)
       onError(false, `Your ${symbol} balance is not sufficient`)
     } else if (value?.length && value > 0) {
       // only try to evaluate when an amount is entered, and valid

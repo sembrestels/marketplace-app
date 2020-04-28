@@ -36,6 +36,8 @@ export const computeValues = values => ({
   ...values,
   maximumTapRateIncreasePct: new BigNumber(values.maximumTapRateIncreasePct),
   maximumTapFloorDecreasePct: new BigNumber(values.maximumTapFloorDecreasePct),
+  buyFeePct: new BigNumber(values.buyFeePct),
+  sellFeePct: new BigNumber(values.sellFeePct),
 })
 
 /**
