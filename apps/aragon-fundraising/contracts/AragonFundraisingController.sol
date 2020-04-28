@@ -333,7 +333,9 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
      * @param _token The address of the token whose tapped amount is to be updated
     */
     function updateTappedAmount(address _token) external {
-        tap.updateTappedAmount(_token);
+        if (tap.rates(_token) != uint256(0)) {
+            tap.updateTappedAmount(_token);
+        }
     }
 
     /**

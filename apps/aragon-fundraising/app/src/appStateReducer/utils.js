@@ -11,9 +11,8 @@ import { Order, Tokens } from '../constants'
 export const ready = state => {
   const synced = !state?.isSyncing
   const hasCollaterals = state?.collaterals.size > 0
-  const hasTaps = state && [...state?.collaterals.values()].some(c => c.tap)
   const presaleStateIsKnown = state?.presale?.state
-  return synced && hasCollaterals && hasTaps && presaleStateIsKnown
+  return synced && hasCollaterals && presaleStateIsKnown
 }
 
 
@@ -65,8 +64,9 @@ const transformCollateral = (address, data) => {
   const actualBalance = new BigNumber(data.actualBalance)
   const realBalance = actualBalance.minus(toBeClaimed)
   const overallBalance = realBalance.plus(virtualBalance)
-  // only DAI collateral has a tap
-  const tap = data.tap ? { ...data.tap, rate: new BigNumber(data.tap.rate), floor: new BigNumber(data.tap.floor) } : null
+  const tap = data.tap ?
+    { ...data.tap, rate: new BigNumber(data.tap.rate), floor: new BigNumber(data.tap.floor) }
+    : { timestamp: 0, rate: new BigNumber(0), floor: new BigNumber(0) }
   return {
     address,
     ...data,

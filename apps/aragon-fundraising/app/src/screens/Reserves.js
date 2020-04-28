@@ -12,11 +12,11 @@ const helpContent = (tokenSymbol) => {
   return [
     [
       'What is the tap rate?',
-      `The tap rate defines the amount of ${tokenSymbol} which can be released every month out of the market-maker reserve to the beneficiary of this fundraising campaign.`,
+      `The tap rate defines the amount of ${tokenSymbol} which can be released every month out of the market-maker reserve to the beneficiary of this marketplace.`,
     ],
     [
       'What is the collateralization ratio?',
-      'The collateralization ratio defines the ratio between the amount of collateral in your market-maker reserve and the market cap of this fundraising campaign.',
+      'The collateralization ratio defines the ratio between the amount of collateral in your market-maker reserve and the market cap of this marketplace.',
     ],
     [
       'What is the tap floor?',
@@ -250,7 +250,7 @@ export default () => {
                 ))}
               </div>
             </Box>
-            <Box heading="Tapped Monthly Allocation">
+            {rate.toNumber() > 0 && <Box heading="Tapped Monthly Allocation">
               <div
                 css={`
                   display: grid;
@@ -271,7 +271,7 @@ export default () => {
                 />
                 {editMonthlyAllocationButton}
               </div>
-            </Box>
+            </Box>}
           </>
         }
         secondary={

@@ -104,7 +104,7 @@ export default () => {
           secondary={
             <div>
               <PresaleGoal />
-              <Box heading="Fundraising Period">
+              <Box heading="Marketplace Period">
                 {noOpenDate && (
                   <Button wide mode="strong" label="Open presale" onClick={handleOpenPresale}>
                     Open presale
@@ -176,7 +176,7 @@ export default () => {
           primary={
             <div>
               <Timeline
-                title="Fundraising Timeline"
+                title="Marketplace Timeline"
                 steps={[
                   ['Presale opens', openDate, 'Contributors can buy presale shares'],
                   ['Presale ends', openDate === 0 ? 0 : endDate, 'Contributors can ask for refund if presale has failed'],

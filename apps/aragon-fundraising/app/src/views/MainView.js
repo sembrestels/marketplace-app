@@ -140,7 +140,7 @@ export default () => {
     <IdentityProvider onResolve={handleResolveLocalIdentity} onShowLocalIdentityModal={handleShowLocalIdentityModal}>
       <MainViewContext.Provider value={context}>
         <Header
-          primary="Fundraising"
+          primary="Marketplace"
           secondary={
             layoutName === 'small' ? (
               <ContextMenu>

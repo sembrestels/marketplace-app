@@ -262,7 +262,7 @@ export default ({ myOrders }) => {
     })
     const result = ['Date,Holder,Status,Value,Share Price,Order Type,Shares'].concat(mappedData).join('\n')
     const today = format(Date.now(), 'yyyy-MM-dd')
-    const filename = `fundraising_${today}.csv`
+    const filename = `marketplace_${today}.csv`
     saveAs(new Blob([result], { type: 'text/csv;charset=utf-8' }), filename)
   }
 
