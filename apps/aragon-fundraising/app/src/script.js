@@ -400,7 +400,7 @@ const resetTappedToken = async (state, { token }, blockNumber) => {
   }
 }
 
-const newOrder = async (state, { buyer, seller, collateral, batchId, value, amount }, settings, blockNumber, transactionHash, logIndex) => {
+const newOrder = async (state, { buyer, seller, collateral, batchId, value, amount, fee }, settings, blockNumber, transactionHash, logIndex) => {
   const orders = cloneDeep(state.orders)
   // if it's a buy order, seller and amount will undefined
   // if it's a sell order, buyer and value will be undefined
@@ -423,6 +423,7 @@ const newOrder = async (state, { buyer, seller, collateral, batchId, value, amou
     state: Order.state.PENDING, // start with a PENDING state
     amount, // can be undefined
     value, // can be undefined
+    fee, // can be undefined
     // price is calculated in the reducer
   }
   // because of chain re-orgs, events can be fired more than once
@@ -482,10 +483,12 @@ const newBatch = async (state, { id: batchId, collateral, supply, balance, reser
     timestamp,
     collateral,
     supply,
-    realSupply: metabatches.get(id),
+    realSupply: metabatches.get(id).supply,
     balance,
     virtualBalance,
     reserveRatio,
+    buyFeePct: metabatches.get(id).buyFeePct,
+    sellFeePct: metabatches.get(id).sellFeePct,
     // realBalance, startPrice, buyPrice, sellPrice are calculated in the reducer
     // totalBuySpend, totalBuyReturn, totalSellReturn, totalSellSpend updated via updatePricing events
   }
@@ -503,8 +506,8 @@ const newBatch = async (state, { id: batchId, collateral, supply, balance, reser
   }
 }
 
-const newMetaBatch = (state, { id, supply }) => {
-  metabatches.set(parseInt(id, 10), supply)
+const newMetaBatch = (state, { id, supply, buyFeePct, sellFeePct }) => {
+  metabatches.set(parseInt(id, 10), {supply, buyFeePct, sellFeePct})
   return state
 }
 

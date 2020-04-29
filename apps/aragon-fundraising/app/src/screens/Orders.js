@@ -140,6 +140,10 @@ export default ({ myOrders }) => {
     rotateSortBy('amount')
   }, [rotateSortBy])
 
+  const rotateSortByFee = useCallback(() => {
+    rotateSortBy('fee')
+  }, [rotateSortBy])
+
   const rotateSortByDate = useCallback(() => {
     rotateSortBy('date')
   }, [rotateSortBy])
@@ -152,6 +156,7 @@ export default ({ myOrders }) => {
         <SortHeader key="date" label="DATE" onClick={rotateSortByDate} sortBy={sortBy[0] === 'date' && sortBy[1]} />,
         'STATUS',
         <SortHeader key="amount" label="VALUE" onClick={rotateSortByAmount} sortBy={sortBy[0] === 'amount' && sortBy[1]} />,
+        <SortHeader key="fee" label="FEE" onClick={rotateSortByFee} sortBy={sortBy[0] === 'fee' && sortBy[1]} />,
         <SortHeader key="price" label="SHARE PRICE" onClick={rotateSortByPrice} sortBy={sortBy[0] === 'price' && sortBy[1]} />,
         'ORDER TYPE',
         <SortHeader key="token" label="SHARES" onClick={rotateSortByTokens} sortBy={sortBy[0] === 'tokens' && sortBy[1]} />,
@@ -175,6 +180,7 @@ export default ({ myOrders }) => {
         'HOLDER',
         'STATUS',
         <SortHeader key="amount" label="VALUE" onClick={rotateSortByAmount} sortBy={sortBy[0] === 'amount' && sortBy[1]} />,
+        <SortHeader key="fee" label="FEE" onClick={rotateSortByFee} sortBy={sortBy[0] === 'fee' && sortBy[1]} />,
         <SortHeader key="price" label="SHARE PRICE" onClick={rotateSortByPrice} sortBy={sortBy[0] === 'price' && sortBy[1]} />,
         'ORDER TYPE',
         <SortHeader key="token" label="SHARES" onClick={rotateSortByTokens} sortBy={sortBy[0] === 'tokens' && sortBy[1]} />,
@@ -227,6 +233,10 @@ export default ({ myOrders }) => {
           else if (sortBy[1] === 1) return b.amount.minus(a.amount).toNumber()
           else return 0
         } else if (sortBy[0] === 'amount') {
+          if (sortBy[1] === -1) return a.value.minus(b.value).toNumber()
+          else if (sortBy[1] === 1) return b.value.minus(a.value).toNumber()
+          else return 0
+        } else if (sortBy[0] === 'fee') {
           if (sortBy[1] === -1) return a.value.minus(b.value).toNumber()
           else if (sortBy[1] === 1) return b.value.minus(a.value).toNumber()
           else return 0
@@ -352,6 +362,12 @@ export default ({ myOrders }) => {
               <p key="orderAmount" css={data.type === Order.type.BUY ? 'font-weight: 600; color: #2CC68F;' : 'font-weight: 600;'}>
                 {formatBigNumber(data.value, daiDecimals, { numberPrefix: sign })} {data.symbol}
               </p>
+            )
+            // fee
+            entry.push(
+              <p key="orderAmount" css={'font-weight: 600;'}>
+              {formatBigNumber(data.fee, daiDecimals, { numberPrefix: '-' })} {data.symbol}
+            </p>
             )
             // price
             entry.push(

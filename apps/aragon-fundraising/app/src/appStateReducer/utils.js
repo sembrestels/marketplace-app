@@ -134,6 +134,8 @@ export const computeBatches = (batches, PPM) => {
     const virtualBalance = new BigNumber(b.virtualBalance)
     const realBalance = balance.minus(virtualBalance)
     const reserveRatio = new BigNumber(b.reserveRatio)
+    const buyFeePct = new BigNumber(b.buyFeePct)
+    const sellFeePct = new BigNumber(b.sellFeePct)
     const totalBuySpend = new BigNumber(b.totalBuySpend)
     const totalBuyReturn = new BigNumber(b.totalBuyReturn)
     const totalSellSpend = new BigNumber(b.totalSellSpend)
@@ -149,6 +151,8 @@ export const computeBatches = (batches, PPM) => {
       virtualBalance,
       realBalance,
       reserveRatio,
+      buyFeePct,
+      sellFeePct,
       totalBuySpend,
       totalBuyReturn,
       totalSellSpend,
@@ -167,24 +171,28 @@ export const computeBatches = (batches, PPM) => {
  * @param {Array} batches - computed batches
  * @returns {Object} the computed orders
  */
-export const computeOrders = (orders, batches) => {
+export const computeOrders = (orders, batches, pctBase) => {
   return orders.map(o => {
     const batch = batches.find(b => b.id === o.batchId && b.collateral === o.collateral)
-    let price, amount, value
+    let price, amount, value, fee
     if (o.type === Order.type.BUY) {
       price = new BigNumber(batch.buyPrice ?? batch.startPrice)
       value = new BigNumber(o.value)
       amount = value.div(price)
+      fee = new BigNumber(o.fee)
     } else {
       price = new BigNumber(batch.sellPrice ?? batch.startPrice)
       amount = new BigNumber(o.amount)
-      value = amount.times(price)
+      const amountNoFeeMultiplier = pctBase.minus(batch.sellFeePct).div(pctBase)
+      value = amount.times(price).times(amountNoFeeMultiplier)
+      fee = amount.times(price).times(batch.sellFeePct.div(pctBase))
     }
     return {
       ...o,
       price,
       amount,
       value,
+      fee
     }
   })
 }

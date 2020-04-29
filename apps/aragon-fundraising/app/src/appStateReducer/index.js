@@ -25,7 +25,7 @@ const appStateReducer = state => {
     const computedCollaterals = computeCollaterals(collaterals)
     const computedBondedToken = computeBondedToken(bondedToken, computedCollaterals)
     const computedBatches = computeBatches(batches, computedConstants.PPM)
-    const computedOrders = computeOrders(orders, computedBatches)
+    const computedOrders = computeOrders(orders, computedBatches, computedConstants.PCT_BASE)
     return {
       ...state,
       isReady,
