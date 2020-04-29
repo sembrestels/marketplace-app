@@ -7,7 +7,7 @@ import { MainViewContext } from '../../context'
 import BancorFormulaAbi from '../../abi/BancorFormula.json'
 import { formatBigNumber, toDecimals } from '../../utils/bn-utils'
 
-const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedReturn }) => {
+const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedReturn, evaluatedReturn }) => {
   const { value, decimals, symbol, reserveRatio } = amount
   // *****************************
   // background script state
@@ -36,14 +36,12 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
   // *****************************
   // internal state
   // *****************************
-  const [evaluatedPrice, setEvaluatedPrice] = useState(null)
   const [formattedAmount, setFormattedAmount] = useState(formatBigNumber(0, 0))
 
   // *****************************
   // handlers
   // *****************************
   const errorCb = (msg = null) => {
-    setEvaluatedPrice(null)
     setEvaluatedReturn(null)
     onError(false, msg)
   }
@@ -78,7 +76,6 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
           // check if the evaluated price don't break the slippage
           const resultBn = new BigNumber(result)
           const price = formatBigNumber(resultBn, decimals)
-          setEvaluatedPrice(price)
           setEvaluatedReturn(price)
           if (isBuyOrder && resultBn.lte(valueBn.div(maxPrice))) {
             errorCb('This buy order will break the price slippage')
@@ -95,13 +92,11 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
     if (isBuyOrder && userBalance.lt(toDecimals(value, decimals))) {
       // cannot buy more than your own balance
       setFormattedAmount(formatBigNumber(value, 0))
-      setEvaluatedPrice(null)
       setEvaluatedReturn(null)
       onError(false, `Your ${symbol} balance is not sufficient`)
     } else if (!isBuyOrder && userBondedTokenBalance.lt(toDecimals(value, decimals))) {
       // cannot sell more than your own balance
       setFormattedAmount(formatBigNumber(value, 0))
-      setEvaluatedPrice(null)
       setEvaluatedReturn(null)
       onError(false, `Your ${symbol} balance is not sufficient`)
     } else if (value?.length && value > 0) {
@@ -130,8 +125,8 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
           <Text weight="bold">{symbol}</Text>
         </div>
         <div css="display: flex; justify-content: flex-end;">
-          {evaluatedPrice && <AmountField color="grey">~{evaluatedPrice}</AmountField>}
-          {evaluatedPrice && <Text color="grey">{conversionSymbol}</Text>}
+          {evaluatedReturn && <AmountField color="grey">~{evaluatedReturn}</AmountField>}
+          {evaluatedReturn && <Text color="grey">{conversionSymbol}</Text>}
         </div>
       </div>
     </div>

@@ -174,6 +174,7 @@ const Order = ({ isBuyOrder }) => {
         conversionSymbol={getConversionSymbol()}
         onError={validate}
         setEvaluatedReturn={setEvaluatedReturn}
+        evaluatedReturn={evaluatedReturn}
       />
       <div
         css={`
@@ -208,7 +209,7 @@ const Order = ({ isBuyOrder }) => {
           `}
         >
           <p>
-            {`A fee of ${getFeeAmount()} ${collateralItems[selectedCollateral].symbol} will be sent directly to the organisation's funding pool.`}
+            {`A fee of ${getFeeAmount()} ${collateralItems[selectedCollateral].symbol} from the displayed amount will be sent directly to the organisation's funding pool.`}
           </p>
         </Info>}
 
