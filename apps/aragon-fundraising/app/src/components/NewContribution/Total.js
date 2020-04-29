@@ -20,7 +20,7 @@ export default ({ value, onError }) => {
   // *****************************
   // context state
   // *****************************
-  const { userDaiBalance } = useContext(PresaleViewContext)
+  const { userPrimaryCollateralBalance } = useContext(PresaleViewContext)
 
   // *****************************
   // internal state
@@ -34,7 +34,7 @@ export default ({ value, onError }) => {
   // recalculate price when amount changed
   useEffect(() => {
     const valueBn = toDecimals(value, contributionDecimals)
-    if (userDaiBalance.lt(valueBn)) {
+    if (userPrimaryCollateralBalance.lt(valueBn)) {
       // cannot buy more than your own balance
       setFormattedValue(formatBigNumber(valueBn, contributionDecimals))
       setEvaluatedPrice(null)

@@ -15,10 +15,10 @@ export default () => {
   const {
     bondedToken: { decimals: tokenDecimals, realSupply },
     collaterals: {
-      dai: {
-        address: daiAddress,
-        decimals: daiDecimals,
-        symbol: daiSymbol,
+      primaryCollateral: {
+        address: primaryCollateralAddress,
+        decimals: primaryCollateralDecimals,
+        symbol: primaryCollateralSymbol,
         toBeClaimed,
         tap: { rate },
       },
@@ -62,23 +62,23 @@ export default () => {
   // human readable values
   // *****************************
   // numbers
-  const numberSuffix = ' ' + daiSymbol;
+  const numberSuffix = ' ' + primaryCollateralSymbol;
   const adjustedPrice = price ? formatBigNumber(price, 0, { numberSuffix }) : '...'
   const marketCap = price ? price.times(realSupply) : null
-  const adjustedMarketCap = price && marketCap ? formatBigNumber(marketCap, daiDecimals, { numberSuffix }) : '...'
+  const adjustedMarketCap = price && marketCap ? formatBigNumber(marketCap, primaryCollateralDecimals, { numberSuffix }) : '...'
   const tradingVolume = orders
-    // only keep DAI orders
-    .filter(o => o.collateral === daiAddress)
+    // only keep primary collateral orders
+    .filter(o => o.collateral === primaryCollateralAddress)
     // keep values
     .map(o => o.value)
     // sum them and tada, you got the trading volume
     .reduce((acc, current) => acc.plus(current), new BigNumber(0))
-  const adjustedTradingVolume = formatBigNumber(tradingVolume, daiDecimals, { numberSuffix })
+  const adjustedTradingVolume = formatBigNumber(tradingVolume, primaryCollateralDecimals, { numberSuffix })
   const adjustedTokenSupply = formatBigNumber(realSupply, tokenDecimals)
   const realReserve = reserveBalance ? reserveBalance.minus(toBeClaimed) : null
-  const adjustedReserves = realReserve ? formatBigNumber(realReserve, daiDecimals, { numberSuffix }) : '...'
-  const adjustedMonthlyAllowance = formatBigNumber(toMonthlyAllocation(rate, daiDecimals), daiDecimals, { numberSuffix })
-  const adjustedYearlyAllowance = formatBigNumber(toMonthlyAllocation(rate, daiDecimals).times(12), daiDecimals, { numberSuffix })
+  const adjustedReserves = realReserve ? formatBigNumber(realReserve, primaryCollateralDecimals, { numberSuffix }) : '...'
+  const adjustedMonthlyAllowance = formatBigNumber(toMonthlyAllocation(rate, primaryCollateralDecimals), primaryCollateralDecimals, { numberSuffix })
+  const adjustedYearlyAllowance = formatBigNumber(toMonthlyAllocation(rate, primaryCollateralDecimals).times(12), primaryCollateralDecimals, { numberSuffix })
 
   // trends
   /**
@@ -99,17 +99,17 @@ export default () => {
   // if startPrice is here, realSupply too, since NewMetaBatch event occurs before NewBatch one
   const trendBatchMarketCap = marketCap && trendBatch?.startPrice ? trendBatch.startPrice.times(trendBatch.realSupply) : null
   const marketCapDiff = marketCap && trendBatch?.startPrice ? marketCap.minus(trendBatchMarketCap) : null
-  const adjustedMarketCapTrend = marketCapDiff ? formatBigNumber(marketCapDiff, daiDecimals, { keepSign: true, numberSuffix }) : null
+  const adjustedMarketCapTrend = marketCapDiff ? formatBigNumber(marketCapDiff, primaryCollateralDecimals, { keepSign: true, numberSuffix }) : null
   const tradingTrendVolume = trendBatch?.id
     ? orders
-        // only keep DAI orders since the start of the trendBatch
-        .filter(o => o.collateral === daiAddress && o.batchId >= trendBatch.id)
+        // only keep primary collateral orders since the start of the trendBatch
+        .filter(o => o.collateral === primaryCollateralAddress && o.batchId >= trendBatch.id)
         // keep values
         .map(o => o.value)
         // sum them and tada, you got the trading volume between now and the beginning of the trendBatch
         .reduce((acc, current) => acc.plus(current), new BigNumber(0))
     : null
-  const adjustedTradingVolumeTrend = tradingTrendVolume ? formatBigNumber(tradingTrendVolume, daiDecimals, { keepSign: true, numberSuffix }) : null
+  const adjustedTradingVolumeTrend = tradingTrendVolume ? formatBigNumber(tradingTrendVolume, primaryCollateralDecimals, { keepSign: true, numberSuffix }) : null
   const adjustedTokenSupplyTrend = trendBatch?.realSupply ? formatBigNumber(realSupply.minus(trendBatch.realSupply), tokenDecimals, { keepSign: true }) : null
   const adjustedReservesTrend =
     reserveBalance && trendBatch?.realBalance

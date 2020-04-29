@@ -8,7 +8,6 @@ import { Presale as PresaleConstants, Polling } from '../constants'
 import Presale from '../screens/Presale'
 import NewContribution from '../components/NewContribution'
 import NewRefund from '../components/NewRefund'
-import Disclaimer from '../components/Disclaimer'
 import { IdentityProvider } from '../components/IdentityManager'
 import { PresaleViewContext } from '../context'
 import PresaleAbi from '../abi/Presale.json'
@@ -45,11 +44,11 @@ export default () => {
   // *****************************
   const [polledOpenDate, setPolledOpenDate] = useState(openDate)
   const [polledPresaleState, setPolledPresaleState] = useState(state)
-  const [userDaiBalance, setUserDaiBalance] = useState(new BigNumber(0))
+  const [userPrimaryCollateralBalance, setUserPrimaryCollateralBalance] = useState(new BigNumber(0))
   const context = {
     openDate: polledOpenDate,
     state: polledPresaleState,
-    userDaiBalance,
+    userPrimaryCollateralBalance: userPrimaryCollateralBalance,
     presalePanel,
     setPresalePanel,
     refundPanel,
@@ -68,30 +67,30 @@ export default () => {
 
   // watch for a connected user and get its balances
   useEffect(() => {
-    const getUserDaiBalance = async () => {
-      setUserDaiBalance(new BigNumber(await api.call('balanceOf', connectedUser, address).toPromise()))
+    const getUserPrimaryCollateralBalance = async () => {
+      setUserPrimaryCollateralBalance(new BigNumber(await api.call('balanceOf', connectedUser, address).toPromise()))
     }
     if (connectedUser) {
-      getUserDaiBalance()
+      getUserPrimaryCollateralBalance()
     }
   }, [connectedUser])
 
   // polls the start date
   useInterval(async () => {
     let newOpenDate = polledOpenDate
-    let newUserDaiBalance = userDaiBalance
+    let newUserPrimaryCollateralBalance = userPrimaryCollateralBalance
     let newPresaleState = polledPresaleState
     // only poll if the openDate is not set yet
     if (openDate === 0) newOpenDate = parseInt(await presale.openDate().toPromise(), 10)
     // only poll if there is a connected user
-    if (connectedUser) newUserDaiBalance = new BigNumber(await api.call('balanceOf', connectedUser, address).toPromise())
+    if (connectedUser) newUserPrimaryCollateralBalance = new BigNumber(await api.call('balanceOf', connectedUser, address).toPromise())
     // poll presale state
     newPresaleState = Object.values(PresaleConstants.state)[await presale.state().toPromise()]
     // TODO: keep an eye on React 17
     batchedUpdates(() => {
       // only update if values are different
       if (newOpenDate !== polledOpenDate) setPolledOpenDate(newOpenDate)
-      if (!newUserDaiBalance.eq(userDaiBalance)) setUserDaiBalance(newUserDaiBalance)
+      if (!newUserPrimaryCollateralBalance.eq(userPrimaryCollateralBalance)) setUserPrimaryCollateralBalance(newUserPrimaryCollateralBalance)
       if (newPresaleState !== polledPresaleState) setPolledPresaleState(newPresaleState)
     })
   }, Polling.DURATION)

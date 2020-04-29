@@ -29,7 +29,7 @@ export default () => {
   // *****************************
   // context state
   // *****************************
-  const { presalePanel, setPresalePanel, userDaiBalance } = useContext(PresaleViewContext)
+  const { presalePanel, setPresalePanel, userPrimaryCollateralBalance } = useContext(PresaleViewContext)
   // *****************************
   // internal state
   // *****************************
@@ -70,7 +70,7 @@ export default () => {
   const handleSubmit = event => {
     event.preventDefault()
     if (account) {
-      const intent = { token: { address: collaterals.dai.address, value: toDecimals(value, contributionDecimals).toFixed(), spender: presale } }
+      const intent = { token: { address: collaterals.primaryCollateral.address, value: toDecimals(value, contributionDecimals).toFixed(), spender: presale } }
       api
         .contribute(toDecimals(value, contributionDecimals).toFixed(), intent)
         .toPromise()
@@ -87,7 +87,7 @@ export default () => {
             margin: ${2 * GU}px 0;
           `}
         >
-          Your balance: {formatBigNumber(userDaiBalance, contributionDecimals)} {contributionSymbol}
+          Your balance: {formatBigNumber(userPrimaryCollateralBalance, contributionDecimals)} {contributionSymbol}
         </p>
         <ValueField key="collateral">
           <label>

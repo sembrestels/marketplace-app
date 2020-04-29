@@ -71,11 +71,11 @@ export default () => {
     constants: { PPM, PCT_BASE },
     values: { maximumTapRateIncreasePct, maximumTapFloorDecreasePct },
     collaterals: {
-      dai: {
-        address: daiAddress,
-        reserveRatio: daiReserveRatio,
-        symbol: daiSymbol,
-        decimals: daiDecimals,
+      primaryCollateral: {
+        address: primaryCollateralAddress,
+        reserveRatio: primaryCollateralReserveRatio,
+        symbol: primaryCollateralSymbol,
+        decimals: primaryCollateralDecimals,
         tap: { rate, floor, timestamp },
       },
     },
@@ -91,22 +91,22 @@ export default () => {
   // human readable values
   // *****************************
   const adjustedTokenSupply = formatBigNumber(realSupply, tokenDecimals)
-  const adjustedRate = toMonthlyAllocation(rate, daiDecimals)
-  const displayRate = formatBigNumber(adjustedRate, daiDecimals)
-  const displayFloor = formatBigNumber(floor, daiDecimals)
+  const adjustedRate = toMonthlyAllocation(rate, primaryCollateralDecimals)
+  const displayRate = formatBigNumber(adjustedRate, primaryCollateralDecimals)
+  const displayFloor = formatBigNumber(floor, primaryCollateralDecimals)
   const adjustedRateIncrease = maximumTapRateIncreasePct.div(PCT_BASE)
   const adjustedFloorDecrease = maximumTapFloorDecreasePct.div(PCT_BASE)
   const displayRateIncrease = formatBigNumber(adjustedRateIncrease.times(100), 0, 0)
   const displayFloorIncrease = formatBigNumber(adjustedFloorDecrease.times(100), 0, 0)
-  const daiRatio = formatBigNumber(daiReserveRatio.div(PPM).times(100), 0)
-  const adjustedMaxRate = formatBigNumber(adjustedRate.plus(adjustedRate.times(maximumTapRateIncreasePct).div(PCT_BASE)), daiDecimals)
-  const adjustedMinFloor = formatBigNumber(floor.minus(floor.times(maximumTapFloorDecreasePct).div(PCT_BASE)), daiDecimals)
+  const primaryCollateralRatio = formatBigNumber(primaryCollateralReserveRatio.div(PPM).times(100), 0)
+  const adjustedMaxRate = formatBigNumber(adjustedRate.plus(adjustedRate.times(maximumTapRateIncreasePct).div(PCT_BASE)), primaryCollateralDecimals)
+  const adjustedMinFloor = formatBigNumber(floor.minus(floor.times(maximumTapFloorDecreasePct).div(PCT_BASE)), primaryCollateralDecimals)
 
   // *****************************
   // internal state
   // *****************************
-  const [newRate, setNewRate] = useState(fromDecimals(adjustedRate, daiDecimals).toFixed(2, 1))
-  const [newFloor, setNewFloor] = useState(fromDecimals(floor, daiDecimals).toFixed(2, 1))
+  const [newRate, setNewRate] = useState(fromDecimals(adjustedRate, primaryCollateralDecimals).toFixed(2, 1))
+  const [newFloor, setNewFloor] = useState(fromDecimals(floor, primaryCollateralDecimals).toFixed(2, 1))
   const [errorMessages, setErrorMessages] = useState(null)
   const [valid, setValid] = useState(false)
   const [opened, setOpened] = useState(false)
@@ -118,8 +118,8 @@ export default () => {
   useEffect(() => {
     if (opened) {
       // reset to default values and validate them
-      setNewRate(fromDecimals(adjustedRate, daiDecimals).toFixed(2, 1))
-      setNewFloor(fromDecimals(floor, daiDecimals).toFixed(2, 1))
+      setNewRate(fromDecimals(adjustedRate, primaryCollateralDecimals).toFixed(2, 1))
+      setNewFloor(fromDecimals(floor, primaryCollateralDecimals).toFixed(2, 1))
       validate()
     }
   }, [opened])
@@ -146,9 +146,9 @@ export default () => {
 
     // RATE RULES
     // check if it's a rate decrease
-    const isRateDecrease = fromMonthlyAllocation(newRate, daiDecimals).lte(rate)
+    const isRateDecrease = fromMonthlyAllocation(newRate, primaryCollateralDecimals).lte(rate)
     // check if the rate increase respects the max rate increase
-    const regularRateIncrease = fromMonthlyAllocation(newRate, daiDecimals).lte(rate.plus(rate.times(adjustedRateIncrease)))
+    const regularRateIncrease = fromMonthlyAllocation(newRate, primaryCollateralDecimals).lte(rate.plus(rate.times(adjustedRateIncrease)))
     // updating rate is valid if:
     // - it's a decrease
     // - or it's a regular increase after at least one month since the previous update
@@ -156,9 +156,9 @@ export default () => {
 
     // FLOOR RULES
     // check if it's a floor increase
-    const isFloorIncrease = toDecimals(newFloor, daiDecimals).gte(floor)
+    const isFloorIncrease = toDecimals(newFloor, primaryCollateralDecimals).gte(floor)
     // check if the floor decrease respects the max floor decrease
-    const regularFloorDecrease = toDecimals(newFloor, daiDecimals).gte(floor.minus(floor.times(adjustedFloorDecrease)))
+    const regularFloorDecrease = toDecimals(newFloor, primaryCollateralDecimals).gte(floor.minus(floor.times(adjustedFloorDecrease)))
     // updating floor is valid if:
     // - it's an increase
     // - or it's a regular decrease after at least one month since the previous update
@@ -188,7 +188,7 @@ export default () => {
    */
   const handleWithdraw = () => {
     api
-      .withdraw(daiAddress)
+      .withdraw(primaryCollateralAddress)
       .toPromise()
       .catch(console.error)
   }
@@ -198,10 +198,10 @@ export default () => {
     if (valid) {
       setOpened(false)
       // toFixed(0) returns rounded integers
-      const rate = fromMonthlyAllocation(newRate, daiDecimals).toFixed(0)
-      const floor = toDecimals(newFloor, daiDecimals).toFixed(0)
+      const rate = fromMonthlyAllocation(newRate, primaryCollateralDecimals).toFixed(0)
+      const floor = toDecimals(newFloor, primaryCollateralDecimals).toFixed(0)
       api
-        .updateTokenTap(daiAddress, rate, floor)
+        .updateTokenTap(primaryCollateralAddress, rate, floor)
         .toPromise()
         .catch(console.error)
     }
@@ -227,12 +227,12 @@ export default () => {
                 `}
               >
                 {[
-                  [daiSymbol, daiRatio],
+                  [primaryCollateralSymbol, primaryCollateralRatio],
                 ].map(([symbol, ratio], i) => (
                   <ReserveSetting
                     key={i}
                     label={`${symbol} collateralization ratio`}
-                    helpContent={helpContent(daiSymbol)[1]}
+                    helpContent={helpContent(primaryCollateralSymbol)[1]}
                     value={
                       <span>
                         {ratio}
@@ -259,8 +259,8 @@ export default () => {
                   width: 100%;
                 `}
               >
-                <ReserveSetting label="Rate" helpContent={helpContent(daiSymbol)[0]} value={`${displayRate} ${daiSymbol} / month`} />
-                <ReserveSetting label="Floor" helpContent={helpContent(daiSymbol)[0]} value={`${displayFloor} ${daiSymbol}`} />
+                <ReserveSetting label="Rate" helpContent={helpContent(primaryCollateralSymbol)[0]} value={`${displayRate} ${primaryCollateralSymbol} / month`} />
+                <ReserveSetting label="Floor" helpContent={helpContent(primaryCollateralSymbol)[0]} value={`${displayFloor} ${primaryCollateralSymbol}`} />
                 <Button
                   icon={<img src={EditIcon} />}
                   label="Enact tap"
@@ -295,10 +295,10 @@ export default () => {
             margin-top: ${3 * GU}px;
           `}
         >
-          <Field label={`Rate (${daiSymbol})`}>
+          <Field label={`Rate (${primaryCollateralSymbol})`}>
             <TextInput type="number" value={newRate} onChange={handleMonthlyChange} wide required />
           </Field>
-          <Field label={`Floor (${daiSymbol})`}>
+          <Field label={`Floor (${primaryCollateralSymbol})`}>
             <TextInput type="number" value={newFloor} onChange={handleFloorChange} wide required />
           </Field>
           <Button mode="strong" type="submit" disabled={!valid} wide>
@@ -313,10 +313,10 @@ export default () => {
             `}
           >
             <p>
-              You can increase the rate by <b>{displayRateIncrease}%</b> up to <b>{adjustedMaxRate} {daiSymbol}</b>.
+              You can increase the rate by <b>{displayRateIncrease}%</b> up to <b>{adjustedMaxRate} {primaryCollateralSymbol}</b>.
             </p>
             <p>
-              You can decrease the floor by <b>{displayFloorIncrease}%</b> down to <b>{adjustedMinFloor} {daiSymbol}</b>.
+              You can decrease the floor by <b>{displayFloorIncrease}%</b> down to <b>{adjustedMinFloor} {primaryCollateralSymbol}</b>.
             </p>
           </Info>
           <Info

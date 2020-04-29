@@ -19,7 +19,7 @@ const Order = ({ isBuyOrder }) => {
     collaterals,
     bondedToken: { decimals: bondedDecimals, symbol: bondedSymbol },
   } = useAppState()
-  const collateralItems = [collaterals.dai]
+  const collateralItems = [collaterals.primaryCollateral]
 
   // *****************************
   // aragon api
@@ -29,7 +29,7 @@ const Order = ({ isBuyOrder }) => {
   // *****************************
   // context state
   // *****************************
-  const { orderPanel, setOrderPanel, userBondedTokenBalance, userDaiBalance } = useContext(MainViewContext)
+  const { orderPanel, setOrderPanel, userBondedTokenBalance, userPrimaryCollateralBalance } = useContext(MainViewContext)
 
   // *****************************
   // internal state
@@ -108,7 +108,7 @@ const Order = ({ isBuyOrder }) => {
   }
 
   const getUserBalance = () => {
-    const balance = isBuyOrder ? [userDaiBalance][selectedCollateral] : userBondedTokenBalance
+    const balance = isBuyOrder ? [userPrimaryCollateralBalance][selectedCollateral] : userBondedTokenBalance
     const decimals = isBuyOrder ? collateralItems[selectedCollateral].decimals : bondedDecimals
     return formatBigNumber(balance, decimals)
   }
@@ -164,7 +164,7 @@ const Order = ({ isBuyOrder }) => {
                 against
               </Text>
             )}
-            <DropDown items={[collaterals.dai.symbol]} selected={selectedCollateral} onChange={setSelectedCollateral} />
+            <DropDown items={[collaterals.primaryCollateral.symbol]} selected={selectedCollateral} onChange={setSelectedCollateral} />
           </CombinedInput>
         </AmountField>
       </InputsWrapper>

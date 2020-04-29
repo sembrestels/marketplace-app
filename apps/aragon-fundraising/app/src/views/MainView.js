@@ -24,11 +24,17 @@ export default () => {
     addresses: { marketMaker: marketMakerAddress, pool },
     constants: { PPM },
     bondedToken: {
-      overallSupply: { dai: daiSupply },
+      overallSupply: { primaryCollateral: primaryCollateralSupply },
       address: bondedTokenAddress,
     },
     collaterals: {
-      dai: { address: daiAddress, reserveRatio, toBeClaimed: daiToBeClaimed, virtualBalance: daiVirtualBalance, overallBalance: daiOverallBalance },
+      primaryCollateral: {
+        address: primaryCollateralAddress,
+        reserveRatio,
+        toBeClaimed: primaryCollateralToBeClaimed,
+        virtualBalance: primaryCollateralVirtualBalance,
+        overallBalance: primaryCollateralOverallBalance
+      },
     },
   } = useAppState()
 
@@ -55,33 +61,33 @@ export default () => {
   // context state
   // *****************************
   const [polledReserveBalance, setPolledReserveBalance] = useState(null)
-  const [polledDaiBalance, setPolledDaiBalance] = useState(daiOverallBalance)
+  const [polledPrimaryCollateralBalance, setPolledPrimaryCollateralBalance] = useState(primaryCollateralOverallBalance)
   const [polledBatchId, setPolledBatchId] = useState(null)
   const [polledPrice, setPolledPrice] = useState(0)
   const [userBondedTokenBalance, setUserBondedTokenBalance] = useState(new BigNumber(0))
-  const [userDaiBalance, setUserDaiBalance] = useState(new BigNumber(0))
+  const [userPrimaryCollateralBalance, setUserPrimaryCollateralBalance] = useState(new BigNumber(0))
 
   // react context accessible on child components
   const context = {
     reserveBalance: polledReserveBalance,
-    daiBalance: polledDaiBalance,
+    primaryCollateralBalance: polledPrimaryCollateralBalance,
     batchId: polledBatchId,
     price: polledPrice,
     orderPanel,
     setOrderPanel,
     userBondedTokenBalance,
-    userDaiBalance,
+    userPrimaryCollateralBalance: userPrimaryCollateralBalance,
   }
 
   // watch for a connected user and get its balances
   useEffect(() => {
     const getUserBalances = async () => {
-      const balancesPromises = [bondedTokenAddress, daiAddress].map(address => api.call('balanceOf', connectedUser, address).toPromise())
-      const [bondedBalance, daiBalance] = await Promise.all(balancesPromises)
+      const balancesPromises = [bondedTokenAddress, primaryCollateralAddress].map(address => api.call('balanceOf', connectedUser, address).toPromise())
+      const [bondedBalance, primaryCollateralBalance] = await Promise.all(balancesPromises)
       // TODO: keep an eye on React 17, since all updates will be batched by default
       batchedUpdates(() => {
         setUserBondedTokenBalance(new BigNumber(bondedBalance))
-        setUserDaiBalance(new BigNumber(daiBalance))
+        setUserPrimaryCollateralBalance(new BigNumber(primaryCollateralBalance))
       })
     }
     if (connectedUser) {
@@ -92,22 +98,22 @@ export default () => {
   // polls the balances, batchId and price
   useInterval(async () => {
     // polling balances and batchId
-    const daiPromise = api.call('balanceOf', pool, daiAddress).toPromise()
+    const primaryCollateralPromise = api.call('balanceOf', pool, primaryCollateralAddress).toPromise()
     const batchIdPromise = marketMakerContract.getCurrentBatchId().toPromise()
-    const [daiBalance, batchId] = await Promise.all([daiPromise, batchIdPromise])
-    const newReserveBalance = new BigNumber(daiBalance)
-    const newDaiBalance = new BigNumber(daiBalance).minus(daiToBeClaimed).plus(daiVirtualBalance)
+    const [primaryCollateralBalance, batchId] = await Promise.all([primaryCollateralPromise, batchIdPromise])
+    const newReserveBalance = new BigNumber(primaryCollateralBalance)
+    const newPrimaryCollateralBalance = new BigNumber(primaryCollateralBalance).minus(primaryCollateralToBeClaimed).plus(primaryCollateralVirtualBalance)
     const newBatchId = parseInt(batchId, 10)
     // poling user balances
-    let newUserBondedTokenBalance, newUserDaiBalance
+    let newUserBondedTokenBalance, newUserPrimaryCollateralBalance
     if (connectedUser) {
-      const balancesPromises = [bondedTokenAddress, daiAddress].map(address => api.call('balanceOf', connectedUser, address).toPromise())
-      const [bondedBalance, daiBalance] = await Promise.all(balancesPromises)
+      const balancesPromises = [bondedTokenAddress, primaryCollateralAddress].map(address => api.call('balanceOf', connectedUser, address).toPromise())
+      const [bondedBalance, primaryCollateralBalance] = await Promise.all(balancesPromises)
       newUserBondedTokenBalance = new BigNumber(bondedBalance)
-      newUserDaiBalance = new BigNumber(daiBalance)
+      newUserPrimaryCollateralBalance = new BigNumber(primaryCollateralBalance)
     }
     // polling price
-    const price = await marketMakerContract.getStaticPricePPM(daiSupply.toFixed(), polledDaiBalance.toFixed(), reserveRatio.toFixed()).toPromise()
+    const price = await marketMakerContract.getStaticPricePPM(primaryCollateralSupply.toFixed(), polledPrimaryCollateralBalance.toFixed(), reserveRatio.toFixed()).toPromise()
     const newPrice = new BigNumber(price).div(PPM)
     // TODO: keep an eye on React 17, since all updates will be batched by default
     // see: https://stackoverflow.com/questions/48563650/does-react-keep-the-order-for-state-updates/48610973#48610973
@@ -115,13 +121,13 @@ export default () => {
     batchedUpdates(() => {
       // update the state only if value changed
       if (!newReserveBalance.eq(polledReserveBalance)) setPolledReserveBalance(newReserveBalance)
-      if (!newDaiBalance.eq(polledDaiBalance)) setPolledDaiBalance(newDaiBalance)
+      if (!newPrimaryCollateralBalance.eq(polledPrimaryCollateralBalance)) setPolledPrimaryCollateralBalance(newPrimaryCollateralBalance)
       if (newBatchId !== polledBatchId) setPolledBatchId(newBatchId)
       if (!newPrice.eq(polledPrice)) setPolledPrice(newPrice)
       // update user balances
       if (connectedUser) {
         if (!newUserBondedTokenBalance.eq(userBondedTokenBalance)) setUserBondedTokenBalance(newUserBondedTokenBalance)
-        if (!newUserDaiBalance.eq(userDaiBalance)) setUserDaiBalance(newUserDaiBalance)
+        if (!newUserPrimaryCollateralBalance.eq(userPrimaryCollateralBalance)) setUserPrimaryCollateralBalance(newUserPrimaryCollateralBalance)
       }
     })
   }, Polling.DURATION)

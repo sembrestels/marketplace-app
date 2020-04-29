@@ -1,6 +1,6 @@
 import cloneDeep from 'lodash/cloneDeep'
 import BigNumber from 'bignumber.js'
-import { Order, Tokens } from '../constants'
+import { Order } from '../constants'
 
 /**
  * Checks whether we have enough data to start the fundraising app
@@ -91,11 +91,10 @@ const transformCollateral = (address, data) => {
  */
 export const computeCollaterals = collaterals => {
   const computedCollaterals = Array.from(cloneDeep(collaterals))
-  const defaultTokenSymbol = computedCollaterals[0][1].symbol
-  console.log('currentCollaterals', computedCollaterals);
-  const [daiAddress, daiData] = computedCollaterals.find(([_, data]) => data.symbol === defaultTokenSymbol)
+  const primaryCollateralSymbol = computedCollaterals[0][1].symbol
+  const [primaryCollateralAddress, primaryCollateralData] = computedCollaterals.find(([_, data]) => data.symbol === primaryCollateralSymbol)
   return {
-    dai: transformCollateral(daiAddress, daiData),
+    primaryCollateral: transformCollateral(primaryCollateralAddress, primaryCollateralData),
   }
 }
 
@@ -105,7 +104,7 @@ export const computeCollaterals = collaterals => {
  * @param {Object} collaterals - fundraising collaterals
  * @returns {Object} the computed bondedToken
  */
-export const computeBondedToken = (bondedToken, { dai }) => {
+export const computeBondedToken = (bondedToken, { primaryCollateral }) => {
   const totalSupply = new BigNumber(bondedToken.totalSupply)
   const toBeMinted = new BigNumber(bondedToken.toBeMinted)
   const realSupply = totalSupply.plus(toBeMinted)
@@ -115,7 +114,7 @@ export const computeBondedToken = (bondedToken, { dai }) => {
     toBeMinted,
     realSupply,
     overallSupply: {
-      dai: realSupply.plus(dai.virtualSupply),
+      primaryCollateral: realSupply.plus(primaryCollateral.virtualSupply),
     },
   }
 }

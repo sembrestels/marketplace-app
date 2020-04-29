@@ -81,9 +81,9 @@ export default ({ myOrders }) => {
   const {
     orders,
     collaterals: {
-      dai: {
-        decimals: daiDecimals,
-        symbol: daiSymbol
+      primaryCollateral: {
+        decimals: primaryCollateralDecimals,
+        symbol: primaryCollateralSymbol
       },
     },
     bondedToken: { decimals: tokenDecimals },
@@ -265,7 +265,7 @@ export default ({ myOrders }) => {
   const handleDownload = () => {
     const mappedData = filteredOrders.map(order => {
       const date = format(order.timestamp, 'MM/dd/yyyy - HH:mm:ss')
-      const amount = fromDecimals(order.value, daiDecimals).toFixed(2, 1)
+      const amount = fromDecimals(order.value, primaryCollateralDecimals).toFixed(2, 1)
       const price = `$${order.price.toFixed(2, 1)}`
       const tokens = fromDecimals(order.amount, tokenDecimals).toFixed(2, 1)
       return `${date},${order.user},${order.state},${amount} ${order.symbol},${price},${order.type},${tokens}`
@@ -291,7 +291,7 @@ export default ({ myOrders }) => {
     }
   }
 
-  const numberSuffix = ' ' + daiSymbol;
+  const numberSuffix = ' ' + primaryCollateralSymbol;
 
   return (
     <ContentWrapper>
@@ -360,13 +360,13 @@ export default ({ myOrders }) => {
             // value
             entry.push(
               <p key="orderAmount" css={data.type === Order.type.BUY ? 'font-weight: 600; color: #2CC68F;' : 'font-weight: 600;'}>
-                {formatBigNumber(data.value, daiDecimals, { numberPrefix: sign })} {data.symbol}
+                {formatBigNumber(data.value, primaryCollateralDecimals, { numberPrefix: sign })} {data.symbol}
               </p>
             )
             // fee
             entry.push(
               <p key="orderAmount" css={'font-weight: 600;'}>
-              {formatBigNumber(data.fee, daiDecimals, { numberPrefix: '-' })} {data.symbol}
+              {formatBigNumber(data.fee, primaryCollateralDecimals, { numberPrefix: '-' })} {data.symbol}
             </p>
             )
             // price

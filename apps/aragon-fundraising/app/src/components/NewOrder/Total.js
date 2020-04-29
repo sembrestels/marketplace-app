@@ -17,10 +17,10 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
     addresses: { formula: formulaAddress },
     bondedToken: { overallSupply },
     collaterals: {
-      dai: { slippage: daiSlippage },
+      primaryCollateral: { slippage: primaryCollateralSlippage },
     },
   } = useAppState()
-  const daiSlippageDec = daiSlippage.div(PCT_BASE)
+  const primaryCollateralSlippageDec = primaryCollateralSlippage.div(PCT_BASE)
 
   // *****************************
   // aragon api
@@ -31,7 +31,7 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
   // *****************************
   // context state
   // *****************************
-  const { price, daiBalance, antBalance, userDaiBalance, userBondedTokenBalance } = useContext(MainViewContext)
+  const { price, primaryCollateralBalance, userPrimaryCollateralBalance, userBondedTokenBalance } = useContext(MainViewContext)
 
   // *****************************
   // internal state
@@ -60,10 +60,10 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
       const valueBn = toDecimals(value, decimals)
       // supply, balance, weight, amount
       const currentSymbol = isBuyOrder ? symbol : conversionSymbol
-      const supply = overallSupply.dai
-      const balance = daiBalance
+      const supply = overallSupply.primaryCollateral
+      const balance = primaryCollateralBalance
       // slippage
-      const currentSlippage = daiSlippageDec
+      const currentSlippage = primaryCollateralSlippageDec
       // unit prices
       const maxPrice = new BigNumber(price).times(new BigNumber(1).plus(currentSlippage))
       const minPrice = new BigNumber(price).times(new BigNumber(1).minus(currentSlippage))
@@ -88,7 +88,7 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
       }
     }
 
-    const userBalance = userDaiBalance
+    const userBalance = userPrimaryCollateralBalance
     if (isBuyOrder && userBalance.lt(toDecimals(value, decimals))) {
       // cannot buy more than your own balance
       setFormattedAmount(formatBigNumber(value, 0))

@@ -12,7 +12,7 @@ export default () => {
       `}
     >
       <p>
-        You might need some Rinkeby DAI or ANT which you can get by visting <Link href="https://faucet.aragon.black/">https://faucet.aragon.black/</Link>.
+        You might need some Rinkeby tokens which you can get by visting <Link href="https://faucet.aragon.black/">https://faucet.aragon.black/</Link>.
       </p>
     </Info>
   )
