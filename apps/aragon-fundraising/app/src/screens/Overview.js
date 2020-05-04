@@ -179,7 +179,7 @@ export default () => {
               <Trend value={adjustedReservesTrend} suffix="M" />
             </div>
           </li>
-          <li>
+          {rate > 0 && <li>
             <div>
               <p className="title">Monthly Allowance</p>
               <p className="number">{adjustedMonthlyAllowance}</p>
@@ -187,7 +187,7 @@ export default () => {
             <div>
               <Trend value={adjustedYearlyAllowance} suffix="Y" />
             </div>
-          </li>
+          </li>}
         </ul>
       </KeyMetrics>
       <Chart />
