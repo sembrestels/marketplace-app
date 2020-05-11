@@ -8,12 +8,13 @@ import BancorFormulaAbi from '../../abi/BancorFormula.json'
 import { formatBigNumber, toDecimals } from '../../utils/bn-utils'
 
 const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedReturn, evaluatedReturn }) => {
-  const { value, decimals, symbol, reserveRatio } = amount
+  const { value, decimals, symbol, reserveRatio, feeAmount, feePercentage } = amount
   // *****************************
   // background script state
   // *****************************
   const {
     constants: { PCT_BASE },
+    values: { buyFeePct },
     addresses: { formula: formulaAddress },
     bondedToken: { overallSupply },
     collaterals: {
@@ -75,8 +76,12 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
         if (!didCancel && result) {
           // check if the evaluated price don't break the slippage
           const resultBn = new BigNumber(result)
-          const price = formatBigNumber(resultBn, decimals)
-          setEvaluatedReturn(price)
+          if (isBuyOrder) {
+            const priceNoFee = PCT_BASE.minus(buyFeePct).times(resultBn).div(PCT_BASE)
+            setEvaluatedReturn(formatBigNumber(priceNoFee, decimals))
+          } else {
+            setEvaluatedReturn(formatBigNumber(resultBn, decimals))
+          }
           if (isBuyOrder && resultBn.lte(valueBn.div(maxPrice))) {
             errorCb('This buy order will break the price slippage')
           } else if (!isBuyOrder && resultBn.lte(valueBn.times(minPrice))) {
@@ -89,20 +94,21 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
     }
 
     const userBalance = userPrimaryCollateralBalance
+    const valueLessFee = isBuyOrder ? parseFloat(value) - feeAmount : value
     if (isBuyOrder && userBalance.lt(toDecimals(value, decimals))) {
       // cannot buy more than your own balance
-      setFormattedAmount(formatBigNumber(value, 0))
+      setFormattedAmount(formatBigNumber(valueLessFee, 0))
       setEvaluatedReturn(null)
       onError(false, `Your ${symbol} balance is not sufficient`)
     } else if (!isBuyOrder && userBondedTokenBalance.lt(toDecimals(value, decimals))) {
       // cannot sell more than your own balance
-      setFormattedAmount(formatBigNumber(value, 0))
+      setFormattedAmount(formatBigNumber(valueLessFee, 0))
       setEvaluatedReturn(null)
       onError(false, `Your ${symbol} balance is not sufficient`)
     } else if (value?.length && value > 0) {
       // only try to evaluate when an amount is entered, and valid
       evaluateOrderReturn()
-      setFormattedAmount(formatBigNumber(value, 0))
+      setFormattedAmount(formatBigNumber(valueLessFee, 0))
     } else {
       // if input is empty, reset to default values and disable order button
       setFormattedAmount(formatBigNumber(0, 0))
@@ -114,6 +120,8 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
     }
   }, [isBuyOrder, amount, conversionSymbol])
 
+  const evaluatedReturnLessFee = formatBigNumber(isBuyOrder ? evaluatedReturn : parseFloat(evaluatedReturn) - feeAmount, 0)
+
   return (
     <div css="display: flex; justify-content: space-between; padding: 0 5px;">
       <div>
@@ -123,18 +131,24 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
         <div css="display: flex; justify-content: flex-end;">
           <AmountField weight="bold">{formattedAmount}</AmountField>
           <Text weight="bold">{symbol}</Text>
+          {feePercentage > 0 && isBuyOrder && <FeeField weight="bold">{`(${formatBigNumber(feeAmount, 0)} FEE)`}</FeeField>}
         </div>
-        <div css="display: flex; justify-content: flex-end;">
-          {evaluatedReturn && <AmountField color="grey">~{evaluatedReturn}</AmountField>}
-          {evaluatedReturn && <Text color="grey">{conversionSymbol}</Text>}
-        </div>
+        {evaluatedReturn && <div css="display: flex; justify-content: flex-end;">
+          <AmountField color="grey">~{evaluatedReturnLessFee}</AmountField>
+          <Text color="grey">{conversionSymbol}</Text>
+          {feePercentage > 0 && !isBuyOrder && <FeeField color="grey">{`(${formatBigNumber(feeAmount, 0)} FEE)`}</FeeField>}
+        </div>}
       </div>
     </div>
   )
 }
 
 const AmountField = styled(Text)`
-  margin-right: 10px;
+  margin-right: 7px;
+`
+
+const FeeField = styled(Text)`
+  margin-left: 10px;
 `
 
 export default Total

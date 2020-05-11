@@ -121,18 +121,22 @@ const Order = ({ isBuyOrder }) => {
     return isBuyOrder ? percentageOf(buyFeePct) : percentageOf(sellFeePct)
   }
 
-  const getFeeAmount = () => {
-    return isBuyOrder ? getBuyFeeAmount() : getSellFeeAmount()
-  } 
-
   const getBuyFeeAmount = () => {
-    const inputAmount = amount > 0 && errorMessage === null ? amount : 0
+    const inputAmount = amount > 0 ? amount : 0
     return buyFeePct.div(PCT_BASE).times(inputAmount)
   }
 
   const getSellFeeAmount = () => {
     const finalEvaluatedReturn = evaluatedReturn > 0 ? evaluatedReturn : 0
     return sellFeePct.div(PCT_BASE).times(finalEvaluatedReturn)
+  }
+
+  const getFeeAmount = () => {
+    return isBuyOrder ? getBuyFeeAmount() : getSellFeeAmount()
+  }
+
+  const getFormattedFeeAmount = () => {
+    return formatBigNumber(getFeeAmount(), 0)
   }
 
   return (
@@ -170,7 +174,14 @@ const Order = ({ isBuyOrder }) => {
       </InputsWrapper>
       <Total
         isBuyOrder={isBuyOrder}
-        amount={{ value: amount, decimals: getDecimals(), symbol: getSymbol(), reserveRatio: getReserveRatio() }}
+        amount={{
+          value: amount,
+          decimals: getDecimals(),
+          symbol: getSymbol(),
+          reserveRatio: getReserveRatio(),
+          feeAmount: getFeeAmount(),
+          feePercentage: getFeePercentage()
+        }}
         conversionSymbol={getConversionSymbol()}
         onError={validate}
         setEvaluatedReturn={setEvaluatedReturn}
@@ -209,7 +220,7 @@ const Order = ({ isBuyOrder }) => {
           `}
         >
           <p>
-            {`A fee of ${getFeeAmount()} ${collateralItems[selectedCollateral].symbol} from the displayed amount will be sent directly to the organisation's funding pool.`}
+            {`A fee of ${getFormattedFeeAmount()} ${collateralItems[selectedCollateral].symbol} will be sent directly to the organisation's funding pool.`}
           </p>
         </Info>}
 

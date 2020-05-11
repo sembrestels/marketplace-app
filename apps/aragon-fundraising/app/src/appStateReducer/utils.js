@@ -171,23 +171,23 @@ export const computeBatches = (batches, PPM) => {
  * @returns {Object} the computed orders
  */
 export const computeOrders = (orders, batches, pctBase) => {
-  return orders.map(o => {
-    const batch = batches.find(b => b.id === o.batchId && b.collateral === o.collateral)
+  return orders.map(order => {
+    const batch = batches.find(batch => batch.id === order.batchId && batch.collateral === order.collateral)
     let price, amount, value, fee
-    if (o.type === Order.type.BUY) {
+    if (order.type === Order.type.BUY) {
       price = new BigNumber(batch.buyPrice ?? batch.startPrice)
-      value = new BigNumber(o.value)
+      value = new BigNumber(order.value)
       amount = value.div(price)
-      fee = new BigNumber(o.fee)
+      fee = new BigNumber(order.fee)
     } else {
       price = new BigNumber(batch.sellPrice ?? batch.startPrice)
-      amount = new BigNumber(o.amount)
+      amount = new BigNumber(order.amount)
       const amountNoFeeMultiplier = pctBase.minus(batch.sellFeePct).div(pctBase)
       value = amount.times(price).times(amountNoFeeMultiplier)
       fee = amount.times(price).times(batch.sellFeePct.div(pctBase))
     }
     return {
-      ...o,
+      ...order,
       price,
       amount,
       value,
