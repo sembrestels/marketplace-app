@@ -25,7 +25,7 @@ import "@ablack/fundraising-shared-interfaces/contracts/IAragonFundraisingContro
 
 // TODO: Change 'value' to 'amount'
 
-contract BatchedBancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
+contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
     using SafeERC20 for ERC20;
     using SafeMath  for uint256;
 
