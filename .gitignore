@@ -23,6 +23,7 @@ package-lock.json
 */**/abis.json
 */**/arapp_local.json
 */**/flattened_contracts
+*/**/build
 
 # keep abis used in the frontend
 !apps/aragon-fundraising/app/src/abi
