@@ -140,12 +140,25 @@ contract('BatchedBancorMarketMaker app', accounts => {
     return new web3.BigNumber(amount)
   }
 
+  const BnWithDecimals = amount => {
+    return BN(amount).mul(BN(Math.pow(10, 18)))
+  }
+
   const purchaseReturn = async (index, supply, balance, amount) => {
     supply = new web3.BigNumber(supply.toString(10))
     balance = new web3.BigNumber(balance.toString(10))
     amount = new web3.BigNumber(amount.toString(10))
 
     return formula.calculatePurchaseReturn(VIRTUAL_SUPPLIES[index].add(supply), VIRTUAL_BALANCES[index].add(balance), RESERVE_RATIOS[index], amount)
+  }
+
+  const expectedReturnForAmount = async (index, amount) => {
+    const fee = computeBuyFee(amount)
+    const amountNoFee = amount.minus(fee)
+
+    const supply = await token.totalSupply()
+    const balanceOfReserve = (await controller.balanceOf(reserve.address, collaterals[index])).add(amountNoFee)
+    return await purchaseReturn(index, supply, balanceOfReserve, amountNoFee)
   }
 
   const saleReturn = async (index, supply, balance, amount) => {
@@ -178,13 +191,13 @@ contract('BatchedBancorMarketMaker app', accounts => {
     return { whitelisted, virtualSupply, virtualBalance, reserveRatio }
   }
 
-  // const openBuyOrder = async (buyer, collateral, amount, opts = {}) => {
-  //   const from = opts && opts.from ? opts.from : buyer
-  //   const value = collateral === ETH ? (opts && opts.value ? opts.value : amount) : opts && opts.value ? opts.value : 0
-  //   const receipt = await marketMaker.openBuyOrder(buyer, collateral, amount, { from, value })
-  //
-  //   return receipt
-  // }
+  const makeBuyOrder = async (buyer, collateral, paidAmount, minReturnAmount, opts = {}) => {
+    const from = opts && opts.from ? opts.from : buyer
+    const value = collateral === ETH ? (opts && opts.value ? opts.value : paidAmount) : opts && opts.value ? opts.value : 0
+    const receipt = await marketMaker.makeBuyOrder(buyer, collateral, paidAmount, minReturnAmount, { from, value })
+
+    return receipt
+  }
 
   // const openSellOrder = async (seller, collateral, amount, opts = {}) => {
   //   const from = opts && opts.from ? opts.from : seller
@@ -739,231 +752,134 @@ contract('BatchedBancorMarketMaker app', accounts => {
   })
   // #endregion
 
-  // TODO: Delete from here VVVV ?
+  // #region makeBuyOrder
+  context.only('> #makeBuyOrder', () => {
+    // forEach(['ETH']).describe(`> %s`, round => {
+    forEach(['ETH', 'ERC20']).describe(`> %s`, round => {
+      const index = round === 'ETH' ? 0 : 1
 
-  // // #region openBuyOrder
-  // context('> #openBuyOrder', () => {
-  //   forEach(['ETH', 'ERC20']).describe(`> %s`, round => {
-  //     const index = round === 'ETH' ? 0 : 1
-  //
-  //     context('> sender has OPEN_BUY_ORDER_ROLE', () => {
-  //       context('> and market making is open', () => {
-  //         context('> and collateral is whitelisted', () => {
-  //           context('> and batch is not cancelled', () => {
-  //             context('> and value is not zero', () => {
-  //               context('> and sender has sufficient funds', () => {
-  //                 context('> and no excess value is sent', () => {
-  //                   context('> and order does not break maximum batch slippage', () => {
-  //                     it('it should initialize new meta-batch [if needed]', async () => {
-  //                       // let's initialize amounts for a first meta-batch
-  //                       const amount = random.amount()
-  //                       const fee = computeBuyFee(amount)
-  //                       const amountAfterFee = amount.minus(fee)
-  //                       const supply = await purchaseReturn(index, 0, 0, amountAfterFee)
-  //                       // let's initialize a first meta-batch
-  //                       const receipt1 = await openBuyOrder(authorized, collaterals[index], amount, { from: authorized })
-  //                       const metaBatch1 = getNewMetaBatchEvent(receipt1)
-  //                       // let's move to the next meta-batch
-  //                       await progressToNextBatch()
-  //                       // let's initialize a second meta-batch
-  //                       const receipt2 = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //                       assertEvent(receipt2, 'NewMetaBatch')
-  //                       const metaBatch2 = getNewMetaBatchEvent(receipt2)
-  //                       // let's check the new meta-batch is properly initialized
-  //                       assert.isAbove(metaBatch2.id.toNumber(), metaBatch1.id.toNumber())
-  //                       assert.equal(metaBatch2.supply.toNumber(), supply.toNumber())
-  //                       assert.equal(metaBatch2.buyFeePct.toNumber(), BUY_FEE_PERCENT)
-  //                       assert.equal(metaBatch2.sellFeePct.toNumber(), SELL_FEE_PERCENT)
-  //                       assert.equal(metaBatch2.formula, formula.address)
-  //                     })
-  //
-  //                     it('it should initialize new batch [if needed]', async () => {
-  //                       // let's initialize amounts for a first batch
-  //                       const amount = random.amount()
-  //                       const fee = computeBuyFee(amount)
-  //                       const amountAfterFee = amount.minus(fee)
-  //                       const supply = await purchaseReturn(index, 0, 0, amountAfterFee)
-  //                       // let's initialize a first batch
-  //                       const receipt1 = await openBuyOrder(authorized, collaterals[index], amount, { from: authorized })
-  //                       const batch1 = getNewBatchEvent(receipt1)
-  //                       // let's move to the next batch
-  //                       await progressToNextBatch()
-  //                       // let's initialize a second batch
-  //                       const receipt2 = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //                       assertEvent(receipt2, 'NewBatch')
-  //                       assertExternalEvent(receipt2, 'UpdateTappedAmount()')
-  //                       const batchId = getBuyOrderBatchId(receipt2)
-  //                       const batch2 = await getBatch(batchId, collaterals[index])
-  //                       // let's check the new batch is properly initialized
-  //                       assert.isAbove(batchId.toNumber(), batch1.id.toNumber())
-  //                       assert.equal(batch2.initialized, true)
-  //                       assert.equal(batch2.cancelled, false)
-  //                       assert.equal(batch2.supply.toNumber(), VIRTUAL_SUPPLIES[index].add(supply).toNumber())
-  //                       assert.equal(batch2.balance.toNumber(), VIRTUAL_BALANCES[index].add(amountAfterFee).toNumber())
-  //                       assert.equal(batch2.reserveRatio.toNumber(), RESERVE_RATIOS[index])
-  //                       assert.equal(batch2.slippage.toNumber(), MAXIMUM_SLIPPAGE)
-  //                     })
-  //
-  //                     it('it should register buy order', async () => {
-  //                       const receipt = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //
-  //                       assertEvent(receipt, 'OpenBuyOrder')
-  //                     })
-  //
-  //                     it('it should deduct fee', async () => {
-  //                       const _balance = await getBalance(collaterals[index], beneficiary)
-  //
-  //                       const amount = random.amount()
-  //                       const fee = computeBuyFee(amount)
-  //
-  //                       await openBuyOrder(authorized, collaterals[index], amount, { from: authorized })
-  //                       const balance_ = await getBalance(collaterals[index], beneficiary)
-  //
-  //                       assert.equal(balance_.minus(_balance).toNumber(), fee.toNumber())
-  //                     })
-  //
-  //                     it('it should collect collateral', async () => {
-  //                       const _balance = await getBalance(collaterals[index], reserve.address)
-  //
-  //                       const amount = random.amount()
-  //                       const fee = computeBuyFee(amount)
-  //                       const amountAfterFee = amount.minus(fee)
-  //
-  //                       await openBuyOrder(authorized, collaterals[index], amount, { from: authorized })
-  //                       const balance_ = await getBalance(collaterals[index], reserve.address)
-  //
-  //                       assert.equal(balance_.minus(_balance).toNumber(), amountAfterFee.toNumber())
-  //                     })
-  //
-  //                     it('it should update batch', async () => {
-  //                       const amount = random.amount()
-  //                       const fee = computeBuyFee(amount)
-  //                       const amountAfterFee = amount.minus(fee)
-  //                       const purchase = await purchaseReturn(index, 0, 0, amountAfterFee)
-  //
-  //                       const receipt = await openBuyOrder(authorized, collaterals[index], amount, { from: authorized })
-  //                       const batchId = getBuyOrderBatchId(receipt)
-  //                       const batch = await getBatch(batchId, collaterals[index])
-  //
-  //                       assert.equal(batch.totalBuySpend.toNumber(), amountAfterFee.toNumber())
-  //                       assert.equal(batch.totalBuyReturn.toNumber(), purchase.toNumber())
-  //                       assert.equal(batch.totalSellSpend.toNumber(), 0)
-  //                       assert.equal(batch.totalSellReturn.toNumber(), 0)
-  //                     })
-  //
-  //                     it('it should update the amount of tokens to be minted', async () => {
-  //                       const amount = random.amount()
-  //                       const fee = computeBuyFee(amount)
-  //                       const amountAfterFee = amount.minus(fee)
-  //                       const purchase = await purchaseReturn(index, 0, 0, amountAfterFee)
-  //
-  //                       await openBuyOrder(authorized, collaterals[index], amount, { from: authorized })
-  //                       const tokensToBeMinted = await marketMaker.tokensToBeMinted()
-  //
-  //                       assert.equal(tokensToBeMinted.toNumber(), purchase.toNumber())
-  //                     })
-  //                   })
-  //
-  //                   context('> but order breaks maximum batch slippage', () => {
-  //                     it('it should revert', async () => {
-  //                       let amount1, amount2
-  //
-  //                       // let's set a small price slippage of 15%
-  //                       await marketMaker.updateCollateralToken(
-  //                         collaterals[index],
-  //                         VIRTUAL_SUPPLIES[index],
-  //                         VIRTUAL_BALANCES[index],
-  //                         RESERVE_RATIOS[index],
-  //                         15 * Math.pow(10, 16),
-  //                         { from: authorized }
-  //                       )
-  //
-  //                       if (index === 0) {
-  //                         // buy price for batch after the first order shoud equal 1.14 for ETH
-  //                         amount1 = BN(3777).mul(BN(Math.pow(10, 18)))
-  //                         // buy price for batch after the second order shoud equal 1.16 for ETH
-  //                         amount2 = BN(335).mul(BN(Math.pow(10, 18)))
-  //                       } else {
-  //                         // buy price for batch after the first order shoud equal 1.14 for ERC20
-  //                         amount1 = BN(33).mul(BN(Math.pow(10, 18)))
-  //                         // buy price for batch after the second order shoud equal 1.16 for ERC20
-  //                         amount2 = BN(5.9).mul(BN(Math.pow(10, 18)))
-  //                       }
-  //
-  //                       // it should not revert
-  //                       await openBuyOrder(authorized, collaterals[index], amount1, { from: authorized })
-  //                       // it should revert
-  //                       await assertRevert(() => openBuyOrder(authorized, collaterals[index], amount2, { from: authorized }))
-  //                     })
-  //                   })
-  //                 })
-  //
-  //                 context('> but excess value is sent', () => {
-  //                   it('it should revert', async () => {
-  //                     const amount = random.amount()
-  //
-  //                     await assertRevert(() => openBuyOrder(authorized, collaterals[index], amount, { from: authorized, value: amount.add(1) })) // should revert both for ETH and ERC20
-  //                   })
-  //                 })
-  //               })
-  //
-  //               context('> but sender does not have sufficient funds', () => {
-  //                 it('it should revert', async () => {
-  //                   const amount = random.amount()
-  //                   // let's burn the extra tokens to end up with a small balance
-  //                   await collateral.transfer(unauthorized, INITIAL_TOKEN_BALANCE - amount, { from: authorized })
-  //
-  //                   await assertRevert(() => openBuyOrder(authorized, collaterals[index], amount.add(1), { from: authorized, value: amount.minus(1) })) // should revert both for ETH and ERC20
-  //                 })
-  //               })
-  //             })
-  //
-  //             context('> but value is zero', () => {
-  //               it('it should revert', async () => {
-  //                 await assertRevert(() => openBuyOrder(authorized, collaterals[index], 0, { from: authorized }))
-  //               })
-  //             })
-  //           })
-  //
-  //           context('> but batch is cancelled', () => {
-  //             it('it should revert', async () => {
-  //               await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //               // current batch is now cancelled
-  //               await assertRevert(() => openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized }))
-  //             })
-  //           })
-  //         })
-  //
-  //         context('> but collateral is not whitelisted', () => {
-  //           it('it should revert', async () => {
-  //             // we can't test un-whitelisted ETH unless we re-deploy a DAO without ETH as a whitelisted
-  //             // collateral just for that use case it's not worth it because the logic is the same than ERC20 anyhow
-  //             const unlisted = await TokenMock.new(authorized, INITIAL_TOKEN_BALANCE)
-  //             await unlisted.approve(marketMaker.address, INITIAL_TOKEN_BALANCE, { from: authorized })
-  //             await assertRevert(() => openBuyOrder(authorized, unlisted.address, random.amount(), { from: authorized }))
-  //           })
-  //         })
-  //       })
-  //
-  //       context('> but market making is not open', () => {
-  //         beforeEach(async () => {
-  //           await initialize(false)
-  //         })
-  //
-  //         it('it should revert', async () => {
-  //           await assertRevert(() => openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized }))
-  //         })
-  //       })
-  //     })
-  //
-  //     context('> sender does not have OPEN_BUY_ORDER_ROLE', () => {
-  //       it('it should revert', async () => {
-  //         await assertRevert(() => openBuyOrder(unauthorized, collaterals[index], random.amount(), { from: unauthorized }))
-  //       })
-  //     })
-  //   })
-  // })
-  // // #endregion
+      context('> sender has OPEN_BUY_ORDER_ROLE', () => {
+        context('> and market making is open', () => {
+          context('> and collateral is whitelisted', () => {
+            context('> and value is not zero', () => {
+              context('> and sender has sufficient funds', () => {
+                context('> and no excess value is sent', () => {
+
+                  it('it should make buy order', async () => {
+                    const amount = random.amount()
+                    const expectedReturnAmount = await expectedReturnForAmount(index, amount)
+                    const senderBalanceBefore = await token.balanceOf(authorized)
+
+                    const receipt = await makeBuyOrder(authorized, collaterals[index], amount, expectedReturnAmount, { from: authorized })
+
+                    const senderBalanceAfter = await token.balanceOf(authorized)
+                    assertEvent(receipt, 'MakeBuyOrder')
+                    assert.equal(senderBalanceAfter.minus(senderBalanceBefore).toString(), expectedReturnAmount.toString())
+                  })
+
+                  it('it should deduct fee', async () => {
+                    const beneficiaryBalanceBefore = await getBalance(collaterals[index], beneficiary)
+                    const amount = random.amount()
+                    const fee = computeBuyFee(amount)
+
+                    await makeBuyOrder(authorized, collaterals[index], amount, 0, { from: authorized })
+
+                    const beneficiaryBalanceAfter = await getBalance(collaterals[index], beneficiary)
+                    assert.equal(beneficiaryBalanceAfter.minus(beneficiaryBalanceBefore).toNumber(), fee.toNumber())
+                  })
+
+                  it('it should collect collateral', async () => {
+                    const reserveBalanceBefore = await getBalance(collaterals[index], reserve.address)
+                    const amount = random.amount()
+                    const fee = computeBuyFee(amount)
+                    const amountAfterFee = amount.minus(fee)
+
+                    await makeBuyOrder(authorized, collaterals[index], amount, 0, { from: authorized })
+
+                    const reserveBalanceAfter = await getBalance(collaterals[index], reserve.address)
+                    assert.equal(reserveBalanceAfter.minus(reserveBalanceBefore).toNumber(), amountAfterFee.toNumber())
+                  })
+
+                  context('> but order returns less than min return amount', () => {
+                    it('it should revert', async () => {
+                      const amount = random.amount()
+                      const expectedReturnAmount = await expectedReturnForAmount(index, amount)
+
+                      await assertRevert(() =>
+                          makeBuyOrder(authorized, collaterals[index], amount, expectedReturnAmount.add(1),
+                            { from: authorized }), "MM_SLIPPAGE_EXCEEDS_LIMIT")
+                    })
+                  })
+                })
+
+                context('> but excess value is sent', () => {
+                  it('it should revert', async () => {
+                    const amount = random.amount()
+
+                    await assertRevert(() =>
+                      makeBuyOrder(authorized, collaterals[index], amount, 0,
+                        { from: authorized, value: amount.add(1) }), "MM_INVALID_COLLATERAL_VALUE") // should revert both for ETH and ERC20
+                  })
+                })
+              })
+
+              context('> but sender does not have sufficient funds', () => {
+                it('it should revert', async () => {
+                  const amount = random.amount()
+                  // let's burn the extra tokens to end up with a small balance
+                  await collateral.transfer(unauthorized, INITIAL_TOKEN_BALANCE - amount, { from: authorized })
+
+                  await assertRevert(() =>
+                    makeBuyOrder(authorized, collaterals[index], amount.add(1), 0,
+                      { from: authorized, value: amount.minus(1) }), "MM_INVALID_COLLATERAL_VALUE") // should revert both for ETH and ERC20
+                })
+              })
+            })
+
+            context('> but value is zero', () => {
+              it('it should revert', async () => {
+                await assertRevert(() =>
+                  makeBuyOrder(authorized, collaterals[index], 0, 0,
+                    { from: authorized }), "MM_INVALID_COLLATERAL_VALUE")
+              })
+            })
+
+          })
+
+          context('> but collateral is not whitelisted', () => {
+            it('it should revert', async () => {
+              // we can't test un-whitelisted ETH unless we re-deploy a DAO without ETH as a whitelisted
+              // collateral just for that use case it's not worth it because the logic is the same than ERC20 anyhow
+              const unlisted = await TokenMock.new(authorized, INITIAL_TOKEN_BALANCE)
+              await unlisted.approve(marketMaker.address, INITIAL_TOKEN_BALANCE, { from: authorized })
+              await assertRevert(() => makeBuyOrder(authorized, unlisted.address, random.amount(), 0, { from: authorized }),
+                "MM_COLLATERAL_NOT_WHITELISTED")
+            })
+          })
+        })
+
+        context('> but market making is not open', () => {
+          beforeEach(async () => {
+            await initialize(false)
+          })
+
+          it('it should revert', async () => {
+            await assertRevert(() => makeBuyOrder(authorized, collaterals[index], random.amount(), 0, { from: authorized }),
+              "MM_NOT_OPEN")
+          })
+        })
+      })
+
+      context('> sender does not have OPEN_BUY_ORDER_ROLE', () => {
+        it('it should revert', async () => {
+          await assertRevert(() => makeBuyOrder(unauthorized, collaterals[index], random.amount(), 0, { from: unauthorized }),
+            "APP_AUTH_FAILED")
+        })
+      })
+    })
+  })
+
+  // #endregion
   //
   // // #region openSellOrder
   // context('> #openSellOrder', () => {
@@ -1231,153 +1147,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
   //   })
   // })
   // // #endregion
-  //
-  // // #region claimBuyOrder
-  // context('> #claimBuyOrder', () => {
-  //   forEach(['ETH', 'ERC20']).describe(`> %s`, round => {
-  //     const index = round === 'ETH' ? 0 : 1
-  //
-  //     context('> collateral is whitelisted', () => {
-  //       context('> and batch is over', () => {
-  //         context('> and batch is not cancelled', () => {
-  //           context('> and there are bonds to claim', () => {
-  //             it('it should register claim', async () => {
-  //               const receipt1 = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //               const batchId = getBuyOrderBatchId(receipt1)
-  //
-  //               await progressToNextBatch()
-  //               const receipt2 = await marketMaker.claimBuyOrder(authorized, batchId, collaterals[index])
-  //
-  //               assertEvent(receipt2, 'ClaimBuyOrder')
-  //             })
-  //
-  //             it('it should return bonds', async () => {
-  //               const amount1 = random.amount()
-  //               const amount2 = random.amount()
-  //               const fee1 = computeBuyFee(amount1)
-  //               const fee2 = computeBuyFee(amount2)
-  //               const amountAfterFee1 = amount1.minus(fee1)
-  //               const amountAfterFee2 = amount2.minus(fee2)
-  //               const amountAfterFee = amountAfterFee1.add(amountAfterFee2)
-  //               const purchase = await purchaseReturn(index, 0, 0, amountAfterFee)
-  //
-  //               const receipt = await openBuyOrder(authorized, collaterals[index], amount1, { from: authorized })
-  //               await openBuyOrder(authorized2, collaterals[index], amount2, { from: authorized })
-  //               const batchId = getBuyOrderBatchId(receipt)
-  //
-  //               await progressToNextBatch()
-  //
-  //               await marketMaker.claimBuyOrder(authorized, batchId, collaterals[index])
-  //               await marketMaker.claimBuyOrder(authorized2, batchId, collaterals[index])
-  //
-  //               const balance1 = await getBalance(token.address, authorized)
-  //               const balance2 = await getBalance(token.address, authorized2)
-  //
-  //               const expectedReturn1 = purchase.mul(amountAfterFee1).div(amountAfterFee)
-  //               const expectedReturn2 = purchase.mul(amountAfterFee2).div(amountAfterFee)
-  //
-  //               assert.equal(balance1.toNumber(), expectedReturn1.toNumber())
-  //               assert.equal(balance2.toNumber(), expectedReturn2.toNumber())
-  //             })
-  //
-  //             it('it should update the amount of token to be minted', async () => {
-  //               const amount = random.amount()
-  //               const fee = computeBuyFee(amount)
-  //               const amountAfterFee = amount.minus(fee)
-  //               const purchase = await purchaseReturn(index, 0, 0, amountAfterFee)
-  //
-  //               const receipt = await openBuyOrder(authorized, collaterals[index], amount, { from: authorized })
-  //               const batchId = getBuyOrderBatchId(receipt)
-  //
-  //               const tokensToBeMinted1 = await marketMaker.tokensToBeMinted()
-  //               assert.equal(tokensToBeMinted1.toNumber(), purchase.toNumber())
-  //
-  //               await progressToNextBatch()
-  //               await marketMaker.claimBuyOrder(authorized, batchId, collaterals[index])
-  //
-  //               const tokensToBeMinted2 = await marketMaker.tokensToBeMinted()
-  //               assert.equal(tokensToBeMinted2.toNumber(), 0)
-  //             })
-  //           })
-  //
-  //           context('> but there are no bonds to claim', () => {
-  //             context('> because address has no pending buy order at all', () => {
-  //               it('it should revert', async () => {
-  //                 const receipt = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //                 const batchId = getBuyOrderBatchId(receipt)
-  //
-  //                 await progressToNextBatch()
-  //
-  //                 await assertRevert(() => marketMaker.claimBuyOrder(authorized2, batchId, collaterals[index]))
-  //               })
-  //             })
-  //
-  //             context('> because address has a pending buy order but created through another collateral', () => {
-  //               it('it should revert', async () => {
-  //                 const receipt = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //                 const batchId = getBuyOrderBatchId(receipt)
-  //                 const index_ = index === 1 ? 0 : 1
-  //
-  //                 await progressToNextBatch()
-  //
-  //                 await assertRevert(() => marketMaker.claimBuyOrder(authorized, batchId, collaterals[index_]))
-  //               })
-  //             })
-  //
-  //             context('> because buy order has already been claimed', () => {
-  //               it('it should revert', async () => {
-  //                 const receipt = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //                 const batchId = getBuyOrderBatchId(receipt)
-  //
-  //                 await progressToNextBatch()
-  //                 await marketMaker.claimBuyOrder(authorized, batchId, collaterals[index])
-  //
-  //                 await assertRevert(() => marketMaker.claimBuyOrder(authorized, batchId, collaterals[index]))
-  //               })
-  //             })
-  //           })
-  //         })
-  //
-  //         context('> but batch is cancelled', () => {
-  //           it('it should revert', async () => {
-  //             const receipt = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //             const batchId = getBuyOrderBatchId(receipt)
-  //
-  //             await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //             await progressToNextBatch()
-  //
-  //             // batch is now cancelled
-  //             await assertRevert(() => marketMaker.claimBuyOrder(authorized, batchId, collaterals[index]))
-  //           })
-  //         })
-  //       })
-  //
-  //       context('> but batch is not yet over', () => {
-  //         it('it should revert', async () => {
-  //           const receipt = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //           const batchId = getBuyOrderBatchId(receipt)
-  //
-  //           await assertRevert(() => marketMaker.claimBuyOrder(authorized, batchId, collaterals[index]))
-  //         })
-  //       })
-  //     })
-  //
-  //     context('> but collateral is not whitelisted', () => {
-  //       it('it should revert', async () => {
-  //         const unlisted = await TokenMock.new(authorized, INITIAL_TOKEN_BALANCE)
-  //         await unlisted.approve(marketMaker.address, INITIAL_TOKEN_BALANCE, { from: authorized })
-  //
-  //         const receipt = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //         const batchId = getBuyOrderBatchId(receipt)
-  //
-  //         await progressToNextBatch()
-  //
-  //         await assertRevert(() => marketMaker.claimBuyOrder(authorized, batchId, unlisted.address))
-  //       })
-  //     })
-  //   })
-  // })
-  // // #endregion
+
   //
   // // #region claimSellOrder
   // context('> #claimSellOrder', () => {
@@ -1556,355 +1326,5 @@ contract('BatchedBancorMarketMaker app', accounts => {
   //   })
   // })
   // // #endregion
-  //
-  // // #region claimCancelledBuyOrder
-  // context('> #claimCancelledBuyOrder', () => {
-  //   forEach(['ETH', 'ERC20']).describe(`> %s`, round => {
-  //     const index = round === 'ETH' ? 0 : 1
-  //
-  //     context('> batch is cancelled', () => {
-  //       context('> and there are collaterals to claim', () => {
-  //         it('it should register claim', async () => {
-  //           const amount = random.amount()
-  //
-  //           const receipt1 = await openBuyOrder(authorized, collaterals[index], amount, { from: authorized })
-  //           const batchId = getBuyOrderBatchId(receipt1)
-  //
-  //           await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //           const receipt2 = await marketMaker.claimCancelledBuyOrder(authorized, batchId, collaterals[index])
-  //
-  //           assertEvent(receipt2, 'ClaimCancelledBuyOrder')
-  //         })
-  //
-  //         it('it should return collateral', async () => {
-  //           const receipt1 = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //           const batchId = getBuyOrderBatchId(receipt1)
-  //           const _balance = await getBalance(collaterals[index], authorized)
-  //
-  //           await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //           await marketMaker.claimCancelledBuyOrder(authorized, batchId, collaterals[index])
-  //           const balance_ = await getBalance(collaterals[index], authorized)
-  //
-  //           // can't assert exactly because of gas being spent
-  //           assert.isAbove(balance_.toNumber(), _balance.toNumber())
-  //         })
-  //
-  //         it('it should update the amount of collateral to be claimed', async () => {
-  //           const receipt = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //           const batchId = getBuyOrderBatchId(receipt)
-  //
-  //           await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //           await marketMaker.claimCancelledBuyOrder(authorized, batchId, collaterals[index])
-  //           const collateralsToBeClaimed = await marketMaker.collateralsToBeClaimed(collaterals[index])
-  //
-  //           assert.equal(collateralsToBeClaimed.toNumber(), 0)
-  //         })
-  //       })
-  //
-  //       context('> but there are no collateral to claim', () => {
-  //         context('> because address has no pending cancelled buy order at all', () => {
-  //           it('it should revert', async () => {
-  //             const receipt = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //             const batchId = getBuyOrderBatchId(receipt)
-  //             await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //
-  //             await assertRevert(() => marketMaker.claimCancelledBuyOrder(authorized2, batchId, collaterals[index]))
-  //           })
-  //         })
-  //
-  //         context('> because address has a pending cancelled buy order but created through another collateral', () => {
-  //           it('it should revert', async () => {
-  //             const receipt = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //             const batchId = getBuyOrderBatchId(receipt)
-  //             await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //
-  //             const index_ = index === 1 ? 0 : 1
-  //
-  //             await assertRevert(() => marketMaker.claimCancelledBuyOrder(authorized, batchId, collaterals[index_]))
-  //           })
-  //         })
-  //
-  //         context('> because cancelled buy order has already been claimed', () => {
-  //           it('it should revert', async () => {
-  //             const receipt = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //             const batchId = getBuyOrderBatchId(receipt)
-  //             await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //             await marketMaker.claimCancelledBuyOrder(authorized, batchId, collaterals[index])
-  //
-  //             // cancelled order is now already claimed
-  //             await assertRevert(() => marketMaker.claimCancelledBuyOrder(authorized, batchId, collaterals[index]))
-  //           })
-  //         })
-  //       })
-  //     })
-  //
-  //     context('> but batch is not cancelled', () => {
-  //       it('it should revert', async () => {
-  //         const receipt1 = await openBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //         const batchId = getBuyOrderBatchId(receipt1)
-  //
-  //         await assertRevert(() => marketMaker.claimCancelledBuyOrder(authorized, batchId, collaterals[index]))
-  //       })
-  //     })
-  //   })
-  // })
-  // // #endregion
-  //
-  // // #region claimCancelledSellOrder
-  // context('> #claimCancelledSellOrder', () => {
-  //   forEach(['ETH', 'ERC20']).describe(`> %s`, round => {
-  //     const index = round === 'ETH' ? 0 : 1
-  //
-  //     context('> batch is cancelled', () => {
-  //       context('> and there are bonds to claim', () => {
-  //         it('it should register claim', async () => {
-  //           const balance = await openAndClaimBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //           const receipt1 = await openSellOrder(authorized, collaterals[index], balance, { from: authorized })
-  //           const batchId = getSellOrderBatchId(receipt1)
-  //
-  //           await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //           const receipt2 = await marketMaker.claimCancelledSellOrder(authorized, batchId, collaterals[index])
-  //
-  //           assertEvent(receipt2, 'ClaimCancelledSellOrder')
-  //         })
-  //
-  //         it('it should return bonds', async () => {
-  //           const balance = await openAndClaimBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //           const receipt = await openSellOrder(authorized, collaterals[index], balance, { from: authorized })
-  //           const _balance = await getBalance(token.address, authorized)
-  //           const batchId = getSellOrderBatchId(receipt)
-  //
-  //           await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //           await marketMaker.claimCancelledSellOrder(authorized, batchId, collaterals[index])
-  //           const balance_ = await getBalance(token.address, authorized)
-  //
-  //           assert.equal(balance_.toNumber(), _balance.add(balance).toNumber())
-  //         })
-  //
-  //         it('it should update the amount of tokens to be minted', async () => {
-  //           const balance = await openAndClaimBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //           const receipt = await openSellOrder(authorized, collaterals[index], balance, { from: authorized })
-  //           const batchId = getSellOrderBatchId(receipt)
-  //
-  //           await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //           await marketMaker.claimCancelledSellOrder(authorized, batchId, collaterals[index])
-  //           const tokensToBeMinted = await marketMaker.tokensToBeMinted()
-  //
-  //           assert.equal(tokensToBeMinted.toNumber(), 0)
-  //         })
-  //       })
-  //
-  //       context('> but there are no bond to claim', () => {
-  //         context('> because address has no pending cancelled sell order at all', () => {
-  //           it('it should revert', async () => {
-  //             const balance = await openAndClaimBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //             const receipt = await openSellOrder(authorized, collaterals[index], balance, { from: authorized })
-  //             const batchId = getSellOrderBatchId(receipt)
-  //             await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //
-  //             await assertRevert(() => marketMaker.claimCancelledSellOrder(authorized2, batchId, collaterals[index]))
-  //           })
-  //         })
-  //
-  //         context('> because address has a pending cancelled sell order but created through another collateral', () => {
-  //           it('it should revert', async () => {
-  //             const balance = await openAndClaimBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //             const receipt = await openSellOrder(authorized, collaterals[index], balance, { from: authorized })
-  //             const batchId = getSellOrderBatchId(receipt)
-  //             await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //
-  //             const index_ = index === 1 ? 0 : 1
-  //
-  //             await assertRevert(() => marketMaker.claimCancelledSellOrder(authorized, batchId, collaterals[index_]))
-  //           })
-  //         })
-  //
-  //         context('> because cancelled sell order has already been claimed', () => {
-  //           it('it should revert', async () => {
-  //             const balance = await openAndClaimBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //             const receipt = await openSellOrder(authorized, collaterals[index], balance, { from: authorized })
-  //             const batchId = getSellOrderBatchId(receipt)
-  //             await marketMaker.removeCollateralToken(collaterals[index], { from: authorized })
-  //             await marketMaker.claimCancelledSellOrder(authorized, batchId, collaterals[index])
-  //
-  //             // cancelled order is now already claimed
-  //             await assertRevert(() => marketMaker.claimCancelledSellOrder(authorized, batchId, collaterals[index]))
-  //           })
-  //         })
-  //       })
-  //     })
-  //
-  //     context('> but batch is not cancelled', () => {
-  //       it('it should revert', async () => {
-  //         const balance = await openAndClaimBuyOrder(authorized, collaterals[index], random.amount(), { from: authorized })
-  //         const receipt = await openSellOrder(authorized, collaterals[index], balance, { from: authorized })
-  //         const batchId = getSellOrderBatchId(receipt)
-  //
-  //         await assertRevert(() => marketMaker.claimCancelledSellOrder(authorized, batchId, collaterals[index]))
-  //       })
-  //     })
-  //   })
-  // })
-  // // #endregion
-  //
-  // // #region maths
-  // context('> #maths', () => {
-  //   forEach(['ETH', 'ERC20']).describe(`> %s`, round => {
-  //     const index = round === 'ETH' ? 0 : 1
-  //     const user1 = authorized
-  //     const user2 = authorized2
-  //
-  //     context('> there are only buy orders', () => {
-  //       it('it should return the right amount of bonded tokens', async () => {
-  //         const amount1 = random.amount()
-  //         const amount2 = random.amount()
-  //         const fee1 = computeBuyFee(amount1)
-  //         const fee2 = computeBuyFee(amount2)
-  //         const amountAfterFee1 = amount1.minus(fee1)
-  //         const amountAfterFee2 = amount2.minus(fee2)
-  //         const amountAfterFee = amountAfterFee1.plus(amountAfterFee2)
-  //         const purchase = await purchaseReturn(index, 0, 0, amountAfterFee)
-  //         const receipt = await openBuyOrder(user1, collaterals[index], amount1, { from: authorized })
-  //         await openBuyOrder(user2, collaterals[index], amount2, { from: authorized })
-  //         const batchId = getBuyOrderBatchId(receipt)
-  //         const batch = await getBatch(batchId, collaterals[index])
-  //         await progressToNextBatch()
-  //         await marketMaker.claimBuyOrder(user1, batchId, collaterals[index])
-  //         await marketMaker.claimBuyOrder(user2, batchId, collaterals[index])
-  //         const balance1 = await getBalance(token.address, user1)
-  //         const balance2 = await getBalance(token.address, user2)
-  //         const return1 = batch.totalBuyReturn.mul(amountAfterFee1).div(amountAfterFee)
-  //         const return2 = batch.totalBuyReturn.mul(amountAfterFee2).div(amountAfterFee)
-  //         assert.equal(batch.totalBuySpend.toNumber(), amountAfterFee.toNumber())
-  //         assert.equal(batch.totalBuyReturn.toNumber(), purchase.toNumber())
-  //         assert.equal(balance1.toNumber(), return1.toNumber())
-  //         assert.equal(balance2.toNumber(), return2.toNumber())
-  //       })
-  //     })
-  //
-  //     context('> there are only sell orders', () => {
-  //       it('it should return the right amount of collaterals', async () => {
-  //         // let's buy some bonds to redeem them afterwards
-  //         const buyAmount1 = random.amount()
-  //         const buyAmount2 = random.amount()
-  //         const buyFee1 = computeBuyFee(buyAmount1)
-  //         const buyFee2 = computeBuyFee(buyAmount2)
-  //         const buyAmountAfterFee1 = buyAmount1.minus(buyFee1)
-  //         const buyAmountAfterFee2 = buyAmount2.minus(buyFee2)
-  //         const buyAmountAfterFee = buyAmountAfterFee1.plus(buyAmountAfterFee2)
-  //         // we now have minted bonds we can redeem
-  //         const sellAmount1 = await openAndClaimBuyOrder(user1, collaterals[index], buyAmount1, { from: authorized })
-  //         const sellAmount2 = await openAndClaimBuyOrder(user2, collaterals[index], buyAmount2, { from: authorized })
-  //         const supply = sellAmount1.plus(sellAmount2)
-  //         const sellAmount = supply
-  //         // let's redeem these bonds
-  //         const receipt = await openSellOrder(user1, collaterals[index], sellAmount1, { from: authorized })
-  //         await openSellOrder(user2, collaterals[index], sellAmount2, { from: authorized })
-  //         await progressToNextBatch()
-  //         // let's compute how orders should be matched
-  //         const sale = await saleReturn(index, supply, buyAmountAfterFee, sellAmount)
-  //         // let's check that orders have been matched properly
-  //         const batchId = getSellOrderBatchId(receipt)
-  //         const batch = await getBatch(batchId, collaterals[index])
-  //         assert.equal(batch.totalSellSpend.toNumber(), sellAmount.toNumber())
-  //         assert.equal(batch.totalSellReturn.toNumber(), sale.toNumber())
-  //         // let's compute how many collaterals should be returned
-  //         const _balance1 = await getBalance(collaterals[index], user1)
-  //         const _balance2 = await getBalance(collaterals[index], user2)
-  //         await marketMaker.claimSellOrder(user1, batchId, collaterals[index])
-  //         await marketMaker.claimSellOrder(user2, batchId, collaterals[index])
-  //         const balance1_ = await getBalance(collaterals[index], user1)
-  //         const balance2_ = await getBalance(collaterals[index], user2)
-  //         const return1 = balance1_.minus(_balance1)
-  //         const return2 = balance2_.minus(_balance2)
-  //         const expectedReturn1_ = batch.totalSellReturn.mul(sellAmount1).div(sellAmount)
-  //         const expectedReturn2_ = batch.totalSellReturn.mul(sellAmount2).div(sellAmount)
-  //         const expectedReturn1 = expectedReturn1_.minus(computeSellFee(expectedReturn1_))
-  //         const expectedReturn2 = expectedReturn2_.minus(computeSellFee(expectedReturn2_))
-  //         // let's check that returned collaterals match expected returns
-  //         assert.equal(return1.toNumber(), expectedReturn1.toNumber())
-  //         assert.equal(return2.toNumber(), expectedReturn2.toNumber())
-  //       })
-  //     })
-  //
-  //     context('> there are both buy and sell orders', () => {
-  //       context('> buy orders are worth more than sell orders', () => {
-  //         it('it should return the right amount of bonds and collaterals', async () => {
-  //           // let's buy some bonds to redeem them afterwards
-  //           const preAmount = BN(Math.pow(10, 20))
-  //           const preAmountFee = computeBuyFee(preAmount)
-  //           const preAmountAfterFee = preAmount.minus(preAmountFee)
-  //           // we now have some minted bonds
-  //           const minted = await openAndClaimBuyOrder(user1, collaterals[index], preAmount, { from: authorized })
-  //           // let's compute what is the static price once these bonds have been minted
-  //           const overallSupply = minted.add(VIRTUAL_SUPPLIES[index])
-  //           const overallBalance = preAmountAfterFee.add(VIRTUAL_BALANCES[index])
-  //           const staticPricePPM = await marketMaker.getStaticPricePPM(overallSupply, overallBalance, RESERVE_RATIOS[index])
-  //           // let's open some buy and sell orders
-  //           const buyAmount = BN(Math.pow(10, 19))
-  //           const buyAmountFee = computeBuyFee(buyAmount)
-  //           const buyAmountAfterFee = buyAmount.minus(buyAmountFee)
-  //           const sellAmount = BN(Math.pow(10, 18))
-  //           const receipt = await openBuyOrder(user2, collaterals[index], buyAmount, { from: authorized })
-  //           await openSellOrder(user1, collaterals[index], sellAmount, { from: authorized })
-  //           // let's fetch the batch
-  //           const batchId = getBuyOrderBatchId(receipt)
-  //           const batch = await getBatch(batchId, collaterals[index])
-  //           // buy orders are worth more than sell orders so ...
-  //           // sell orders should be matched against the buy orders at the current static price
-  //           const expectedSaleReturn = staticPricePPM.mul(sellAmount).div(PPM)
-  //           // no need to check claims as their logic is the same than where there are only sell orders [already checked above]
-  //           assert.equal(batch.totalSellSpend.toNumber(), sellAmount.toNumber())
-  //           assert.equal(batch.totalSellReturn.toNumber(), expectedSaleReturn.toNumber())
-  //           // now that sell orders have been matched the remaining buy orders should be added and matched normally along the formula
-  //           const remainingBuy = buyAmountAfterFee.minus(expectedSaleReturn)
-  //           const expectedRemainingBuyReturn = await purchaseReturn(index, minted, preAmountAfterFee, remainingBuy)
-  //           const expectedBuyReturn = expectedRemainingBuyReturn.add(sellAmount)
-  //           // no need to check claims as their logic is the same than where there are only buy orders [already checked above]
-  //           assert.equal(batch.totalBuySpend.toNumber(), buyAmountAfterFee.toNumber())
-  //           assert.equal(batch.totalBuyReturn.toNumber(), expectedBuyReturn.toNumber())
-  //         })
-  //       })
-  //
-  //       context('> sell orders are worth more than buy orders', () => {
-  //         it('it should return the right amount of bonds and collaterals', async () => {
-  //           // let's buy some bonds to redeem them afterwards
-  //           const preAmount = BN(Math.pow(10, 20))
-  //           const preAmountFee = computeBuyFee(preAmount)
-  //           const preAmountAfterFee = preAmount.minus(preAmountFee)
-  //           // we now have some minted bonds
-  //           const minted = await openAndClaimBuyOrder(user1, collaterals[index], preAmount, { from: authorized })
-  //           // let's compute what is the static price once these bonds have been minted
-  //           const overallSupply = minted.add(VIRTUAL_SUPPLIES[index])
-  //           const overallBalance = preAmountAfterFee.add(VIRTUAL_BALANCES[index])
-  //           const staticPricePPM = await marketMaker.getStaticPricePPM(overallSupply, overallBalance, RESERVE_RATIOS[index])
-  //           // let's open some buy and sell orders
-  //           const buyAmount = BN(Math.pow(10, 18))
-  //           const buyAmountFee = computeBuyFee(buyAmount)
-  //           const buyAmountAfterFee = buyAmount.minus(buyAmountFee)
-  //           const sellAmount = BN(Math.pow(10, 19))
-  //           const receipt = await openBuyOrder(user2, collaterals[index], buyAmount, { from: authorized })
-  //           await openSellOrder(user1, collaterals[index], sellAmount, { from: authorized })
-  //           // let's fetch the batch
-  //           const batchId = getBuyOrderBatchId(receipt)
-  //           const batch = await getBatch(batchId, collaterals[index])
-  //           // sell orders are worth more than buy orders so ...
-  //           // buy orders should be matched against the sell orders at the current static price
-  //           const expectedBuyReturn = buyAmountAfterFee.mul(PPM).div(staticPricePPM)
-  //           // no need to check claims as their logic is the same than where there are only buy orders [already checked above]
-  //           assert.equal(batch.totalBuySpend.toNumber(), buyAmountAfterFee.toNumber())
-  //           assert.equal(batch.totalBuyReturn.toNumber(), expectedBuyReturn.toNumber())
-  //           // now that buy orders have been matched the remaining sell orders should be added and matched normally along the formula
-  //           const remainingSell = sellAmount.minus(expectedBuyReturn)
-  //           const expectedRemainingSellReturn = await saleReturn(index, minted, preAmountAfterFee, remainingSell)
-  //           const expectedSellReturn = expectedRemainingSellReturn.add(buyAmountAfterFee)
-  //           // no need to check claims as their logic is the same than where there are only sell orders [already checked above]
-  //           assert.equal(batch.totalSellSpend.toNumber(), sellAmount.toNumber())
-  //           assert.equal(batch.totalSellReturn.toNumber(), expectedSellReturn.toNumber())
-  //         })
-  //       })
-  //     })
-  //   })
-  // })
-  // // #endregion
+
 })

@@ -23,8 +23,6 @@ import "../../aragon-fundraising/contracts/IAragonFundraisingController.sol";
 // claimCancelledSellOrder()
 // removed slippage from collateral tokens
 
-// TODO: Change 'value' to 'amount'
-
 contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
     using SafeERC20 for ERC20;
     using SafeMath  for uint256;
