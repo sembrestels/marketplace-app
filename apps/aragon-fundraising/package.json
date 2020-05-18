@@ -49,7 +49,7 @@
     "@ablack/fundraising-shared-interfaces": "^1.0.0",
     "@ablack/fundraising-tap": "^1.0.0",
     "@aragon/apps-agent": "^2.0.0-rc.1",
-    "@aragon/os": "4.2.1"
+    "@aragon/os": "4.4.0"
   },
   "devDependencies": {
     "@ablack/fundraising-bancor-formula": "^1.0.0",

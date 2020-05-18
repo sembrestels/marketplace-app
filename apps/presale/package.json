@@ -35,7 +35,6 @@
     "@ablack/fundraising-shared-interfaces": "^1.0.0",
     "@aragon/apps-token-manager": "^2.1.0",
     "@aragon/os": "4.2.1",
-    "@ablack/fundraising-shared-interfaces": "^1.0.0",
     "@ablack/fundraising-shared-test-helpers": "^1.0.0"
   },
   "devDependencies": {
