@@ -6,7 +6,7 @@ const TokenManager = artifacts.require('TokenManager')
 const MiniMeToken = artifacts.require('MiniMeToken')
 const Controller = artifacts.require('AragonFundraisingController')
 const Presale = artifacts.require('PresaleMock')
-const MarketMaker = artifacts.require('BatchedBancorMarketMaker')
+const MarketMaker = artifacts.require('BancorMarketMaker')
 const Formula = artifacts.require('BancorFormula')
 const Agent = artifacts.require('Agent')
 const Vault = artifacts.require('Vault')
@@ -188,7 +188,6 @@ const setup = {
         ctx.formula.address,
         ctx.reserve.address,
         ctx.vault.address,
-        BATCH_BLOCKS,
         BUY_FEE_PCT,
         SELL_FEE_PCT,
         { from: root }

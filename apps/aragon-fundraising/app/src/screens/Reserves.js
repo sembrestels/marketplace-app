@@ -187,10 +187,11 @@ export default () => {
    * @returns {void}
    */
   const handleWithdraw = () => {
-    api
-      .withdraw(primaryCollateralAddress)
-      .toPromise()
-      .catch(console.error)
+    // TODO: Note tap has been removed for now. So the withdraw() function is not available.
+    // api
+    //   .withdraw(primaryCollateralAddress)
+    //   .toPromise()
+    //   .catch(console.error)
   }
 
   const handleSubmit = event => {
@@ -200,10 +201,12 @@ export default () => {
       // toFixed(0) returns rounded integers
       const rate = fromMonthlyAllocation(newRate, primaryCollateralDecimals).toFixed(0)
       const floor = toDecimals(newFloor, primaryCollateralDecimals).toFixed(0)
-      api
-        .updateTokenTap(primaryCollateralAddress, rate, floor)
-        .toPromise()
-        .catch(console.error)
+
+      // TODO: Note tap has been removed for now. So the updateTokenTap() function is not available.
+      // api
+      //   .updateTokenTap(primaryCollateralAddress, rate, floor)
+      //   .toPromise()
+      //   .catch(console.error)
     }
   }
 

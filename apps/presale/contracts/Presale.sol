@@ -9,7 +9,8 @@ import "@aragon/os/contracts/lib/math/SafeMath64.sol";
 import "@aragon/os/contracts/lib/token/ERC20.sol";
 import "@aragon/apps-token-manager/contracts/TokenManager.sol";
 import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
-import "@ablack/fundraising-shared-interfaces/contracts/IAragonFundraisingController.sol";
+import "../../aragon-fundraising/contracts/IAragonFundraisingController.sol";
+
 
 contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
     using SafeERC20  for ERC20;
