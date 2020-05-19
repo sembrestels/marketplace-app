@@ -309,7 +309,7 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
         _transfer(_buyer, address(reserve), _collateral, depositAmountLessFee);
 
         uint256 collateralSupply = token.totalSupply().add(collaterals[_collateral].virtualSupply);
-        uint256 collateralBalanceOfReserve = controller.balanceOf(address(reserve), _collateral).add(collaterals[_collateral].virtualBalance); // .sub(collateralsToBeClaimed[_collateral]);
+        uint256 collateralBalanceOfReserve = controller.balanceOf(address(reserve), _collateral).add(collaterals[_collateral].virtualBalance);
         uint32 reserveRatio = collaterals[_collateral].reserveRatio;
         uint256 returnAmount = formula.calculatePurchaseReturn(collateralSupply, collateralBalanceOfReserve, reserveRatio, depositAmountLessFee);
 
@@ -339,7 +339,7 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
         tokenManager.burn(_seller, _sellAmount);
 
         uint256 collateralSupply = token.totalSupply().add(collaterals[_collateral].virtualSupply);
-        uint256 collateralBalanceOfReserve = controller.balanceOf(address(reserve), _collateral).add(collaterals[_collateral].virtualBalance); // .sub(collateralsToBeClaimed[_collateral]);
+        uint256 collateralBalanceOfReserve = controller.balanceOf(address(reserve), _collateral).add(collaterals[_collateral].virtualBalance);
         uint32 reserveRatio = collaterals[_collateral].reserveRatio;
         uint256 returnAmount = formula.calculateSaleReturn(collateralSupply, collateralBalanceOfReserve, reserveRatio, _sellAmount);
 

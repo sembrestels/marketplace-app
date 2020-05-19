@@ -11,6 +11,8 @@ import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
 import "../../batched-bancor-market-maker/contracts/BancorMarketMaker.sol";
 import "./IAragonFundraisingController.sol";
 
+// TODO: Update permissions
+
 // TODO: Removed vars for UI reference:
 // ITap public tap;
 //bytes32 public constant UPDATE_MAXIMUM_TAP_RATE_INCREASE_PCT_ROLE  = keccak256("UPDATE_MAXIMUM_TAP_RATE_INCREASE_PCT_ROLE");
