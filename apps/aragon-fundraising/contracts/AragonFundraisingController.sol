@@ -43,8 +43,8 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
     bytes32 public constant OPEN_PRESALE_ROLE                          = keccak256("OPEN_PRESALE_ROLE");
     bytes32 public constant OPEN_TRADING_ROLE                          = keccak256("OPEN_TRADING_ROLE");
     bytes32 public constant CONTRIBUTE_ROLE                            = keccak256("CONTRIBUTE_ROLE");
-    bytes32 public constant OPEN_BUY_ORDER_ROLE                        = keccak256("OPEN_BUY_ORDER_ROLE");
-    bytes32 public constant OPEN_SELL_ORDER_ROLE                       = keccak256("OPEN_SELL_ORDER_ROLE");
+    bytes32 public constant MAKE_BUY_ORDER_ROLE                        = keccak256("MAKE_BUY_ORDER_ROLE");
+    bytes32 public constant MAKE_SELL_ORDER_ROLE                       = keccak256("MAKE_SELL_ORDER_ROLE");
     */
     bytes32 public constant UPDATE_BENEFICIARY_ROLE                    = 0xf7ea2b80c7b6a2cab2c11d2290cb005c3748397358a25e17113658c83b732593;
     bytes32 public constant UPDATE_FEES_ROLE                           = 0x5f9be2932ed3a723f295a763be1804c7ebfd1a41c1348fb8bdf5be1c5cdca822;
@@ -54,8 +54,8 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
     bytes32 public constant OPEN_PRESALE_ROLE                          = 0xf323aa41eef4850a8ae7ebd047d4c89f01ce49c781f3308be67303db9cdd48c2;
     bytes32 public constant OPEN_TRADING_ROLE                          = 0x26ce034204208c0bbca4c8a793d17b99e546009b1dd31d3c1ef761f66372caf6;
     bytes32 public constant CONTRIBUTE_ROLE                            = 0x9ccaca4edf2127f20c425fdd86af1ba178b9e5bee280cd70d88ac5f6874c4f07;
-    bytes32 public constant OPEN_BUY_ORDER_ROLE                        = 0xa589c8f284b76fc8d510d9d553485c47dbef1b0745ae00e0f3fd4e28fcd77ea7;
-    bytes32 public constant OPEN_SELL_ORDER_ROLE                       = 0xd68ba2b769fa37a2a7bd4bed9241b448bc99eca41f519ef037406386a8f291c0;
+    bytes32 public constant MAKE_BUY_ORDER_ROLE                        = 0x0dfea6908176d96adbee7026b3fe9fbdaccfc17bc443ddf14734fd27c3136179;
+    bytes32 public constant MAKE_SELL_ORDER_ROLE                       = 0x52e3ace6a83e0c810920056ccc32fed5aa1e86287545113b03a52ab5c84e3f66;
 
     string private constant ERROR_CONTRACT_IS_EOA = "FUNDRAISING_CONTRACT_IS_EOA";
 
@@ -158,7 +158,7 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
      * @param _minReturnAmountAfterFee The minimum amount of the returned bonded tokens
     */
     function makeBuyOrder(address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
-        external payable authP(OPEN_BUY_ORDER_ROLE, arr(msg.sender))
+        external payable authP(MAKE_BUY_ORDER_ROLE, arr(msg.sender))
     {
         marketMaker.makeBuyOrder.value(msg.value)(msg.sender, _collateral, _depositAmount, _minReturnAmountAfterFee);
     }
@@ -170,7 +170,7 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
      * @param _minReturnAmountAfterFee The minimum amount of the returned collateral tokens
     */
     function makeSellOrder(address _collateral, uint256 _sellAmount, uint256 _minReturnAmountAfterFee)
-        external authP(OPEN_SELL_ORDER_ROLE, arr(msg.sender))
+        external authP(MAKE_SELL_ORDER_ROLE, arr(msg.sender))
     {
         marketMaker.makeSellOrder(msg.sender, _collateral, _sellAmount, _minReturnAmountAfterFee);
     }

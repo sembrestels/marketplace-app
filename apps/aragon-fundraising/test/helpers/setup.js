@@ -231,8 +231,8 @@ const setup = {
       ctx.roles.controller.OPEN_PRESALE_ROLE = await ctx.base.controller.OPEN_PRESALE_ROLE()
       ctx.roles.controller.OPEN_TRADING_ROLE = await ctx.base.controller.OPEN_TRADING_ROLE()
       ctx.roles.controller.CONTRIBUTE_ROLE = await ctx.base.controller.CONTRIBUTE_ROLE()
-      ctx.roles.controller.OPEN_BUY_ORDER_ROLE = await ctx.base.controller.OPEN_BUY_ORDER_ROLE()
-      ctx.roles.controller.OPEN_SELL_ORDER_ROLE = await ctx.base.controller.OPEN_SELL_ORDER_ROLE()
+      ctx.roles.controller.MAKE_BUY_ORDER_ROLE = await ctx.base.controller.MAKE_BUY_ORDER_ROLE()
+      ctx.roles.controller.MAKE_SELL_ORDER_ROLE = await ctx.base.controller.MAKE_SELL_ORDER_ROLE()
 
       await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.UPDATE_BENEFICIARY_ROLE, root, { from: root })
       await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.UPDATE_FEES_ROLE, root, { from: root })
@@ -242,8 +242,8 @@ const setup = {
       await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.OPEN_PRESALE_ROLE, root, { from: root })
       await ctx.acl.createPermission(ctx.presale.address, ctx.controller.address, ctx.roles.controller.OPEN_TRADING_ROLE, root, { from: root })
       await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.CONTRIBUTE_ROLE, root, { from: root })
-      await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.OPEN_BUY_ORDER_ROLE, root, { from: root })
-      await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.OPEN_SELL_ORDER_ROLE, root, { from: root })
+      await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.MAKE_BUY_ORDER_ROLE, root, { from: root })
+      await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.MAKE_SELL_ORDER_ROLE, root, { from: root })
 
       // for tests purposes only
       await ctx.acl.grantPermission(root, ctx.controller.address, ctx.roles.controller.ADD_COLLATERAL_TOKEN_ROLE, { from: root })
@@ -280,8 +280,8 @@ const setup = {
       ctx.roles.marketMaker.ADD_COLLATERAL_TOKEN_ROLE = await ctx.base.marketMaker.ADD_COLLATERAL_TOKEN_ROLE()
       ctx.roles.marketMaker.REMOVE_COLLATERAL_TOKEN_ROLE = await ctx.base.marketMaker.REMOVE_COLLATERAL_TOKEN_ROLE()
       ctx.roles.marketMaker.UPDATE_COLLATERAL_TOKEN_ROLE = await ctx.base.marketMaker.UPDATE_COLLATERAL_TOKEN_ROLE()
-      ctx.roles.marketMaker.OPEN_BUY_ORDER_ROLE = await ctx.base.marketMaker.OPEN_BUY_ORDER_ROLE()
-      ctx.roles.marketMaker.OPEN_SELL_ORDER_ROLE = await ctx.base.marketMaker.OPEN_SELL_ORDER_ROLE()
+      ctx.roles.marketMaker.MAKE_BUY_ORDER_ROLE = await ctx.base.marketMaker.MAKE_BUY_ORDER_ROLE()
+      ctx.roles.marketMaker.MAKE_SELL_ORDER_ROLE = await ctx.base.marketMaker.MAKE_SELL_ORDER_ROLE()
 
       await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.OPEN_ROLE, root, { from: root })
       await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.UPDATE_BENEFICIARY_ROLE, root, { from: root })
@@ -295,8 +295,8 @@ const setup = {
       await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.UPDATE_COLLATERAL_TOKEN_ROLE, root, {
         from: root,
       })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.OPEN_BUY_ORDER_ROLE, root, { from: root })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.OPEN_SELL_ORDER_ROLE, root, { from: root })
+      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.MAKE_BUY_ORDER_ROLE, root, { from: root })
+      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.MAKE_SELL_ORDER_ROLE, root, { from: root })
     },
     reserve: async (ctx, root) => {
       ctx.roles.reserve = ctx.roles.reserve || {}

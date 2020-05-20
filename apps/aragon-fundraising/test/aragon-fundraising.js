@@ -208,7 +208,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       await this.controller.openTrading({ from: authorized })
     })
 
-    context('> sender has OPEN_BUY_ORDER_ROLE', () => {
+    context('> sender has MAKE_BUY_ORDER_ROLE', () => {
       it('it should open buy order [ETH]', async () => {
         const amount = random.amount()
         const receipt = await this.controller.makeBuyOrder(ETH, amount, 0, { from: authorized, value: amount })
@@ -223,7 +223,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
 
-    context('> sender does not have OPEN_BUY_ORDER_ROLE', () => {
+    context('> sender does not have MAKE_BUY_ORDER_ROLE', () => {
       it('it should revert [ETH]', async () => {
         const amount = random.amount()
 
@@ -243,7 +243,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       await this.controller.openTrading({ from: authorized })
     })
 
-    context('> sender has OPEN_SELL_ORDER_ROLE', () => {
+    context('> sender has MAKE_SELL_ORDER_ROLE', () => {
       it('it should open sell order [ETH]', async () => {
         const amount = random.amount()
         await this.controller.makeBuyOrder(ETH, amount, 0, { from: authorized, value: amount })
@@ -264,7 +264,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
 
-    context('> sender does not have OPEN_SELL_ORDER_ROLE', () => {
+    context('> sender does not have MAKE_SELL_ORDER_ROLE', () => {
       it('it should revert [ETH]', async () => {
         const amount = random.amount()
         await this.controller.makeBuyOrder(ETH, amount, 0, { from: authorized, value: amount })

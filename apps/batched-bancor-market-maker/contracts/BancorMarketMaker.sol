@@ -36,8 +36,8 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
     bytes32 public constant ADD_COLLATERAL_TOKEN_ROLE    = keccak256("ADD_COLLATERAL_TOKEN_ROLE");
     bytes32 public constant REMOVE_COLLATERAL_TOKEN_ROLE = keccak256("REMOVE_COLLATERAL_TOKEN_ROLE");
     bytes32 public constant UPDATE_COLLATERAL_TOKEN_ROLE = keccak256("UPDATE_COLLATERAL_TOKEN_ROLE");
-    bytes32 public constant OPEN_BUY_ORDER_ROLE          = keccak256("OPEN_BUY_ORDER_ROLE");
-    bytes32 public constant OPEN_SELL_ORDER_ROLE         = keccak256("OPEN_SELL_ORDER_ROLE");
+    bytes32 public constant MAKE_BUY_ORDER_ROLE          = keccak256("MAKE_BUY_ORDER_ROLE");
+    bytes32 public constant MAKE_SELL_ORDER_ROLE         = keccak256("MAKE_SELL_ORDER_ROLE");
     */
     bytes32 public constant OPEN_ROLE                    = 0xefa06053e2ca99a43c97c4a4f3d8a394ee3323a8ff237e625fba09fe30ceb0a4;
     bytes32 public constant UPDATE_FORMULA_ROLE          = 0xbfb76d8d43f55efe58544ea32af187792a7bdb983850d8fed33478266eec3cbb;
@@ -46,8 +46,8 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
     bytes32 public constant ADD_COLLATERAL_TOKEN_ROLE    = 0x217b79cb2bc7760defc88529853ef81ab33ae5bb315408ce9f5af09c8776662d;
     bytes32 public constant REMOVE_COLLATERAL_TOKEN_ROLE = 0x2044e56de223845e4be7d0a6f4e9a29b635547f16413a6d1327c58d9db438ee2;
     bytes32 public constant UPDATE_COLLATERAL_TOKEN_ROLE = 0xe0565c2c43e0d841e206bb36a37f12f22584b4652ccee6f9e0c071b697a2e13d;
-    bytes32 public constant OPEN_BUY_ORDER_ROLE          = 0xa589c8f284b76fc8d510d9d553485c47dbef1b0745ae00e0f3fd4e28fcd77ea7;
-    bytes32 public constant OPEN_SELL_ORDER_ROLE         = 0xd68ba2b769fa37a2a7bd4bed9241b448bc99eca41f519ef037406386a8f291c0;
+    bytes32 public constant MAKE_BUY_ORDER_ROLE          = 0x0dfea6908176d96adbee7026b3fe9fbdaccfc17bc443ddf14734fd27c3136179;
+    bytes32 public constant MAKE_SELL_ORDER_ROLE         = 0x52e3ace6a83e0c810920056ccc32fed5aa1e86287545113b03a52ab5c84e3f66;
 
     uint256 public constant PCT_BASE = 10 ** 18; // 0% = 0; 1% = 10 ** 16; 100% = 10 ** 18
     uint32  public constant PPM      = 1000000;
@@ -292,7 +292,7 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
      * @param _minReturnAmountAfterFee The minimum amount of the returned bonded tokens
      */
     function makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
-        external payable nonReentrant auth(OPEN_BUY_ORDER_ROLE)
+        external payable nonReentrant auth(MAKE_BUY_ORDER_ROLE)
     {
         require(isOpen, ERROR_NOT_OPEN);
         require(_collateralIsWhitelisted(_collateral), ERROR_COLLATERAL_NOT_WHITELISTED);
@@ -330,7 +330,7 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
      * @param _minReturnAmountAfterFee The minimum amount of the returned collateral tokens
     */
     function makeSellOrder(address _seller, address _collateral, uint256 _sellAmount, uint256 _minReturnAmountAfterFee)
-        external nonReentrant auth(OPEN_SELL_ORDER_ROLE)
+        external nonReentrant auth(MAKE_SELL_ORDER_ROLE)
     {
         require(isOpen, ERROR_NOT_OPEN);
         require(_collateralIsWhitelisted(_collateral), ERROR_COLLATERAL_NOT_WHITELISTED);
