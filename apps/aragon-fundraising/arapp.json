@@ -29,6 +29,11 @@
   "roles": [
     {
       "name": "Update beneficiary address",
+      "id": "UPDATE_FORMULA_ROLE",
+      "params": []
+    },
+    {
+      "name": "Update beneficiary address",
       "id": "UPDATE_BENEFICIARY_ROLE",
       "params": []
     },

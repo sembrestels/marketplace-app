@@ -45,7 +45,7 @@ const setup = {
     controller: hash('aragon-fundraising.aragonpm.eth'),
     tokenManager: hash('token-manager.aragonpm.eth'),
     presale: hash('presale.aragonpm.eth'),
-    marketMaker: hash('batched-bancor-market-maker.aragonpm.eth'),
+    marketMaker: hash('bancor-market-maker.aragonpm.eth'),
     agent: hash('agent.aragonpm.eth'),
     vault: hash('vault.aragonpm.eth'),
     tap: hash('tap.aragonpm.eth'),

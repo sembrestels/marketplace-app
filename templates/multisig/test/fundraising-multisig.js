@@ -226,8 +226,8 @@ contract('Fundraising with multisig', ([_, owner, boardMember1, boardMember2]) =
       assert.equal(installedAppsDuringFundraising.presale.length, 1, 'should have installed 1 presale app')
       presale = Presale.at(installedAppsDuringFundraising.presale[0])
 
-      assert.equal(installedAppsDuringFundraising['batched-bancor-market-maker'].length, 1, 'should have installed 1 market-maker app')
-      marketMaker = MarketMaker.at(installedAppsDuringFundraising['batched-bancor-market-maker'][0])
+      assert.equal(installedAppsDuringFundraising['bancor-market-maker'].length, 1, 'should have installed 1 market-maker app')
+      marketMaker = MarketMaker.at(installedAppsDuringFundraising['bancor-market-maker'][0])
 
       assert.equal(installedAppsDuringFundraising.tap.length, 1, 'should have installed 1 tap app')
       tap = Tap.at(installedAppsDuringFundraising.tap[0])

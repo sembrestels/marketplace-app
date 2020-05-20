@@ -33,5 +33,5 @@
       "params": []
     }
   ],
-  "path": "contracts/BatchedBancorMarketMaker.sol"
+  "path": "contracts/BancorMarketMaker.sol"
 }
