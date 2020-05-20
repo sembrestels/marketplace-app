@@ -1,4 +1,5 @@
 const Controller = artifacts.require('AragonFundraisingController')
+const BancorFormula = artifacts.require('BancorFormula')
 const TokenMock = artifacts.require('TokenMock')
 const {
   ETH,
@@ -70,6 +71,28 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
 
     it('it should revert on re-initialization', async () => {
       await assertRevert(() => setup.initialize.controller(this, root))
+    })
+  })
+  // #endregion
+
+  // #region updateFormula
+  context('> #updateFormula', () => {
+    context('> sender has UPDATE_FORMULA_ROLE', () => {
+      it('it should update the formula', async () => {
+        const newFormula = await BancorFormula.new()
+        const receipt = await this.controller.updateFormula(newFormula.address, { from: authorized })
+
+        assertExternalEvent(receipt, 'UpdateFormula(address)', 1)
+        // double checked that the transaction has been dispatched in the marketMaker
+        assert.equal(await this.marketMaker.formula(), newFormula.address)
+      })
+    })
+
+    context('> sender does not have UPDATE_FORMULA_ROLE', () => {
+      it('it should revert', async () => {
+        const newFormula = await BancorFormula.new()
+        await assertRevert(() => this.controller.updateFormula(newFormula.address, { from: unauthorized }))
+      })
     })
   })
   // #endregion

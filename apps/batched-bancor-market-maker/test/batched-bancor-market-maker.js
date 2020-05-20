@@ -44,15 +44,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
   let APP_MANAGER_ROLE,
     MINT_ROLE,
     BURN_ROLE,
-    OPEN_ROLE,
-    ADD_COLLATERAL_TOKEN_ROLE,
-    REMOVE_COLLATERAL_TOKEN_ROLE,
-    UPDATE_COLLATERAL_TOKEN_ROLE,
-    UPDATE_BENEFICIARY_ROLE,
-    UPDATE_FORMULA_ROLE,
-    UPDATE_FEES_ROLE,
-    MAKE_BUY_ORDER_ROLE,
-    MAKE_SELL_ORDER_ROLE,
+    CONTROLLER_ROLE,
     TRANSFER_ROLE
 
   const root = accounts[0]
@@ -85,23 +77,8 @@ contract('BatchedBancorMarketMaker app', accounts => {
     await acl.createPermission(marketMaker.address, tokenManager.address, MINT_ROLE, root, { from: root })
     await acl.createPermission(marketMaker.address, tokenManager.address, BURN_ROLE, root, { from: root })
     await acl.createPermission(marketMaker.address, reserve.address, TRANSFER_ROLE, root, { from: root })
-    await acl.createPermission(authorized, marketMaker.address, OPEN_ROLE, root, { from: root })
-    await acl.createPermission(authorized, marketMaker.address, ADD_COLLATERAL_TOKEN_ROLE, root, { from: root })
-    await acl.createPermission(authorized, marketMaker.address, REMOVE_COLLATERAL_TOKEN_ROLE, root, { from: root })
-    await acl.createPermission(authorized, marketMaker.address, UPDATE_COLLATERAL_TOKEN_ROLE, root, { from: root })
-    await acl.createPermission(authorized, marketMaker.address, UPDATE_BENEFICIARY_ROLE, root, { from: root })
-    await acl.createPermission(authorized, marketMaker.address, UPDATE_FORMULA_ROLE, root, { from: root })
-    await acl.createPermission(authorized, marketMaker.address, UPDATE_FEES_ROLE, root, { from: root })
-    await acl.createPermission(authorized, marketMaker.address, MAKE_BUY_ORDER_ROLE, root, { from: root })
-    await acl.createPermission(authorized, marketMaker.address, MAKE_SELL_ORDER_ROLE, root, { from: root })
-    await acl.grantPermission(authorized2, marketMaker.address, ADD_COLLATERAL_TOKEN_ROLE, { from: root })
-    await acl.grantPermission(authorized2, marketMaker.address, REMOVE_COLLATERAL_TOKEN_ROLE, { from: root })
-    await acl.grantPermission(authorized2, marketMaker.address, UPDATE_COLLATERAL_TOKEN_ROLE, { from: root })
-    await acl.grantPermission(authorized2, marketMaker.address, UPDATE_BENEFICIARY_ROLE, { from: root })
-    await acl.grantPermission(authorized2, marketMaker.address, UPDATE_FORMULA_ROLE, { from: root })
-    await acl.grantPermission(authorized2, marketMaker.address, UPDATE_FEES_ROLE, { from: root })
-    await acl.grantPermission(authorized2, marketMaker.address, MAKE_BUY_ORDER_ROLE, { from: root })
-    await acl.grantPermission(authorized2, marketMaker.address, MAKE_SELL_ORDER_ROLE, { from: root })
+    await acl.createPermission(authorized, marketMaker.address, CONTROLLER_ROLE, root, { from: root })
+    await acl.grantPermission(authorized2, marketMaker.address, CONTROLLER_ROLE, { from: root })
     // collaterals
     collateral = await TokenMock.new(authorized, INITIAL_TOKEN_BALANCE * 2)
     await collateral.transfer(authorized2, INITIAL_TOKEN_BALANCE, { from: authorized })
@@ -232,15 +209,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
     TRANSFER_ROLE = await rBase.TRANSFER_ROLE()
     MINT_ROLE = await tBase.MINT_ROLE()
     BURN_ROLE = await tBase.BURN_ROLE()
-    OPEN_ROLE = await mBase.OPEN_ROLE()
-    ADD_COLLATERAL_TOKEN_ROLE = await mBase.ADD_COLLATERAL_TOKEN_ROLE()
-    REMOVE_COLLATERAL_TOKEN_ROLE = await mBase.REMOVE_COLLATERAL_TOKEN_ROLE()
-    UPDATE_COLLATERAL_TOKEN_ROLE = await mBase.UPDATE_COLLATERAL_TOKEN_ROLE()
-    UPDATE_BENEFICIARY_ROLE = await mBase.UPDATE_BENEFICIARY_ROLE()
-    UPDATE_FORMULA_ROLE = await mBase.UPDATE_FORMULA_ROLE()
-    UPDATE_FEES_ROLE = await mBase.UPDATE_FEES_ROLE()
-    MAKE_BUY_ORDER_ROLE = await mBase.MAKE_BUY_ORDER_ROLE()
-    MAKE_SELL_ORDER_ROLE = await mBase.MAKE_SELL_ORDER_ROLE()
+    CONTROLLER_ROLE = await mBase.CONTROLLER_ROLE()
   })
 
   beforeEach(async () => {
@@ -452,7 +421,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
 
   // #region open
   context('> #open', () => {
-    context('> sender has OPEN_ROLE', () => {
+    context('> sender has CONTROLLER_ROLE', () => {
       context('> and market making is not yet open', () => {
         beforeEach(async () => {
           await initialize(false)
@@ -474,7 +443,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
 
-    context('> sender does not have OPEN_ROLE', () => {
+    context('> sender does not have CONTROLLER_ROLE', () => {
       beforeEach(async () => {
         await initialize(false)
       })
@@ -488,7 +457,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
 
   // #region addCollateralToken
   context('> #addCollateralToken', () => {
-    context('> sender has ADD_COLLATERAL_TOKEN_ROLE', () => {
+    context('> sender has CONTROLLER_ROLE', () => {
       context('> and collateral token has not yet been added', () => {
         context('> and collateral token is ETH or ERC20 [i.e. contract]', () => {
           context('> and reserve ratio is valid', () => {
@@ -545,7 +514,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
 
-    context('> sender does not have ADD_COLLATERAL_TOKEN_ROLE', () => {
+    context('> sender does not have CONTROLLER_ROLE', () => {
       it('it should revert', async () => {
         const unlisted = await TokenMock.new(authorized, INITIAL_TOKEN_BALANCE)
 
@@ -561,7 +530,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
 
   // #region removeCollateralToken
   context('> #removeCollateralToken', () => {
-    context('> sender has REMOVE_COLLATERAL_TOKEN_ROLE', () => {
+    context('> sender has CONTROLLER_ROLE', () => {
       context('> and collateral token is whitelisted', () => {
         it('it should remove collateral token', async () => {
           const receipt = await marketMaker.removeCollateralToken(collateral.address, { from: authorized })
@@ -585,7 +554,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
 
-    context('> sender does not have REMOVE_COLLATERAL_TOKEN_ROLE', () => {
+    context('> sender does not have CONTROLLER_ROLE', () => {
       it('it should revert', async () => {
         await assertRevert(() => marketMaker.removeCollateralToken(collateral.address, { from: unauthorized }))
       })
@@ -595,7 +564,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
 
   // #region updateCollateralToken
   context('> #updateCollateralToken', () => {
-    context('> sender has UPDATE_COLLATERAL_TOKEN_ROLE', () => {
+    context('> sender has CONTROLLER_ROLE', () => {
       context('> and collateral token is whitelisted', () => {
         context('> and reserve ratio is valid', () => {
           it('it should update collateral token', async () => {
@@ -640,7 +609,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
 
-    context('> sender does not have UPDATE_COLLATERAL_TOKEN_ROLE', () => {
+    context('> sender does not have CONTROLLER_ROLE', () => {
       it('it should revert', async () => {
         await assertRevert(() =>
           marketMaker.updateCollateralToken(collateral.address, random.virtualSupply(), random.virtualBalance(), random.reserveRatio(), {
@@ -654,7 +623,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
 
   // #region updateBeneficiary
   context('> #updateBeneficiary', () => {
-    context('> sender has UPDATE_BENEFICIARY_ROLE', () => {
+    context('> sender has CONTROLLER_ROLE', () => {
       context('> and beneficiary is valid', () => {
         it('it should update beneficiary', async () => {
           const receipt = await marketMaker.updateBeneficiary(root, { from: authorized })
@@ -671,7 +640,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
 
-    context('> sender does not have UPDATE_BENEFICIARY_ROLE', () => {
+    context('> sender does not have CONTROLLER_ROLE', () => {
       it('it should revert', async () => {
         await assertRevert(() => marketMaker.updateBeneficiary(root, { from: unauthorized }))
       })
@@ -681,7 +650,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
 
   // #region updateFormula
   context('> #updateFormula', () => {
-    context('> sender has UPDATE_FORMULA_ROLE', () => {
+    context('> sender has CONTROLLER_ROLE', () => {
       context('> and formula is a contract', () => {
         it('it should update formula', async () => {
           const formula_ = await Formula.new()
@@ -699,7 +668,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
 
-    context('> sender does not have UPDATE_FORMULA_ROLE', () => {
+    context('> sender does not have CONTROLLER_ROLE', () => {
       it('it should revert', async () => {
         const formula_ = await Formula.new()
 
@@ -711,7 +680,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
 
   // #region updateFees
   context('> #updateFees', () => {
-    context('> sender has UPDATE_FEES_ROLE', () => {
+    context('> sender has CONTROLLER_ROLE', () => {
       context('> and new fees are valid', () => {
         it('it should update fees', async () => {
           const receipt = await marketMaker.updateFees(40, 50, { from: authorized })
@@ -733,7 +702,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
 
-    context('> sender does not have UPDATE_FEES_ROLE', () => {
+    context('> sender does not have CONTROLLER_ROLE', () => {
       it('it should revert', async () => {
         await assertRevert(() => marketMaker.updateFees(40, 50, { from: unauthorized }))
       })
@@ -746,7 +715,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
     forEach(['ETH', 'ERC20']).describe(`> %s`, round => {
       const index = round === 'ETH' ? 0 : 1
 
-      context('> sender has MAKE_BUY_ORDER_ROLE', () => {
+      context('> sender has CONTROLLER_ROLE', () => {
         context('> and market making is open', () => {
           context('> and collateral is whitelisted', () => {
             context('> and value is not zero', () => {
@@ -858,7 +827,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
         })
       })
 
-      context('> sender does not have MAKE_BUY_ORDER_ROLE', () => {
+      context('> sender does not have CONTROLLER_ROLE', () => {
         it('it should revert', async () => {
           await assertRevert(() => makeBuyOrder(unauthorized, collaterals[index], random.amount(), 0, { from: unauthorized }),
             'APP_AUTH_FAILED')
@@ -874,7 +843,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       forEach(['ETH', 'ERC20']).describe(`> %s`, round => {
       const index = round === 'ETH' ? 0 : 1
 
-      context('> sender has MAKE_SELL_ORDER_ROLE', () => {
+      context('> sender has CONTROLLER_ROLE', () => {
         context('> and market making is open', () => {
           context('> and collateral is whitelisted', () => {
             context('> and amount is not zero', () => {
@@ -989,7 +958,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
         })
       })
 
-      context('> sender does not have MAKE_SELL_ORDER_ROLE', () => {
+      context('> sender does not have CONTROLLER_ROLE', () => {
         it('it should revert', async () => {
           await makeBuyOrder(authorized, collaterals[index], random.amount(), 0, { from: authorized })
           const senderBalance = await token.balanceOf(authorized)

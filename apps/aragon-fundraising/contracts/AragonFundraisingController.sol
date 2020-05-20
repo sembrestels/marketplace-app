@@ -11,8 +11,6 @@ import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
 import "../../batched-bancor-market-maker/contracts/BancorMarketMaker.sol";
 import "./IAragonFundraisingController.sol";
 
-// TODO: Update permissions
-
 // TODO: Removed vars for UI reference:
 // ITap public tap;
 //bytes32 public constant UPDATE_MAXIMUM_TAP_RATE_INCREASE_PCT_ROLE  = keccak256("UPDATE_MAXIMUM_TAP_RATE_INCREASE_PCT_ROLE");
@@ -35,6 +33,7 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
 
     /**
     Hardcoded constants to save gas
+    bytes32 public constant UPDATE_FORMULA_ROLE                        = keccak256("UPDATE_FORMULA_ROLE");
     bytes32 public constant UPDATE_BENEFICIARY_ROLE                    = keccak256("UPDATE_BENEFICIARY_ROLE");
     bytes32 public constant UPDATE_FEES_ROLE                           = keccak256("UPDATE_FEES_ROLE");
     bytes32 public constant ADD_COLLATERAL_TOKEN_ROLE                  = keccak256("ADD_COLLATERAL_TOKEN_ROLE");
@@ -46,6 +45,7 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
     bytes32 public constant MAKE_BUY_ORDER_ROLE                        = keccak256("MAKE_BUY_ORDER_ROLE");
     bytes32 public constant MAKE_SELL_ORDER_ROLE                       = keccak256("MAKE_SELL_ORDER_ROLE");
     */
+    bytes32 public constant UPDATE_FORMULA_ROLE                        = 0xbfb76d8d43f55efe58544ea32af187792a7bdb983850d8fed33478266eec3cbb;
     bytes32 public constant UPDATE_BENEFICIARY_ROLE                    = 0xf7ea2b80c7b6a2cab2c11d2290cb005c3748397358a25e17113658c83b732593;
     bytes32 public constant UPDATE_FEES_ROLE                           = 0x5f9be2932ed3a723f295a763be1804c7ebfd1a41c1348fb8bdf5be1c5cdca822;
     bytes32 public constant ADD_COLLATERAL_TOKEN_ROLE                  = 0x217b79cb2bc7760defc88529853ef81ab33ae5bb315408ce9f5af09c8776662d;
@@ -91,6 +91,14 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
     }
 
     /* generic settings related function */
+
+    /**
+     * @notice Update formula to `_formula`
+     * @param _formula The address of the new beneficiary
+    */
+    function updateFormula(IBancorFormula _formula) external auth(UPDATE_FORMULA_ROLE) {
+        marketMaker.updateFormula(_formula);
+    }
 
     /**
      * @notice Update beneficiary to `_beneficiary`

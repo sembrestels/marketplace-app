@@ -223,6 +223,7 @@ const setup = {
   setPermissions: {
     controller: async (ctx, root, user) => {
       ctx.roles.controller = ctx.roles.controller || {}
+      ctx.roles.controller.UPDATE_FORMULA_ROLE = await ctx.base.controller.UPDATE_FORMULA_ROLE()
       ctx.roles.controller.UPDATE_BENEFICIARY_ROLE = await ctx.base.controller.UPDATE_BENEFICIARY_ROLE()
       ctx.roles.controller.UPDATE_FEES_ROLE = await ctx.base.controller.UPDATE_FEES_ROLE()
       ctx.roles.controller.ADD_COLLATERAL_TOKEN_ROLE = await ctx.base.controller.ADD_COLLATERAL_TOKEN_ROLE()
@@ -234,6 +235,7 @@ const setup = {
       ctx.roles.controller.MAKE_BUY_ORDER_ROLE = await ctx.base.controller.MAKE_BUY_ORDER_ROLE()
       ctx.roles.controller.MAKE_SELL_ORDER_ROLE = await ctx.base.controller.MAKE_SELL_ORDER_ROLE()
 
+      await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.UPDATE_FORMULA_ROLE, root, { from: root })
       await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.UPDATE_BENEFICIARY_ROLE, root, { from: root })
       await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.UPDATE_FEES_ROLE, root, { from: root })
       await ctx.acl.createPermission(user, ctx.controller.address, ctx.roles.controller.ADD_COLLATERAL_TOKEN_ROLE, root, { from: root })
@@ -274,29 +276,8 @@ const setup = {
     },
     marketMaker: async (ctx, root) => {
       ctx.roles.marketMaker = ctx.roles.marketMaker || {}
-      ctx.roles.marketMaker.OPEN_ROLE = await ctx.base.marketMaker.OPEN_ROLE()
-      ctx.roles.marketMaker.UPDATE_BENEFICIARY_ROLE = await ctx.base.marketMaker.UPDATE_BENEFICIARY_ROLE()
-      ctx.roles.marketMaker.UPDATE_FEES_ROLE = await ctx.base.marketMaker.UPDATE_FEES_ROLE()
-      ctx.roles.marketMaker.ADD_COLLATERAL_TOKEN_ROLE = await ctx.base.marketMaker.ADD_COLLATERAL_TOKEN_ROLE()
-      ctx.roles.marketMaker.REMOVE_COLLATERAL_TOKEN_ROLE = await ctx.base.marketMaker.REMOVE_COLLATERAL_TOKEN_ROLE()
-      ctx.roles.marketMaker.UPDATE_COLLATERAL_TOKEN_ROLE = await ctx.base.marketMaker.UPDATE_COLLATERAL_TOKEN_ROLE()
-      ctx.roles.marketMaker.MAKE_BUY_ORDER_ROLE = await ctx.base.marketMaker.MAKE_BUY_ORDER_ROLE()
-      ctx.roles.marketMaker.MAKE_SELL_ORDER_ROLE = await ctx.base.marketMaker.MAKE_SELL_ORDER_ROLE()
-
-      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.OPEN_ROLE, root, { from: root })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.UPDATE_BENEFICIARY_ROLE, root, { from: root })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.UPDATE_FEES_ROLE, root, { from: root })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.ADD_COLLATERAL_TOKEN_ROLE, root, {
-        from: root,
-      })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.REMOVE_COLLATERAL_TOKEN_ROLE, root, {
-        from: root,
-      })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.UPDATE_COLLATERAL_TOKEN_ROLE, root, {
-        from: root,
-      })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.MAKE_BUY_ORDER_ROLE, root, { from: root })
-      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.MAKE_SELL_ORDER_ROLE, root, { from: root })
+      ctx.roles.marketMaker.CONTROLLER_ROLE = await ctx.base.marketMaker.CONTROLLER_ROLE()
+      await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.CONTROLLER_ROLE, root, { from: root })
     },
     reserve: async (ctx, root) => {
       ctx.roles.reserve = ctx.roles.reserve || {}
