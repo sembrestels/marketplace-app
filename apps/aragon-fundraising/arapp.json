@@ -81,7 +81,7 @@
       "name": "Make sell orders",
       "id": "MAKE_SELL_ORDER_ROLE",
       "params": []
-    },
+    }
   ],
   "path": "contracts/AragonFundraisingController.sol"
 }

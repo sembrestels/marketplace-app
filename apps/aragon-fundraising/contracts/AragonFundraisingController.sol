@@ -8,7 +8,7 @@ import "@aragon/os/contracts/lib/math/SafeMath.sol";
 import "@aragon/os/contracts/lib/token/ERC20.sol";
 import "@aragon/apps-vault/contracts/Vault.sol";
 import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
-import "../../batched-bancor-market-maker/contracts/BancorMarketMaker.sol";
+import "../../bancor-market-maker/contracts/BancorMarketMaker.sol";
 import "./IAragonFundraisingController.sol";
 
 // TODO: Removed vars for UI reference:
