@@ -45,7 +45,6 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
     bytes32 public constant CONTRIBUTE_ROLE                            = keccak256("CONTRIBUTE_ROLE");
     bytes32 public constant OPEN_BUY_ORDER_ROLE                        = keccak256("OPEN_BUY_ORDER_ROLE");
     bytes32 public constant OPEN_SELL_ORDER_ROLE                       = keccak256("OPEN_SELL_ORDER_ROLE");
-    bytes32 public constant WITHDRAW_ROLE                              = keccak256("WITHDRAW_ROLE");
     */
     bytes32 public constant UPDATE_BENEFICIARY_ROLE                    = 0xf7ea2b80c7b6a2cab2c11d2290cb005c3748397358a25e17113658c83b732593;
     bytes32 public constant UPDATE_FEES_ROLE                           = 0x5f9be2932ed3a723f295a763be1804c7ebfd1a41c1348fb8bdf5be1c5cdca822;
@@ -57,7 +56,6 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
     bytes32 public constant CONTRIBUTE_ROLE                            = 0x9ccaca4edf2127f20c425fdd86af1ba178b9e5bee280cd70d88ac5f6874c4f07;
     bytes32 public constant OPEN_BUY_ORDER_ROLE                        = 0xa589c8f284b76fc8d510d9d553485c47dbef1b0745ae00e0f3fd4e28fcd77ea7;
     bytes32 public constant OPEN_SELL_ORDER_ROLE                       = 0xd68ba2b769fa37a2a7bd4bed9241b448bc99eca41f519ef037406386a8f291c0;
-    bytes32 public constant WITHDRAW_ROLE                              = 0x5d8e12c39142ff96d79d04d15d1ba1269e4fe57bb9d26f43523628b34ba108ec;
 
     string private constant ERROR_CONTRACT_IS_EOA = "FUNDRAISING_CONTRACT_IS_EOA";
 
@@ -152,8 +150,6 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
     function openTrading() external auth(OPEN_TRADING_ROLE) {
         marketMaker.open();
     }
-
-
 
     /**
      * @notice Open a buy order worth `@tokenAmount(_collateral, _value)`
