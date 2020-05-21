@@ -5,7 +5,7 @@ import { Box, useTheme, GU } from '@aragon/ui'
 import BigNumber from 'bignumber.js'
 import subMonths from 'date-fns/subMonths'
 import Chart from '../components/Chart'
-import { formatBigNumber, toMonthlyAllocation } from '../utils/bn-utils'
+import { formatBigNumber } from '../utils/bn-utils'
 import { MainViewContext } from '../context'
 
 export default () => {
@@ -18,12 +18,9 @@ export default () => {
       primaryCollateral: {
         address: primaryCollateralAddress,
         decimals: primaryCollateralDecimals,
-        symbol: primaryCollateralSymbol,
-        toBeClaimed,
-        tap: { rate },
+        symbol: primaryCollateralSymbol
       },
     },
-    batches,
     orders,
   } = useAppState()
 
@@ -44,19 +41,19 @@ export default () => {
   // effects
   // *****************************
   // update the base batch to compute trends
-  useEffect(() => {
-    // search the closest batch from (now - 1 month) to create some trends
-    const oneMonthAgo = subMonths(new Date(), 1).getTime()
-    const trendBatch = batches.reduce(
-      (closest, b) => {
-        const currentClosest = Math.abs(closest.timestamp - oneMonthAgo)
-        const current = Math.abs(b.timestamp - oneMonthAgo)
-        return currentClosest < current ? closest : b
-      },
-      { timestamp: new Date() }
-    )
-    setTrendBatch(trendBatch)
-  }, [batches])
+  // useEffect(() => {
+  //   // search the closest batch from (now - 1 month) to create some trends
+  //   const oneMonthAgo = subMonths(new Date(), 1).getTime()
+  //   const trendBatch = batches.reduce(
+  //     (closest, b) => {
+  //       const currentClosest = Math.abs(closest.timestamp - oneMonthAgo)
+  //       const current = Math.abs(b.timestamp - oneMonthAgo)
+  //       return currentClosest < current ? closest : b
+  //     },
+  //     { timestamp: new Date() }
+  //   )
+  //   setTrendBatch(trendBatch)
+  // }, [batches])
 
   // *****************************
   // human readable values
@@ -75,10 +72,8 @@ export default () => {
     .reduce((acc, current) => acc.plus(current), new BigNumber(0))
   const adjustedTradingVolume = formatBigNumber(tradingVolume, primaryCollateralDecimals, { numberSuffix })
   const adjustedTokenSupply = formatBigNumber(realSupply, tokenDecimals)
-  const realReserve = reserveBalance ? reserveBalance.minus(toBeClaimed) : null
+  const realReserve = reserveBalance
   const adjustedReserves = realReserve ? formatBigNumber(realReserve, primaryCollateralDecimals, { numberSuffix }) : '...'
-  const adjustedMonthlyAllowance = formatBigNumber(toMonthlyAllocation(rate, primaryCollateralDecimals), primaryCollateralDecimals, { numberSuffix })
-  const adjustedYearlyAllowance = formatBigNumber(toMonthlyAllocation(rate, primaryCollateralDecimals).times(12), primaryCollateralDecimals, { numberSuffix })
 
   // trends
   /**
@@ -94,6 +89,7 @@ export default () => {
       .times(100)
   }
 
+  // TODO: Investigate how to include trended info. Not sure what this currently looks like.
   const adjustedPriceTrendPct =
     price && trendBatch?.startPrice ? formatBigNumber(variation(trendBatch.startPrice, price), 0, { keepSign: true, numberSuffix: '%' }) : null
   // if startPrice is here, realSupply too, since NewMetaBatch event occurs before NewBatch one
@@ -179,15 +175,6 @@ export default () => {
               <Trend value={adjustedReservesTrend} suffix="M" />
             </div>
           </li>
-          {rate > 0 && <li>
-            <div>
-              <p className="title">Monthly Allowance</p>
-              <p className="number">{adjustedMonthlyAllowance}</p>
-            </div>
-            <div>
-              <Trend value={adjustedYearlyAllowance} suffix="Y" />
-            </div>
-          </li>}
         </ul>
       </KeyMetrics>
       <Chart />

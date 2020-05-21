@@ -1,13 +1,11 @@
 import cloneDeep from 'lodash/cloneDeep'
 import BigNumber from 'bignumber.js'
-import { Order } from '../constants'
 
 /**
  * Checks whether we have enough data to start the fundraising app
  * @param {Object} state - the background script state
  * @returns {boolean} true if ready, false otherwise
  */
-// TODO: check if we can start the app with no collateral token
 export const ready = state => {
   const synced = !state?.isSyncing
   const hasCollaterals = state?.collaterals.size > 0
@@ -34,8 +32,6 @@ export const computeConstants = constants => ({
  */
 export const computeValues = values => ({
   ...values,
-  maximumTapRateIncreasePct: new BigNumber(values.maximumTapRateIncreasePct),
-  maximumTapFloorDecreasePct: new BigNumber(values.maximumTapFloorDecreasePct),
   buyFeePct: new BigNumber(values.buyFeePct),
   sellFeePct: new BigNumber(values.sellFeePct),
 })
@@ -62,13 +58,9 @@ export const computePresale = (presale, PPM) => ({
  */
 const transformCollateral = (address, data) => {
   const virtualBalance = new BigNumber(data.virtualBalance)
-  const toBeClaimed = new BigNumber(data.toBeClaimed)
   const actualBalance = new BigNumber(data.actualBalance)
-  const realBalance = actualBalance.minus(toBeClaimed)
+  const realBalance = actualBalance
   const overallBalance = realBalance.plus(virtualBalance)
-  const tap = data.tap ?
-    { ...data.tap, rate: new BigNumber(data.tap.rate), floor: new BigNumber(data.tap.floor) }
-    : { timestamp: 0, rate: new BigNumber(0), floor: new BigNumber(0) }
   return {
     address,
     ...data,
@@ -76,11 +68,9 @@ const transformCollateral = (address, data) => {
     virtualSupply: new BigNumber(data.virtualSupply),
     slippage: new BigNumber(data.slippage),
     virtualBalance,
-    toBeClaimed,
     actualBalance,
     realBalance,
-    overallBalance,
-    tap,
+    overallBalance
   }
 }
 
@@ -106,12 +96,10 @@ export const computeCollaterals = collaterals => {
  */
 export const computeBondedToken = (bondedToken, { primaryCollateral }) => {
   const totalSupply = new BigNumber(bondedToken.totalSupply)
-  const toBeMinted = new BigNumber(bondedToken.toBeMinted)
-  const realSupply = totalSupply.plus(toBeMinted)
+  const realSupply = totalSupply
   return {
     ...bondedToken,
     totalSupply,
-    toBeMinted,
     realSupply,
     overallSupply: {
       primaryCollateral: realSupply.plus(primaryCollateral.virtualSupply),
@@ -125,73 +113,78 @@ export const computeBondedToken = (bondedToken, { primaryCollateral }) => {
  * @param {BigNumber} PPM - part per million
  * @returns {Object} the computed batches
  */
-export const computeBatches = (batches, PPM) => {
-  return batches.map(b => {
-    const supply = new BigNumber(b.supply)
-    const realSupply = new BigNumber(b.realSupply)
-    const balance = new BigNumber(b.balance)
-    const virtualBalance = new BigNumber(b.virtualBalance)
-    const realBalance = balance.minus(virtualBalance)
-    const reserveRatio = new BigNumber(b.reserveRatio)
-    const buyFeePct = new BigNumber(b.buyFeePct)
-    const sellFeePct = new BigNumber(b.sellFeePct)
-    const totalBuySpend = new BigNumber(b.totalBuySpend)
-    const totalBuyReturn = new BigNumber(b.totalBuyReturn)
-    const totalSellSpend = new BigNumber(b.totalSellSpend)
-    const totalSellReturn = new BigNumber(b.totalSellReturn)
-    const startPrice = balance.times(PPM).div(supply.times(reserveRatio))
-    const buyPrice = totalBuySpend.div(totalBuyReturn)
-    const sellPrice = totalSellReturn.div(totalSellSpend)
-    return {
-      ...b,
-      supply,
-      realSupply,
-      balance,
-      virtualBalance,
-      realBalance,
-      reserveRatio,
-      buyFeePct,
-      sellFeePct,
-      totalBuySpend,
-      totalBuyReturn,
-      totalSellSpend,
-      totalSellReturn,
-      startPrice,
-      buyPrice,
-      sellPrice,
-    }
-  })
-}
+// export const computeBatches = (batches, PPM) => {
+//   return batches.map(b => {
+//     const supply = new BigNumber(b.supply)
+//     const realSupply = new BigNumber(b.realSupply)
+//     const balance = new BigNumber(b.balance)
+//     const virtualBalance = new BigNumber(b.virtualBalance)
+//     const realBalance = balance.minus(virtualBalance)
+//     const reserveRatio = new BigNumber(b.reserveRatio)
+//     const buyFeePct = new BigNumber(b.buyFeePct)
+//     const sellFeePct = new BigNumber(b.sellFeePct)
+//     const totalBuySpend = new BigNumber(b.totalBuySpend)
+//     const totalBuyReturn = new BigNumber(b.totalBuyReturn)
+//     const totalSellSpend = new BigNumber(b.totalSellSpend)
+//     const totalSellReturn = new BigNumber(b.totalSellReturn)
+//     const startPrice = balance.times(PPM).div(supply.times(reserveRatio))
+//     const buyPrice = totalBuySpend.div(totalBuyReturn)
+//     const sellPrice = totalSellReturn.div(totalSellSpend)
+//     return {
+//       ...b,
+//       supply,
+//       realSupply,
+//       balance,
+//       virtualBalance,
+//       realBalance,
+//       reserveRatio,
+//       buyFeePct,
+//       sellFeePct,
+//       totalBuySpend,
+//       totalBuyReturn,
+//       totalSellSpend,
+//       totalSellReturn,
+//       startPrice,
+//       buyPrice,
+//       sellPrice,
+//     }
+//   })
+// }
 
+// TODO: Check this works, remove commented bits
 /**
  * Converts the background script orders with BigNumbers for a better handling in the frontend
  * Also update the price of the order
  * @param {Array} orders - background script orders data
- * @param {Array} batches - computed batches
  * @returns {Object} the computed orders
  */
-export const computeOrders = (orders, batches, pctBase) => {
+export const computeOrders = (orders) => {
   return orders.map(order => {
-    const batch = batches.find(batch => batch.id === order.batchId && batch.collateral === order.collateral)
-    let price, amount, value, fee
-    if (order.type === Order.type.BUY) {
-      price = new BigNumber(batch.buyPrice ?? batch.startPrice)
-      value = new BigNumber(order.value)
-      amount = value.div(price)
-      fee = new BigNumber(order.fee)
-    } else {
-      price = new BigNumber(batch.sellPrice ?? batch.startPrice)
-      amount = new BigNumber(order.amount)
-      const amountNoFeeMultiplier = pctBase.minus(batch.sellFeePct).div(pctBase)
-      value = amount.times(price).times(amountNoFeeMultiplier)
-      fee = amount.times(price).times(batch.sellFeePct.div(pctBase))
-    }
+    const feePct = new BigNumber(order.feePct)
+    const fee = new BigNumber(order.fee)
+    const value = new BigNumber(order.value)
+    const amount = new BigNumber(order.amount)
+    const price = value.div(amount)
+    // if (order.type === Order.type.BUY) {
+      // price = new BigNumber(batch.buyPrice ?? batch.startPrice)
+      // amount = value.div(price)
+      // value = new BigNumber(order.value)
+      // amount = new BigNumber(order.amount)
+    // } else {
+      // price = new BigNumber(batch.sellPrice ?? batch.startPrice)
+      // amount = new BigNumber(order.amount)
+      // value = new BigNumber(order.value)
+      // const amountNoFeeMultiplier = pctBase.minus(feePct).div(pctBase)
+      // value = amount.times(price).times(amountNoFeeMultiplier)
+      // fee = amount.times(price).times(feePct.div(pctBase))
+    // }
     return {
       ...order,
       price,
       amount,
       value,
-      fee
+      fee,
+      feePct
     }
   })
 }
