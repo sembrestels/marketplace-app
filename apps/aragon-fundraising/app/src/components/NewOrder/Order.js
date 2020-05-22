@@ -36,6 +36,7 @@ const Order = ({ isBuyOrder }) => {
   // *****************************
   const [selectedCollateral, setSelectedCollateral] = useState(0)
   const [amount, setAmount] = useState('')
+  const [minReturn, setMinReturn] = useState('')
   const [evaluatedReturn, setEvaluatedReturn] = useState('')
   const [valid, setValid] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
@@ -65,6 +66,10 @@ const Order = ({ isBuyOrder }) => {
     setAmount(event.target.value)
   }
 
+  const handleMinReturnUpdate = event => {
+    setMinReturn(event.target.value)
+  }
+
   const validate = (err, message) => {
     setValid(err)
     setErrorMessage(message)
@@ -75,15 +80,16 @@ const Order = ({ isBuyOrder }) => {
     const address = collateralItems[selectedCollateral].address
     if (valid) {
       const amountBn = toDecimals(amount, collateralItems[selectedCollateral].decimals).toFixed()
+      const minReturnBn = toDecimals(minReturn, collateralItems[selectedCollateral].decimals).toFixed()
       if (isBuyOrder) {
         const intent = { token: { address, value: amountBn, spender: marketMaker } }
         api
-          .openBuyOrder(address, amountBn, intent)
+          .makeBuyOrder(address, amountBn, minReturnBn, intent)
           .toPromise()
           .catch(console.error)
       } else {
         api
-          .openSellOrder(address, amountBn)
+          .makeSellOrder(address, amountBn, minReturnBn)
           .toPromise()
           .catch(console.error)
       }
@@ -147,8 +153,9 @@ const Order = ({ isBuyOrder }) => {
             {isBuyOrder && <StyledTextBlock>{collateralItems[selectedCollateral].symbol} TO SPEND</StyledTextBlock>}
             {!isBuyOrder && <StyledTextBlock>{bondedSymbol} TO SELL</StyledTextBlock>}
           </label>
-          <CombinedInput>
-            <TextInput ref={amountInput} type="number" value={amount} onChange={handleAmountUpdate} min={0} placeholder="0" step="any" required wide />
+          <CombinedInput
+            css={`margin-bottom: 10px;`}>
+            <TextInput type="number" value={amount} onChange={handleAmountUpdate} min={0} placeholder="0" step="any" required wide />
             {isBuyOrder ? (
               <span
                 css={`
@@ -170,6 +177,11 @@ const Order = ({ isBuyOrder }) => {
             )}
             <DropDown items={[collaterals.primaryCollateral.symbol]} selected={selectedCollateral} onChange={setSelectedCollateral} />
           </CombinedInput>
+          <label>
+            {isBuyOrder && <StyledTextBlock>MIN {bondedSymbol} RECEIVED</StyledTextBlock>}
+            {!isBuyOrder && <StyledTextBlock>MIN {collateralItems[selectedCollateral].symbol} RECEIVED</StyledTextBlock>}
+          </label>
+          <TextInput type="number" value={minReturn} onChange={handleMinReturnUpdate} min={0} placeholder="0" step="any" required wide />
         </AmountField>
       </InputsWrapper>
       <Total

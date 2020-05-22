@@ -119,11 +119,6 @@ const initialize = async (poolAddress, marketMakerAddress, presaleAddress) => {
         case 'MakeBuyOrder':
         case 'MakeSellOrder':
           return newOrder(nextState, returnValues, settings, blockNumber, transactionHash, logIndex)
-        case 'ClaimBuyOrder':
-        case 'ClaimSellOrder':
-          return newClaim(nextState, returnValues, settings)
-        case 'UpdatePricing':
-          return updatePricing(nextState, returnValues)
         case 'UpdateFees':
           return updateFees(nextState, returnValues)
         case 'SetOpenDate':
@@ -373,11 +368,10 @@ const newOrder = async (state, { buyer, seller, collateral, purchaseAmount, sell
   // if it's a sell order, buyer and purchaseAmount will be undefined
   const type = buyer ? Order.type.BUY : Order.type.SELL
   const tokenContract = tokenContracts.has(collateral) ? tokenContracts.get(collateral) : app.external(collateral, tokenAbi)
-  const [timestamp, symbol, bondedToken, collaterals] = await Promise.all([
+  const [timestamp, symbol, bondedToken] = await Promise.all([
     loadTimestamp(blockNumber),
     loadTokenSymbol(tokenContract, collateral, settings),
     updateBondedToken(state.bondedToken, settings),
-    // updateCollateralsToken(state.collaterals, collateral, settings),
   ])
   const newOrder = {
     transactionHash,
@@ -408,7 +402,6 @@ const newOrder = async (state, { buyer, seller, collateral, purchaseAmount, sell
     ...state,
     orders,
     bondedToken,
-    collaterals,
   }
 }
 

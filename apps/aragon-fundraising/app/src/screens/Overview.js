@@ -89,7 +89,7 @@ export default () => {
       .times(100)
   }
 
-  // TODO: Investigate how to include trended info. Not sure what this currently looks like.
+  // TODO: Investigate how to include trended info. Think this is the green labels under the overview bar.
   const adjustedPriceTrendPct =
     price && trendBatch?.startPrice ? formatBigNumber(variation(trendBatch.startPrice, price), 0, { keepSign: true, numberSuffix: '%' }) : null
   // if startPrice is here, realSupply too, since NewMetaBatch event occurs before NewBatch one

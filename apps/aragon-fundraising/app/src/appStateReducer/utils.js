@@ -164,7 +164,8 @@ export const computeOrders = (orders) => {
     const fee = new BigNumber(order.fee)
     const value = new BigNumber(order.value)
     const amount = new BigNumber(order.amount)
-    const price = value.div(amount)
+    const price = value.plus(fee).div(amount)
+
     // if (order.type === Order.type.BUY) {
       // price = new BigNumber(batch.buyPrice ?? batch.startPrice)
       // amount = value.div(price)

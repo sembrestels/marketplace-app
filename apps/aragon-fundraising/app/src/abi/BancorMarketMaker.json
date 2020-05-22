@@ -515,6 +515,11 @@
         "indexed": false,
         "name": "returnedAmount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "feePct",
+        "type": "uint256"
       }
     ],
     "name": "MakeBuyOrder",
@@ -545,7 +550,12 @@
       },
       {
         "indexed": false,
-        "name": "returnAmount",
+        "name": "returnedAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "feePct",
         "type": "uint256"
       }
     ],

@@ -14,14 +14,10 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
   // *****************************
   const {
     constants: { PCT_BASE },
-    values: { buyFeePct },
+    values: { buyFeePct, sellFeePct },
     addresses: { formula: formulaAddress },
-    bondedToken: { overallSupply },
-    collaterals: {
-      primaryCollateral: { slippage: primaryCollateralSlippage },
-    },
+    bondedToken: { overallSupply }
   } = useAppState()
-  const primaryCollateralSlippageDec = primaryCollateralSlippage.div(PCT_BASE)
 
   // *****************************
   // aragon api
@@ -63,31 +59,32 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
       const currentSymbol = isBuyOrder ? symbol : conversionSymbol
       const supply = overallSupply.primaryCollateral
       const balance = primaryCollateralBalance
-      // slippage
-      const currentSlippage = primaryCollateralSlippageDec
-      // unit prices
-      const maxPrice = new BigNumber(price).times(new BigNumber(1).plus(currentSlippage))
-      const minPrice = new BigNumber(price).times(new BigNumber(1).minus(currentSlippage))
 
-      if (balance) {
-        const result = await formula[functionToCall](supply.toFixed(), balance.toFixed(), reserveRatio.toFixed(), valueBn.toFixed())
-          .toPromise()
-          .catch(() => errorCb('The amount is out of range of the supply'))
-        if (!didCancel && result) {
-          // check if the evaluated price don't break the slippage
+      if (balance && !didCancel) {
+        if (isBuyOrder) {
+          const fee = valueBn.times(buyFeePct).div(PCT_BASE)
+          const paidLessFee = valueBn.minus(fee)
+          const reserveBalanceAtCalculation = balance.plus(paidLessFee).toFixed()
+
+          const result = await api.external(formulaAddress, BancorFormulaAbi)
+            .calculatePurchaseReturn(supply.toFixed(), reserveBalanceAtCalculation, reserveRatio.toFixed(), paidLessFee.toFixed())
+            .toPromise()
+            .catch(() => errorCb('The amount is out of range of the supply'))
           const resultBn = new BigNumber(result)
-          if (isBuyOrder) {
-            const priceNoFee = PCT_BASE.minus(buyFeePct).times(resultBn).div(PCT_BASE)
-            setEvaluatedReturn(formatBigNumber(priceNoFee, decimals))
-          } else {
-            setEvaluatedReturn(formatBigNumber(resultBn, decimals))
-          }
-          if (isBuyOrder && resultBn.lte(valueBn.div(maxPrice))) {
-            errorCb('This buy order will break the price slippage')
-          } else if (!isBuyOrder && resultBn.lte(valueBn.times(minPrice))) {
-            errorCb('This sell order will break the price slippage')
-          } else okCb()
+
+          setEvaluatedReturn(formatBigNumber(resultBn, decimals))
+        } else {
+          const reserveSupplyAtCalculation = supply.minus(valueBn).toFixed()
+
+          const result = await api.external(formulaAddress, BancorFormulaAbi)
+            .calculateSaleReturn(reserveSupplyAtCalculation, balance.toFixed(), reserveRatio.toFixed(), valueBn.toFixed())
+            .toPromise()
+            .catch(() => errorCb('The amount is out of range of the supply'))
+          const resultBn = new BigNumber(result)
+
+          setEvaluatedReturn(formatBigNumber(resultBn, decimals))
         }
+        okCb()
       } else {
         errorCb(null)
       }
@@ -131,12 +128,14 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
         <div css="display: flex; justify-content: flex-end;">
           <AmountField weight="bold">{formattedAmount}</AmountField>
           <Text weight="bold">{symbol}</Text>
-          {feePercentage > 0 && isBuyOrder && <FeeField weight="bold">{`(${formatBigNumber(feeAmount, 0)} FEE)`}</FeeField>}
+          {feePercentage > 0 && isBuyOrder &&
+          <FeeField weight="bold">{`(${formatBigNumber(feeAmount, 0)} FEE)`}</FeeField>}
         </div>
         {evaluatedReturn && <div css="display: flex; justify-content: flex-end;">
           <AmountField color="grey">~{evaluatedReturnLessFee}</AmountField>
           <Text color="grey">{conversionSymbol}</Text>
-          {feePercentage > 0 && !isBuyOrder && <FeeField color="grey">{`(${formatBigNumber(feeAmount, 0)} FEE)`}</FeeField>}
+          {feePercentage > 0 && !isBuyOrder &&
+          <FeeField color="grey">{`(${formatBigNumber(feeAmount, 0)} FEE)`}</FeeField>}
         </div>}
       </div>
     </div>

@@ -1,16 +1,6 @@
 import BigNumber from 'bignumber.js'
 
 /**
- * Converts a tap rate to its monthly rate
- * @param {String|Number|BigNumber} value - value to convert
- * @param {Number} decimals - decimals of the value to convert
- * @returns {BigNumber} the converted value
- */
-export const toMonthlyAllocation = (value, decimals) => {
-  return new BigNumber(value).times(4 * 60 * 24 * 30)
-}
-
-/**
  * Converts a monthly rate to its tap rate (wei/block)
  * @param {String|Number|BigNumber} value - value to convert
  * @param {Number} decimals - decimals of the value to convert

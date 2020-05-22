@@ -160,7 +160,7 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
     }
 
     /**
-     * @notice Open a buy order worth `@tokenAmount(_collateral, _value)`
+     * @notice Make a buy order worth `@tokenAmount(_collateral, _depositAmount)` for atleast `@tokenAmount(self.token(): address, _minReturnAmountAfterFee)`
      * @param _collateral The address of the collateral token to be spent
      * @param _depositAmount The amount of collateral token to be deposited
      * @param _minReturnAmountAfterFee The minimum amount of the returned bonded tokens
@@ -172,7 +172,7 @@ contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonF
     }
 
     /**
-     * @notice Open a sell order worth `@tokenAmount(self.token(): address, _amount)` against `_collateral.symbol(): string`
+     * @notice Make a sell order worth `@tokenAmount(self.token(): address, _sellAmount)` for atleast `@tokenAmount(_collateral, _minReturnAmountAfterFee)`
      * @param _collateral The address of the collateral token to be returned
      * @param _sellAmount The amount of bonded token to be spent
      * @param _minReturnAmountAfterFee The minimum amount of the returned collateral tokens

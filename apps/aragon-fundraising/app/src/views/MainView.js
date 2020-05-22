@@ -9,7 +9,7 @@ import Disclaimer from '../components/Disclaimer'
 import Reserves from '../screens/Reserves'
 import Orders from '../screens/Orders'
 import Overview from '../screens/Overview'
-import marketMaker from '../abi/BatchedBancorMarketMaker.json'
+import marketMaker from '../abi/BancorMarketMaker.json'
 import { MainViewContext } from '../context'
 import { Polling } from '../constants'
 import { IdentityProvider } from '../components/IdentityManager'
@@ -31,7 +31,6 @@ export default () => {
       primaryCollateral: {
         address: primaryCollateralAddress,
         reserveRatio,
-        toBeClaimed: primaryCollateralToBeClaimed,
         virtualBalance: primaryCollateralVirtualBalance,
         overallBalance: primaryCollateralOverallBalance
       },
@@ -62,7 +61,6 @@ export default () => {
   // *****************************
   const [polledReserveBalance, setPolledReserveBalance] = useState(null)
   const [polledPrimaryCollateralBalance, setPolledPrimaryCollateralBalance] = useState(primaryCollateralOverallBalance)
-  const [polledBatchId, setPolledBatchId] = useState(null)
   const [polledPrice, setPolledPrice] = useState(0)
   const [userBondedTokenBalance, setUserBondedTokenBalance] = useState(new BigNumber(0))
   const [userPrimaryCollateralBalance, setUserPrimaryCollateralBalance] = useState(new BigNumber(0))
@@ -71,7 +69,6 @@ export default () => {
   const context = {
     reserveBalance: polledReserveBalance,
     primaryCollateralBalance: polledPrimaryCollateralBalance,
-    batchId: polledBatchId,
     price: polledPrice,
     orderPanel,
     setOrderPanel,
@@ -95,15 +92,14 @@ export default () => {
     }
   }, [connectedUser])
 
-  // polls the balances, batchId and price
+  // polls the balances and price
   useInterval(async () => {
-    // polling balances and batchId
+    // polling balances
     const primaryCollateralPromise = api.call('balanceOf', pool, primaryCollateralAddress).toPromise()
-    const batchIdPromise = marketMakerContract.getCurrentBatchId().toPromise()
-    const [primaryCollateralBalance, batchId] = await Promise.all([primaryCollateralPromise, batchIdPromise])
+    const primaryCollateralBalance = await Promise.all([primaryCollateralPromise])
+
     const newReserveBalance = new BigNumber(primaryCollateralBalance)
-    const newPrimaryCollateralBalance = new BigNumber(primaryCollateralBalance).minus(primaryCollateralToBeClaimed).plus(primaryCollateralVirtualBalance)
-    const newBatchId = parseInt(batchId, 10)
+    const newPrimaryCollateralBalance = new BigNumber(primaryCollateralBalance).plus(primaryCollateralVirtualBalance)
     // poling user balances
     let newUserBondedTokenBalance, newUserPrimaryCollateralBalance
     if (connectedUser) {
@@ -122,7 +118,6 @@ export default () => {
       // update the state only if value changed
       if (!newReserveBalance.eq(polledReserveBalance)) setPolledReserveBalance(newReserveBalance)
       if (!newPrimaryCollateralBalance.eq(polledPrimaryCollateralBalance)) setPolledPrimaryCollateralBalance(newPrimaryCollateralBalance)
-      if (newBatchId !== polledBatchId) setPolledBatchId(newBatchId)
       if (!newPrice.eq(polledPrice)) setPolledPrice(newPrice)
       // update user balances
       if (connectedUser) {
