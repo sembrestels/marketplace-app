@@ -2,17 +2,7 @@ import React from 'react'
 import { useAppState, GU } from '@aragon/api-react'
 import { Info } from '@aragon/ui'
 
-const Information = ({ isBuyOrder, slippage }) => {
-  // *****************************
-  // background script state
-  // *****************************
-  const {
-    constants: { PCT_BASE },
-  } = useAppState()
-  const slippagePct = slippage
-    .div(PCT_BASE)
-    .times(100)
-    .toFixed(2, 1)
+const Information = () => {
 
   return (
     <div
@@ -20,10 +10,10 @@ const Information = ({ isBuyOrder, slippage }) => {
         margin-top: ${4 * GU}px;
       `}
     >
-      <Info.Action title="Slippage">
+      <Info.Action title="Min received amount">
         <p>
-          The exact return of your order may differ from the one indicated if other users open buy or sell orders simultaneously. In any case you can be assured
-          that the price slippage won't exceed <b>{slippagePct}%</b>.
+          The exact return of your order may differ from the one indicated if other users open buy or sell orders simultaneously.
+          To ensure your return is not unsatisfactory your return will be atleast the minimum amount specified.
         </p>
       </Info.Action>
     </div>
