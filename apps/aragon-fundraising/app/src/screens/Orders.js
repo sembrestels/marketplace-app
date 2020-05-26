@@ -75,6 +75,7 @@ const SortHeader = ({ onClick, label, sortBy = 0, rightAligned = false }) => {
 }
 
 export default ({ myOrders }) => {
+
   // *****************************
   // background script state
   // *****************************
@@ -154,7 +155,6 @@ export default ({ myOrders }) => {
   const dataViewFields = myOrders
     ? [
         <SortHeader key="date" label="DATE" onClick={rotateSortByDate} sortBy={sortBy[0] === 'date' && sortBy[1]} />,
-        'STATUS',
         <SortHeader key="amount" label="VALUE" onClick={rotateSortByAmount} sortBy={sortBy[0] === 'amount' && sortBy[1]} />,
         <SortHeader key="fee" label="FEE" onClick={rotateSortByFee} sortBy={sortBy[0] === 'fee' && sortBy[1]} />,
         <SortHeader key="price" label="SHARE PRICE" onClick={rotateSortByPrice} sortBy={sortBy[0] === 'price' && sortBy[1]} />,
@@ -178,7 +178,6 @@ export default ({ myOrders }) => {
     : [
         <SortHeader key="date" label="DATE" onClick={rotateSortByDate} sortBy={sortBy[0] === 'date' && sortBy[1]} />,
         'HOLDER',
-        'STATUS',
         <SortHeader key="amount" label="VALUE" onClick={rotateSortByAmount} sortBy={sortBy[0] === 'amount' && sortBy[1]} />,
         <SortHeader key="fee" label="FEE" onClick={rotateSortByFee} sortBy={sortBy[0] === 'fee' && sortBy[1]} />,
         <SortHeader key="price" label="SHARE PRICE" onClick={rotateSortByPrice} sortBy={sortBy[0] === 'price' && sortBy[1]} />,
@@ -252,16 +251,6 @@ export default ({ myOrders }) => {
   // *****************************
   // handlers
   // *****************************
-  const handleClaim = ({ batchId, collateral, type }) => {
-    // can claim only if connected
-    if (account) {
-      const functionToCall = type === Order.type.BUY ? 'claimBuyOrder' : 'claimSellOrder'
-      api[functionToCall](account, batchId, collateral)
-        .toPromise()
-        .catch(console.error)
-    }
-  }
-
   const handleDownload = () => {
     const mappedData = filteredOrders.map(order => {
       const date = format(order.timestamp, 'MM/dd/yyyy - HH:mm:ss')
@@ -270,7 +259,7 @@ export default ({ myOrders }) => {
       const tokens = fromDecimals(order.amount, tokenDecimals).toFixed(2, 1)
       return `${date},${order.user},${order.state},${amount} ${order.symbol},${price},${order.type},${tokens}`
     })
-    const result = ['Date,Holder,Status,Value,Share Price,Order Type,Shares'].concat(mappedData).join('\n')
+    const result = ['Date,Holder,Value,Share Price,Order Type,Shares'].concat(mappedData).join('\n')
     const today = format(Date.now(), 'yyyy-MM-dd')
     const filename = `marketplace_${today}.csv`
     saveAs(new Blob([result], { type: 'text/csv;charset=utf-8' }), filename)
@@ -351,12 +340,6 @@ export default ({ myOrders }) => {
             entry.push(<StyledText key="date">{format(data.timestamp, 'MM/dd/yyyy - HH:mm:ss', { awareOfUnicodeTokens: true })}</StyledText>)
             // user if not myOrders
             if (!myOrders) entry.push(<IdentityBadge key="address" entity={data.user} />)
-            // status
-            entry.push(
-              <div key="status" css="display: flex; align-items: center;">
-                <OrderState state={data.state} />
-              </div>
-            )
             // value
             entry.push(
               <p key="orderAmount" css={data.type === Order.type.BUY ? 'font-weight: 600; color: #2CC68F;' : 'font-weight: 600;'}>
@@ -383,15 +366,6 @@ export default ({ myOrders }) => {
                 {formatBigNumber(data.amount, tokenDecimals, { numberPrefix: sign })}
               </p>
             )
-            // claim button if myOrders
-            if (myOrders)
-              entry.push(
-                data.state === Order.state.OVER ? (
-                  <Button mode="strong" label="Claim" onClick={() => handleClaim(data)}>
-                    Claim
-                  </Button>
-                ) : null
-              )
             return entry
           }}
           renderEntryActions={data => (
