@@ -36,8 +36,9 @@ const Order = ({ isBuyOrder }) => {
   // *****************************
   const [selectedCollateral, setSelectedCollateral] = useState(0)
   const [amount, setAmount] = useState('')
-  const [minReturn, setMinReturn] = useState('')
-  const [evaluatedReturn, setEvaluatedReturn] = useState('')
+  const [slippagePercent, setSlippagePercent] = useState(1)
+  const [minReturnAmount, setMinReturnAmount] = useState('')
+  const [feeAmount, setFeeAmount] = useState(0)
   const [valid, setValid] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
   const amountInput = useRef(null)
@@ -66,8 +67,11 @@ const Order = ({ isBuyOrder }) => {
     setAmount(event.target.value)
   }
 
-  const handleMinReturnUpdate = event => {
-    setMinReturn(event.target.value)
+  const handleSlippageUpdated = event => {
+    const value = event.target.value
+    if (value >= 0 && value <= 100) {
+      setSlippagePercent(event.target.value)
+    }
   }
 
   const validate = (err, message) => {
@@ -79,8 +83,8 @@ const Order = ({ isBuyOrder }) => {
     event.preventDefault()
     const address = collateralItems[selectedCollateral].address
     if (valid) {
-      const amountBn = toDecimals(amount, collateralItems[selectedCollateral].decimals).toFixed()
-      const minReturnBn = toDecimals(minReturn, collateralItems[selectedCollateral].decimals).toFixed()
+      const amountBn = toDecimals(amount, isBuyOrder ? collateralItems[selectedCollateral].decimals : bondedDecimals).toFixed()
+      const minReturnBn = toDecimals(minReturnAmount, isBuyOrder ? bondedDecimals : collateralItems[selectedCollateral].decimals).toFixed()
       if (isBuyOrder) {
         const intent = { token: { address, value: amountBn, spender: marketMaker } }
         api
@@ -127,24 +131,6 @@ const Order = ({ isBuyOrder }) => {
     return isBuyOrder ? percentageOf(buyFeePct) : percentageOf(sellFeePct)
   }
 
-  const getBuyFeeAmount = () => {
-    const inputAmount = amount > 0 ? amount : 0
-    return buyFeePct.div(PCT_BASE).times(inputAmount)
-  }
-
-  const getSellFeeAmount = () => {
-    const finalEvaluatedReturn = evaluatedReturn > 0 ? evaluatedReturn : 0
-    return sellFeePct.div(PCT_BASE).times(finalEvaluatedReturn)
-  }
-
-  const getFeeAmount = () => {
-    return isBuyOrder ? getBuyFeeAmount() : getSellFeeAmount()
-  }
-
-  const getFormattedFeeAmount = () => {
-    return formatBigNumber(getFeeAmount(), 0)
-  }
-
   return (
     <form onSubmit={handleSubmit}>
       <InputsWrapper>
@@ -178,10 +164,9 @@ const Order = ({ isBuyOrder }) => {
             <DropDown items={[collaterals.primaryCollateral.symbol]} selected={selectedCollateral} onChange={setSelectedCollateral} />
           </CombinedInput>
           <label>
-            {isBuyOrder && <StyledTextBlock>MIN {bondedSymbol} RECEIVED</StyledTextBlock>}
-            {!isBuyOrder && <StyledTextBlock>MIN {collateralItems[selectedCollateral].symbol} RECEIVED</StyledTextBlock>}
+            <StyledTextBlock>ACCEPTED SLIPPAGE %</StyledTextBlock>
           </label>
-          <TextInput type="number" value={minReturn} onChange={handleMinReturnUpdate} min={0} placeholder="0" step="any" required wide />
+          <TextInput type="number" value={slippagePercent} onChange={handleSlippageUpdated} min={0} max={100} placeholder="0" step="any" required wide />
         </AmountField>
       </InputsWrapper>
       <Total
@@ -191,20 +176,21 @@ const Order = ({ isBuyOrder }) => {
           decimals: getDecimals(),
           symbol: getSymbol(),
           reserveRatio: getReserveRatio(),
-          feeAmount: getFeeAmount(),
-          feePercentage: getFeePercentage()
+          feePercentage: getFeePercentage(),
+          slippagePercent: slippagePercent
         }}
         conversionSymbol={getConversionSymbol()}
         onError={validate}
-        setEvaluatedReturn={setEvaluatedReturn}
-        evaluatedReturn={evaluatedReturn}
+        setMinReturnAmount={setMinReturnAmount}
+        setFeeAmount={setFeeAmount}
+        feeAmount={feeAmount}
       />
       <div
         css={`
           padding: ${2 * GU}px 0 0;
         `}
       >
-        <Button mode="strong" type="submit" disabled={!valid} wide>
+        <Button mode="strong" type="submit" disabled={!valid || !slippagePercent} wide>
           Open {isBuyOrder ? 'buy' : 'sell'} order
         </Button>
       </div>
@@ -223,7 +209,12 @@ const Order = ({ isBuyOrder }) => {
           {getUserBalance()} {getSymbol()}
         </Info>
 
-        <Info_ isBuyOrder={isBuyOrder} slippage={collateralItems[selectedCollateral].slippage} />
+        <Info_
+          isBuyOrder={isBuyOrder}
+          slippage={collateralItems[selectedCollateral].slippage}
+          minExpectedReturnAmount={minReturnAmount}
+          tokenSymbol={isBuyOrder ? bondedSymbol : collateralItems[selectedCollateral].symbol}
+        />
 
         {getFeePercentage() > 0 && <Info
           title={`Fee (${getFeePercentage()}%)`}
@@ -232,7 +223,7 @@ const Order = ({ isBuyOrder }) => {
           `}
         >
           <p>
-            {`A fee of ${getFormattedFeeAmount()} ${collateralItems[selectedCollateral].symbol} will be sent directly to the organisation's funding pool.`}
+            {`A fee of ${feeAmount} ${collateralItems[selectedCollateral].symbol} will be sent directly to the organisation's funding pool.`}
           </p>
         </Info>}
 

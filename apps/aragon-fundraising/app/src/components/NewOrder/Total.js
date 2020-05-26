@@ -7,8 +7,9 @@ import { MainViewContext } from '../../context'
 import BancorFormulaAbi from '../../abi/BancorFormula.json'
 import { formatBigNumber, toDecimals } from '../../utils/bn-utils'
 
-const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedReturn, evaluatedReturn }) => {
-  const { value, decimals, symbol, reserveRatio, feeAmount, feePercentage } = amount
+const Total = ({ isBuyOrder, amount, conversionSymbol, onError,
+                 setMinReturnAmount, setFeeAmount, feeAmount }) => {
+  const { value, decimals, symbol, reserveRatio, feePercentage, slippagePercent } = amount
   // *****************************
   // background script state
   // *****************************
@@ -34,6 +35,8 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
   // internal state
   // *****************************
   const [formattedAmount, setFormattedAmount] = useState(formatBigNumber(0, 0))
+  const [evaluatedReturn, setEvaluatedReturn] = useState(0)
+  const [evaluatedReturnLessFee, setEvaluatedReturnLessFee] = useState(0)
 
   // *****************************
   // handlers
@@ -59,30 +62,41 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
       const currentSymbol = isBuyOrder ? symbol : conversionSymbol
       const supply = overallSupply.primaryCollateral
       const balance = primaryCollateralBalance
-
       if (balance && !didCancel) {
         if (isBuyOrder) {
           const fee = valueBn.times(buyFeePct).div(PCT_BASE)
           const paidLessFee = valueBn.minus(fee)
           const reserveBalanceAtCalculation = balance.plus(paidLessFee).toFixed()
 
-          const result = await api.external(formulaAddress, BancorFormulaAbi)
+          const evaluatedReturn = await api.external(formulaAddress, BancorFormulaAbi)
             .calculatePurchaseReturn(supply.toFixed(), reserveBalanceAtCalculation, reserveRatio.toFixed(), paidLessFee.toFixed())
             .toPromise()
             .catch(() => errorCb('The amount is out of range of the supply'))
-          const resultBn = new BigNumber(result)
+          const evaluatedReturnBn = new BigNumber(evaluatedReturn)
 
-          setEvaluatedReturn(formatBigNumber(resultBn, decimals))
+          const minReturnAmountLessSlippage = formatBigNumber(evaluatedReturnBn, decimals) * ((100 - slippagePercent) / 100)
+
+          setEvaluatedReturn(formatBigNumber(evaluatedReturnBn, decimals))
+          setMinReturnAmount(minReturnAmountLessSlippage)
+          setFeeAmount(formatBigNumber(buyFeePct.div(PCT_BASE).times(value), 0))
+          setEvaluatedReturnLessFee(formatBigNumber(evaluatedReturnBn, decimals))
         } else {
           const reserveSupplyAtCalculation = supply.minus(valueBn).toFixed()
 
-          const result = await api.external(formulaAddress, BancorFormulaAbi)
+          const evaluatedReturn = await api.external(formulaAddress, BancorFormulaAbi)
             .calculateSaleReturn(reserveSupplyAtCalculation, balance.toFixed(), reserveRatio.toFixed(), valueBn.toFixed())
             .toPromise()
             .catch(() => errorCb('The amount is out of range of the supply'))
-          const resultBn = new BigNumber(result)
 
-          setEvaluatedReturn(formatBigNumber(resultBn, decimals))
+          const evaluatedReturnBn = new BigNumber(evaluatedReturn)
+          const sellFeeAmountBn = sellFeePct.div(PCT_BASE).times(evaluatedReturnBn)
+          const minReturnAmount = (evaluatedReturnBn.minus(sellFeeAmountBn)).times((100 - slippagePercent) / 100)
+          const evalutatedReturnLessFee = evaluatedReturnBn.minus(sellFeeAmountBn)
+
+          setEvaluatedReturn(formatBigNumber(evaluatedReturnBn, decimals))
+          setMinReturnAmount(formatBigNumber(minReturnAmount, decimals))
+          setFeeAmount(formatBigNumber(sellFeeAmountBn, decimals))
+          setEvaluatedReturnLessFee(formatBigNumber(evalutatedReturnLessFee, decimals))
         }
         okCb()
       } else {
@@ -109,6 +123,10 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
     } else {
       // if input is empty, reset to default values and disable order button
       setFormattedAmount(formatBigNumber(0, 0))
+      setFeeAmount(formatBigNumber(0, 0))
+      setEvaluatedReturn(formatBigNumber(0, 0))
+      setMinReturnAmount(formatBigNumber(0, 0))
+      setEvaluatedReturnLessFee(formatBigNumber(0, 0))
       errorCb(null)
     }
 
@@ -116,8 +134,6 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError, setEvaluatedRetu
       didCancel = true
     }
   }, [isBuyOrder, amount, conversionSymbol])
-
-  const evaluatedReturnLessFee = formatBigNumber(isBuyOrder ? evaluatedReturn : parseFloat(evaluatedReturn) - feeAmount, 0)
 
   return (
     <div css="display: flex; justify-content: space-between; padding: 0 5px;">
