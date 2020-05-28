@@ -85,7 +85,6 @@ const Order = ({ isBuyOrder }) => {
     if (valid) {
       const amountBn = toDecimals(amount, isBuyOrder ? collateralItems[selectedCollateral].decimals : bondedDecimals).toFixed()
 
-      console.log('minReturnAmount', minReturnAmount)
       const minReturnBn = toDecimals(minReturnAmount, isBuyOrder ? bondedDecimals : collateralItems[selectedCollateral].decimals).toFixed()
       if (isBuyOrder) {
         const intent = { token: { address, value: amountBn, spender: marketMaker } }
