@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react'
 import { useAppState } from '@aragon/api-react'
 import { Box, GU, Help, IdentityBadge, Split, textStyle, TokenBadge, useLayout, useTheme } from '@aragon/ui'
 import DefinitionsBox from '../components/DefinitionsBox'
-import EditFees from '../components/Fees/EditFees'
+import UpdateFees from '../components/Fees/UpdateFees'
 import Fees from '../components/Fees/Fees'
 import { formatBigNumber, percentageFromBase } from '../utils/bn-utils'
 
@@ -94,60 +94,61 @@ export default () => {
 
   return (
     <>
-      <Split
-        primary={
-          <>
-            <Box heading="Collateralization ratios">
-              <div
-                css={`
-                  display: grid;
-                  grid-column-gap: ${3 * GU}px;
-                  grid-template-columns: repeat(${layoutName === 'small' ? '1' : '2'}, 1fr);
-                  width: 100%;
-                `}
-              >
-                {[[primaryCollateralSymbol, primaryCollateralRatio]].map(([symbol, ratio], i) => (
-                  <ReserveSetting
-                    key={i}
-                    label={`${symbol} collateralization ratio`}
-                    helpContent={helpContent(primaryCollateralSymbol)[0]}
-                    value={
-                      <span>
-                        {ratio}
-                        <span
-                          css={`
-                            margin-left: ${0.5 * GU}px;
-                            color: ${theme.surfaceContentSecondary};
-                          `}
-                        >
-                          %
-                        </span>
-                      </span>
-                    }
-                  />
-                ))}
-              </div>
-            </Box>
-          </>
-        }
-        secondary={
-          <>
-            <DefinitionsBox
-              heading="Shares"
-              definitions={[
-                { label: 'Total Supply', content: <strong>{adjustedTokenSupply}</strong> },
-                {
-                  label: 'Token',
-                  content: <TokenBadge name={name} symbol={symbol} badgeOnly />,
-                },
-                { label: 'Address', content: <IdentityBadge entity={address} /> },
-              ]}
-            />
-            <Fees onRequestEditFees={handlePanelOpen} buyFeePct={adjustedBuyFeePct} sellFeePct={adjustedSellFee} />
-          </>
-        }
-      />
-      <EditFees opened={panelOpened} onClosePanel={handlePanelClose} buyFeePct={adjustedBuyFeePct} sellFeePct={adjustedSellFee} />
+      <div
+        css={`
+          display: grid;
+          grid-template-columns: auto 1fr 1fr;
+          grid-gap: ${2 * GU}px;
+        `}
+      >
+        <Box heading="Collateralization ratios">
+          <div
+            css={`
+              display: grid;
+              grid-column-gap: ${3 * GU}px;
+              grid-template-columns: repeat(${layoutName === 'small' ? '1' : '2'}, 1fr);
+              width: 100%;
+            `}
+          >
+            {[[primaryCollateralSymbol, primaryCollateralRatio]].map(([symbol, ratio], i) => (
+              <ReserveSetting
+                key={i}
+                label={`${symbol} collateralization ratio`}
+                helpContent={helpContent(primaryCollateralSymbol)[0]}
+                value={
+                  <span>
+                    {ratio}
+                    <span
+                      css={`
+                        margin-left: ${0.5 * GU}px;
+                        color: ${theme.surfaceContentSecondary};
+                      `}
+                    >
+                      %
+                    </span>
+                  </span>
+                }
+              />
+            ))}
+          </div>
+        </Box>
+
+        <div>
+          <DefinitionsBox
+            heading="Shares"
+            definitions={[
+              { label: 'Total Supply', content: <strong>{adjustedTokenSupply}</strong> },
+              {
+                label: 'Token',
+                content: <TokenBadge name={name} symbol={symbol} badgeOnly />,
+              },
+              { label: 'Address', content: <IdentityBadge entity={address} /> },
+            ]}
+          />
+        </div>
+        <Fees onRequestUpdateFees={handlePanelOpen} buyFeePct={adjustedBuyFeePct} sellFeePct={adjustedSellFee} />
+      </div>
+      <UpdateFees opened={panelOpened} onClosePanel={handlePanelClose} buyFeePct={adjustedBuyFeePct} sellFeePct={adjustedSellFee} />
     </>
   )
 }

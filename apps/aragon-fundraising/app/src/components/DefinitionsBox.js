@@ -4,7 +4,12 @@ import { Box, GU, useTheme } from '@aragon/ui'
 const DefinitionsBox = ({ heading, definitions }) => {
   const theme = useTheme()
   return (
-    <Box heading={heading}>
+    <Box
+      heading={heading}
+      css={`
+        height: 100%;
+      `}
+    >
       <ul>
         {definitions.map(({ label, content }, index) => (
           <li

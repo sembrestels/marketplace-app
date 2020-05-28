@@ -1,9 +1,9 @@
 import React, { useCallback, useState } from 'react'
-import { Button, Field, GU, SidePanel, TextInput, useTheme } from '@aragon/ui'
+import { Button, Field, GU, Info, SidePanel, TextInput, useTheme } from '@aragon/ui'
 import { useAragonApi } from '@aragon/api-react'
 import { percetangeToBase } from '../../utils/bn-utils'
 
-const EditFees = ({ buyFeePct: initialBuyFeePct, opened, onClosePanel, sellFeePct: initialSellFeePct }) => {
+const UpdateFees = ({ buyFeePct: initialBuyFeePct, opened, onClosePanel, sellFeePct: initialSellFeePct }) => {
   const { api, appState } = useAragonApi()
   const {
     constants: { PCT_BASE },
@@ -38,13 +38,21 @@ const EditFees = ({ buyFeePct: initialBuyFeePct, opened, onClosePanel, sellFeePc
   const feesUpdated = buyFeePct !== initialBuyFeePct || sellFeePct !== initialSellFeePct
 
   return (
-    <SidePanel opened={opened} onClose={onClosePanel} title="Edit fees">
+    <SidePanel opened={opened} onClose={onClosePanel} title="Update Fees">
       <form
         onSubmit={handleSubmit}
         css={`
           margin-top: ${3 * GU}px;
         `}
       >
+        <Info
+          css={`
+            margin-bottom: ${2 * GU}px;
+          `}
+          title="Action"
+        >
+          Update the fee taken from all buy/sell orders that is deposited into the organisation's funding pool
+        </Info>
         <Field label="Buy fee">
           <PercentageInput value={buyFeePct} onChange={handleBuyFeeChange} />
         </Field>
@@ -53,7 +61,7 @@ const EditFees = ({ buyFeePct: initialBuyFeePct, opened, onClosePanel, sellFeePc
         </Field>
 
         <Button
-          label="Edit fees"
+          label="Update Fees"
           mode="strong"
           type="submit"
           wide
@@ -97,4 +105,4 @@ const PercentageInput = ({ value, onChange }) => {
   )
 }
 
-export default EditFees
+export default UpdateFees

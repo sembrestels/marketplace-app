@@ -1,7 +1,7 @@
 import React from 'react'
 import { Box, Button, GU, IconEdit, textStyle, useTheme } from '@aragon/ui'
 
-const Fees = ({ buyFeePct, sellFeePct, onRequestEditFees }) => {
+const Fees = ({ buyFeePct, sellFeePct, onRequestUpdateFees }) => {
   return (
     <Box heading="Fees">
       <div>
@@ -12,8 +12,8 @@ const Fees = ({ buyFeePct, sellFeePct, onRequestEditFees }) => {
             margin-top: ${2 * GU}px;
           `}
           icon={<IconEdit />}
-          label="Edit fees"
-          onClick={onRequestEditFees}
+          label="Update Fees"
+          onClick={onRequestUpdateFees}
           wide
         />
       </div>
