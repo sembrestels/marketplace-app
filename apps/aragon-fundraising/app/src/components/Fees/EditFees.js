@@ -38,7 +38,7 @@ const EditFees = ({ buyFeePct: initialBuyFeePct, opened, onClosePanel, sellFeePc
   const feesUpdated = buyFeePct !== initialBuyFeePct || sellFeePct !== initialSellFeePct
 
   return (
-    <SidePanel opened={opened} onClose={onClosePanel} title="Update fees">
+    <SidePanel opened={opened} onClose={onClosePanel} title="Edit fees">
       <form
         onSubmit={handleSubmit}
         css={`
