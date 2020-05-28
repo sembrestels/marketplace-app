@@ -1,7 +1,7 @@
 import React, { useEffect, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { useApi, useAppState } from '@aragon/api-react'
-import { Button, DropDown, Info, Text, TextInput, theme, unselectable, GU } from '@aragon/ui'
+import { Button, DropDown, GU, Info, Text, TextInput, theme, unselectable, useTheme } from '@aragon/ui'
 import { MainViewContext } from '../../context'
 import Total from './Total'
 import Info_ from './Info'
@@ -176,9 +176,9 @@ const Order = ({ isBuyOrder }) => {
             <DropDown items={[collaterals.primaryCollateral.symbol]} selected={selectedCollateral} onChange={setSelectedCollateral} css="width: 130px;" />
           </CombinedInput>
           <label>
-            <StyledTextBlock>ACCEPTED SLIPPAGE %</StyledTextBlock>
+            <StyledTextBlock>ACCEPTED SLIPPAGE</StyledTextBlock>
           </label>
-          <TextInput type="number" value={slippagePercent} onChange={handleSlippageUpdated} min={0} max={100} placeholder="0" step="any" required wide />
+          <PercentageInput value={slippagePercent} onChange={handleSlippageUpdated} />
         </AmountField>
       </InputsWrapper>
       <Total
@@ -235,6 +235,37 @@ const Order = ({ isBuyOrder }) => {
         )}
       </div>
     </form>
+  )
+}
+
+const PercentageInput = ({ value, onChange }) => {
+  const theme = useTheme()
+  const adornmentSettings = { padding: 1 }
+
+  return (
+    <TextInput
+      type="number"
+      value={value}
+      onChange={onChange}
+      wide
+      required
+      min={0}
+      max={100}
+      placeholder="0"
+      adornment={
+        <span
+          css={`
+            background: ${theme.background};
+            border-left: 1px solid ${theme.border};
+            padding: 7px ${2 * GU}px;
+          `}
+        >
+          %
+        </span>
+      }
+      adornmentPosition="end"
+      adornmentSettings={adornmentSettings}
+    />
   )
 }
 
