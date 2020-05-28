@@ -267,7 +267,7 @@ const loadContractsData = async (state, { bondedToken, marketMaker, presale, net
       symbol,
       name,
       decimals: parseInt(decimals, 10),
-      totalSupply
+      totalSupply,
       // realSupply and overallSupply will be calculated on the reducer
     },
   }
@@ -362,7 +362,14 @@ const removeCollateralToken = (state, { collateral }) => {
 //   }
 // }
 
-const newOrder = async (state, { buyer, seller, collateral, purchaseAmount, sellAmount, returnedAmount, fee, feePct }, settings, blockNumber, transactionHash, logIndex) => {
+const newOrder = async (
+  state,
+  { buyer, seller, collateral, purchaseAmount, sellAmount, returnedAmount, fee, feePct },
+  settings,
+  blockNumber,
+  transactionHash,
+  logIndex
+) => {
   const orders = cloneDeep(state.orders)
   // if it's a buy order, seller and sellAmount will undefined
   // if it's a sell order, buyer and purchaseAmount will be undefined
@@ -382,8 +389,8 @@ const newOrder = async (state, { buyer, seller, collateral, purchaseAmount, sell
     user: buyer || seller,
     type,
     state: Order.state.CLAIMED,
-    amount: sellAmount ? sellAmount : returnedAmount,
-    value: purchaseAmount ? purchaseAmount : returnedAmount,
+    amount: sellAmount || returnedAmount,
+    value: purchaseAmount || returnedAmount,
     fee, // can be undefined
     feePct, // can be undefined
     // price is calculated in the reducer
@@ -516,7 +523,7 @@ const updateFees = (state, { buyFeePct, sellFeePct }) => {
     values: {
       ...state.values,
       buyFeePct,
-      sellFeePct
+      sellFeePct,
     },
   }
 }
