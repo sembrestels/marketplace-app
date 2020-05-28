@@ -7,8 +7,7 @@ import { MainViewContext } from '../../context'
 import BancorFormulaAbi from '../../abi/BancorFormula.json'
 import { formatBigNumber, toDecimals } from '../../utils/bn-utils'
 
-const Total = ({ isBuyOrder, amount, conversionSymbol, onError,
-                 setMinReturnAmount, setFeeAmount, feeAmount }) => {
+const Total = React.memo(({ isBuyOrder, amount, conversionSymbol, onError, setMinReturnAmount, setFeeAmount, feeAmount }) => {
   const { value, decimals, symbol, reserveRatio, feePercentage, slippagePercent } = amount
   // *****************************
   // background script state
@@ -17,19 +16,18 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError,
     constants: { PCT_BASE },
     values: { buyFeePct, sellFeePct },
     addresses: { formula: formulaAddress },
-    bondedToken: { overallSupply }
+    bondedToken: { overallSupply },
   } = useAppState()
 
   // *****************************
   // aragon api
   // *****************************
   const api = useApi()
-  const formula = api.external(formulaAddress, BancorFormulaAbi)
 
   // *****************************
   // context state
   // *****************************
-  const { price, primaryCollateralBalance, userPrimaryCollateralBalance, userBondedTokenBalance } = useContext(MainViewContext)
+  const { primaryCollateralBalance, userPrimaryCollateralBalance, userBondedTokenBalance } = useContext(MainViewContext)
 
   // *****************************
   // internal state
@@ -56,10 +54,8 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError,
     let didCancel = false
 
     const evaluateOrderReturn = async () => {
-      const functionToCall = isBuyOrder ? 'calculatePurchaseReturn' : 'calculateSaleReturn'
       const valueBn = toDecimals(value, decimals)
       // supply, balance, weight, amount
-      const currentSymbol = isBuyOrder ? symbol : conversionSymbol
       const supply = overallSupply.primaryCollateral
       const balance = primaryCollateralBalance
       if (balance && !didCancel) {
@@ -68,35 +64,44 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError,
           const paidLessFee = valueBn.minus(fee)
           const reserveBalanceAtCalculation = balance.plus(paidLessFee).toFixed()
 
-          const evaluatedReturn = await api.external(formulaAddress, BancorFormulaAbi)
-            .calculatePurchaseReturn(supply.toFixed(), reserveBalanceAtCalculation, reserveRatio.toFixed(), paidLessFee.toFixed())
-            .toPromise()
-            .catch(() => errorCb('The amount is out of range of the supply'))
-          const evaluatedReturnBn = new BigNumber(evaluatedReturn)
+          try {
+            const evaluatedReturn = await api
+              .external(formulaAddress, BancorFormulaAbi)
+              .calculatePurchaseReturn(supply.toFixed(), reserveBalanceAtCalculation, reserveRatio.toFixed(), paidLessFee.toFixed())
+              .toPromise()
 
-          const minReturnAmountLessSlippage = formatBigNumber(evaluatedReturnBn, decimals) * ((100 - slippagePercent) / 100)
+            const evaluatedReturnBn = new BigNumber(evaluatedReturn)
 
-          setEvaluatedReturn(formatBigNumber(evaluatedReturnBn, decimals))
-          setMinReturnAmount(minReturnAmountLessSlippage)
-          setFeeAmount(formatBigNumber(buyFeePct.div(PCT_BASE).times(value), 0))
-          setEvaluatedReturnLessFee(formatBigNumber(evaluatedReturnBn, decimals))
+            const minReturnAmountLessSlippage = (formatBigNumber(evaluatedReturnBn, decimals) * ((100 - slippagePercent) / 100)).toFixed(2)
+
+            setEvaluatedReturn(formatBigNumber(evaluatedReturnBn, decimals))
+            setMinReturnAmount(minReturnAmountLessSlippage)
+            setFeeAmount(formatBigNumber(buyFeePct.div(PCT_BASE).times(value), 0, { commify: false }))
+            setEvaluatedReturnLessFee(formatBigNumber(evaluatedReturnBn, decimals))
+          } catch (err) {
+            return errorCb('The amount is out of range of the supply')
+          }
         } else {
           const reserveSupplyAtCalculation = supply.minus(valueBn).toFixed()
 
-          const evaluatedReturn = await api.external(formulaAddress, BancorFormulaAbi)
-            .calculateSaleReturn(reserveSupplyAtCalculation, balance.toFixed(), reserveRatio.toFixed(), valueBn.toFixed())
-            .toPromise()
-            .catch(() => errorCb('The amount is out of range of the supply'))
+          try {
+            const evaluatedReturn = await api
+              .external(formulaAddress, BancorFormulaAbi)
+              .calculateSaleReturn(reserveSupplyAtCalculation, balance.toFixed(), reserveRatio.toFixed(), valueBn.toFixed())
+              .toPromise()
 
-          const evaluatedReturnBn = new BigNumber(evaluatedReturn)
-          const sellFeeAmountBn = sellFeePct.div(PCT_BASE).times(evaluatedReturnBn)
-          const minReturnAmount = (evaluatedReturnBn.minus(sellFeeAmountBn)).times((100 - slippagePercent) / 100)
-          const evalutatedReturnLessFee = evaluatedReturnBn.minus(sellFeeAmountBn)
+            const evaluatedReturnBn = new BigNumber(evaluatedReturn)
+            const sellFeeAmountBn = sellFeePct.div(PCT_BASE).times(evaluatedReturnBn)
+            const minReturnAmount = evaluatedReturnBn.minus(sellFeeAmountBn).times((100 - slippagePercent) / 100)
+            const evalutatedReturnLessFee = evaluatedReturnBn.minus(sellFeeAmountBn)
 
-          setEvaluatedReturn(formatBigNumber(evaluatedReturnBn, decimals))
-          setMinReturnAmount(formatBigNumber(minReturnAmount, decimals))
-          setFeeAmount(formatBigNumber(sellFeeAmountBn, decimals))
-          setEvaluatedReturnLessFee(formatBigNumber(evalutatedReturnLessFee, decimals))
+            setEvaluatedReturn(formatBigNumber(evaluatedReturnBn, decimals))
+            setMinReturnAmount(formatBigNumber(minReturnAmount, decimals, { commify: false }))
+            setFeeAmount(formatBigNumber(sellFeeAmountBn, decimals, { commify: false }))
+            setEvaluatedReturnLessFee(formatBigNumber(evalutatedReturnLessFee, decimals))
+          } catch (err) {
+            return errorCb('The amount is out of range of the supply')
+          }
         }
         okCb()
       } else {
@@ -105,7 +110,9 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError,
     }
 
     const userBalance = userPrimaryCollateralBalance
+
     const valueLessFee = isBuyOrder ? parseFloat(value) - feeAmount : value
+
     if (isBuyOrder && userBalance.lt(toDecimals(value, decimals))) {
       // cannot buy more than your own balance
       setFormattedAmount(formatBigNumber(valueLessFee, 0))
@@ -133,7 +140,7 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError,
     return () => {
       didCancel = true
     }
-  }, [isBuyOrder, amount, conversionSymbol])
+  }, [amount, conversionSymbol, isBuyOrder, feeAmount])
 
   return (
     <div css="display: flex; justify-content: space-between; padding: 0 5px;">
@@ -144,19 +151,19 @@ const Total = ({ isBuyOrder, amount, conversionSymbol, onError,
         <div css="display: flex; justify-content: flex-end;">
           <AmountField weight="bold">{formattedAmount}</AmountField>
           <Text weight="bold">{symbol}</Text>
-          {feePercentage > 0 && isBuyOrder &&
-          <FeeField weight="bold">{`(${formatBigNumber(feeAmount, 0)} FEE)`}</FeeField>}
+          {feePercentage > 0 && isBuyOrder && <FeeField weight="bold">{`(${formatBigNumber(feeAmount, 0)} FEE)`}</FeeField>}
         </div>
-        {evaluatedReturn && <div css="display: flex; justify-content: flex-end;">
-          <AmountField color="grey">~{evaluatedReturnLessFee}</AmountField>
-          <Text color="grey">{conversionSymbol}</Text>
-          {feePercentage > 0 && !isBuyOrder &&
-          <FeeField color="grey">{`(${formatBigNumber(feeAmount, 0)} FEE)`}</FeeField>}
-        </div>}
+        {evaluatedReturn && (
+          <div css="display: flex; justify-content: flex-end;">
+            <AmountField color="grey">~{evaluatedReturnLessFee}</AmountField>
+            <Text color="grey">{conversionSymbol}</Text>
+            {feePercentage > 0 && !isBuyOrder && <FeeField color="grey">{`(${formatBigNumber(feeAmount, 0)} FEE)`}</FeeField>}
+          </div>
+        )}
       </div>
     </div>
   )
-}
+})
 
 const AmountField = styled(Text)`
   margin-right: 7px;

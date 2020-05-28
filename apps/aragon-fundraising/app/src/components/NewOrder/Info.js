@@ -1,9 +1,7 @@
 import React from 'react'
-import { useAppState, GU } from '@aragon/api-react'
-import { Info } from '@aragon/ui'
+import { GU, Info } from '@aragon/ui'
 
-const Information = ({minExpectedReturnAmount, tokenSymbol}) => {
-
+const Information = ({ minExpectedReturnAmount, tokenSymbol }) => {
   return (
     <div
       css={`
