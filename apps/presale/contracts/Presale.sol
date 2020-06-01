@@ -9,7 +9,7 @@ import "@aragon/os/contracts/lib/math/SafeMath64.sol";
 import "@aragon/os/contracts/lib/token/ERC20.sol";
 import "@aragon/apps-token-manager/contracts/TokenManager.sol";
 import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
-import "../../aragon-fundraising/contracts/IAragonFundraisingController.sol";
+import "../../marketplace-controller/contracts/IMarketplaceController.sol";
 
 
 contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
@@ -49,7 +49,7 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
         Closed       // presale has reached goal within period, has been closed and trading has been open
     }
 
-    IAragonFundraisingController                    public controller;
+    IMarketplaceController                          public controller;
     TokenManager                                    public tokenManager;
     ERC20                                           public token;
     address                                         public reserve;
@@ -96,7 +96,7 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
      * @param _openDate                 The date upon which that presale is to be open [ignored if 0]
     */
     function initialize(
-        IAragonFundraisingController _controller,
+        IMarketplaceController       _controller,
         TokenManager                 _tokenManager,
         address                      _reserve,
         address                      _beneficiary,

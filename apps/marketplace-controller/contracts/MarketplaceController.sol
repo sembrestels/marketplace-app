@@ -9,9 +9,9 @@ import "@aragon/os/contracts/lib/token/ERC20.sol";
 import "@aragon/apps-vault/contracts/Vault.sol";
 import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
 import "../../bancor-market-maker/contracts/BancorMarketMaker.sol";
-import "./IAragonFundraisingController.sol";
+import "./IMarketplaceController.sol";
 
-contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonFundraisingController, AragonApp {
+contract MarketplaceController is EtherTokenConstant, IsContract, IMarketplaceController, AragonApp {
     using SafeERC20 for ERC20;
     using SafeMath  for uint256;
 

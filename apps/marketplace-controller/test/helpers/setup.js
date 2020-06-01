@@ -42,7 +42,7 @@ const getProxyAddress = require('@ablack/fundraising-shared-test-helpers/getProx
 
 const setup = {
   ids: {
-    controller: hash('aragon-fundraising.aragonpm.eth'),
+    controller: hash('marketplace-controller.aragonpm.eth'),
     tokenManager: hash('token-manager.aragonpm.eth'),
     presale: hash('presale.aragonpm.eth'),
     marketMaker: hash('bancor-market-maker.aragonpm.eth'),

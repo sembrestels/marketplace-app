@@ -91,7 +91,7 @@ This module enforce a tap-based control of the funds allowed to be withdrawn fro
 | [`@ablack/fundraising-bancor-formula`](/apps/bancor-formula)                           |         | `BancorFormula` computation contract                                                                          |
 | [`@ablack/fundraising-batched-bancor-market-maker`](/apps/bancor-market-maker) |         | Automated market-maker batching orders filled through the `BancorFormula`                                     |
 | [`@ablack/fundraising-tap`](/apps/tap)                                                 |         | Tap controlling the flow of funds from a reserve to a beneficiary                                             |
-| [`@ablack/fundraising-aragon-fundraising`](/apps/aragon-fundraising)                   |         | `API` contract providing a single entry-point to interact consistently with all fundraising-related contracts |
+| [`@ablack/fundraising-aragon-fundraising`](/apps/marketplace-controller)                   |         | `API` contract providing a single entry-point to interact consistently with all fundraising-related contracts |
 
 
 ## Contributing
