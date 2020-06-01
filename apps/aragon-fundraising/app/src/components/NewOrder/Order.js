@@ -145,7 +145,7 @@ const Order = ({ isBuyOrder }) => {
   }, [amount, collateralItems, getDecimals, getSymbol, getFeePercentage, selectedCollateral, slippagePercent])
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form noValidate onSubmit={handleSubmit}>
       <InputsWrapper>
         <AmountField key="collateral">
           <label>
@@ -212,6 +212,10 @@ const Order = ({ isBuyOrder }) => {
           `}
         >
           {getUserBalance()} {getSymbol()}
+          {!isBuyOrder &&
+            <p css={`padding-top: ${GU}px`}>
+              Note that your accounts balance displayed elsewhere may differ if tokens are still vesting.
+            </p>}
         </Info>
 
         <Info_

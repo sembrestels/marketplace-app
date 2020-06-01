@@ -11,22 +11,6 @@ import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
 import "../../bancor-market-maker/contracts/BancorMarketMaker.sol";
 import "./IAragonFundraisingController.sol";
 
-// TODO: Removed vars for UI reference:
-// ITap public tap;
-//bytes32 public constant UPDATE_MAXIMUM_TAP_RATE_INCREASE_PCT_ROLE  = keccak256("UPDATE_MAXIMUM_TAP_RATE_INCREASE_PCT_ROLE");
-//bytes32 public constant UPDATE_MAXIMUM_TAP_FLOOR_DECREASE_PCT_ROLE = keccak256("UPDATE_MAXIMUM_TAP_FLOOR_DECREASE_PCT_ROLE");
-//bytes32 public constant ADD_TOKEN_TAP_ROLE                         = keccak256("ADD_TOKEN_TAP_ROLE");
-//bytes32 public constant UPDATE_TOKEN_TAP_ROLE                      = keccak256("UPDATE_TOKEN_TAP_ROLE");
-//     uint256 public constant TO_RESET_CAP = 10;
-//     string private constant ERROR_INVALID_TOKENS  = "FUNDRAISING_INVALID_TOKENS";
-//     address[]                public toReset;
-//function openBuyOrder(address _collateral, uint256 _value)
-//function openSellOrder(address _collateral, uint256 _amount)
-//function claimBuyOrder(address _buyer, uint256 _batchId, address _collateral)
-//function claimSellOrder(address _seller, uint256 _batchId, address _collateral)
-//function collateralsToBeClaimed(address _collateral)
-
-
 contract AragonFundraisingController is EtherTokenConstant, IsContract, IAragonFundraisingController, AragonApp {
     using SafeERC20 for ERC20;
     using SafeMath  for uint256;

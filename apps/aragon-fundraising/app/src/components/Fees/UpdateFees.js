@@ -40,6 +40,7 @@ const UpdateFees = ({ buyFeePct: initialBuyFeePct, opened, onClosePanel, sellFee
   return (
     <SidePanel opened={opened} onClose={onClosePanel} title="Update Fees">
       <form
+        noValidate
         onSubmit={handleSubmit}
         css={`
           margin-top: ${3 * GU}px;

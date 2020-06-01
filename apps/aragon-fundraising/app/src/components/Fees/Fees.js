@@ -5,8 +5,8 @@ const Fees = ({ buyFeePct, sellFeePct, onRequestUpdateFees }) => {
   return (
     <Box heading="Fees">
       <div>
-        <Field label="Buy fee" value={`% ${buyFeePct}`} />
-        <Field label="Sell fee" value={`% ${sellFeePct}`} />
+        <Field label="Buy fee" value={`${buyFeePct} %`} />
+        <Field label="Sell fee" value={`${sellFeePct} %`} />
         <Button
           css={`
             margin-top: ${2 * GU}px;

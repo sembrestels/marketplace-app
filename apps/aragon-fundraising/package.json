@@ -1,6 +1,6 @@
 {
-  "name": "@ablack/fundraising-aragon-fundraising",
-  "version": "1.0.2",
+  "name": "@1hive/apps-marketplace",
+  "version": "1.0.0",
   "author": "Aragon Assocation <legal@aragon.org>",
   "contributors": [
     "Olivier Sarrouy <olivier@aragon.black>",
@@ -9,7 +9,7 @@
     "Cory Dickson <cory@aragon.black>"
   ],
   "license": "(GPL-3.0-or-later OR AGPL-3.0-or-later)",
-  "homepage": "https://github.com/AragonBlack/fundraising",
+  "homepage": "https://github.com/1Hive/marketplace-app",
   "scripts": {
     "install": "npm run install:frontend",
     "install:frontend": "cd app && npm install",

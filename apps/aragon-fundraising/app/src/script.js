@@ -339,29 +339,6 @@ const removeCollateralToken = (state, { collateral }) => {
   }
 }
 
-// const handleTappedToken = async (state, { token, rate, floor }, blockNumber) => {
-//   const collaterals = cloneDeep(state.collaterals)
-//   const timestamp = await loadTimestamp(blockNumber)
-//   const tap = { rate, floor, timestamp }
-//   collaterals.set(token, { ...collaterals.get(token), tap })
-//   return {
-//     ...state,
-//     collaterals,
-//   }
-// }
-//
-// const resetTappedToken = async (state, { token }, blockNumber) => {
-//   const collaterals = cloneDeep(state.collaterals)
-//   const timestamp = await loadTimestamp(blockNumber)
-//   const currentCollateral = collaterals.get(token)
-//   const tap = { ...currentCollateral.tap, timestamp }
-//   collaterals.set(token, { ...currentCollateral, tap })
-//   return {
-//     ...state,
-//     collaterals,
-//   }
-// }
-
 const newOrder = async (
   state,
   { buyer, seller, collateral, purchaseAmount, sellAmount, returnedAmount, fee, feePct },
@@ -411,111 +388,6 @@ const newOrder = async (
     bondedToken,
   }
 }
-
-// const updateMaximumTapRateIncreasePct = (state, { maximumTapRateIncreasePct }) => {
-//   return {
-//     ...state,
-//     values: {
-//       ...state.values,
-//       maximumTapRateIncreasePct,
-//     },
-//   }
-// }
-//
-// const updateMaximumTapFloorDecreasePct = (state, { maximumTapFloorDecreasePct }) => {
-//   return {
-//     ...state,
-//     values: {
-//       ...state.values,
-//       maximumTapFloorDecreasePct,
-//     },
-//   }
-// }
-
-// const newClaim = async (state, { buyer, seller, collateral, batchId, value, amount }, settings) => {
-//   // if it's a buy return, seller and value will undefined
-//   // if it's a sell return, buyer and amount will be undefined
-//   const user = buyer || seller
-//   const type = buyer ? Order.type.BUY : Order.type.SELL
-//   const orders = cloneDeep(state.orders)
-//     // find orders concerned by this event and update values
-//     .map(order => {
-//       if (order.user === user && order.batchId === parseInt(batchId, 10) && order.collateral === collateral && order.type === type) {
-//         return {
-//           ...order,
-//           amount: order.amount ? order.amount : amount, // update amount for a buy order
-//           value: order.value ? order.value : value, // update value for a sell order
-//           state: Order.state.CLAIMED,
-//         }
-//       } else return order
-//     })
-//   const [bondedToken, collaterals] = await Promise.all([
-//     updateBondedToken(state.bondedToken, settings),
-//     updateCollateralsToken(state.collaterals, collateral, settings),
-//   ])
-//   return {
-//     ...state,
-//     orders,
-//     bondedToken,
-//     collaterals,
-//   }
-// }
-
-// const newBatch = async (state, { id: batchId, collateral, supply, balance, reserveRatio }, blockNumber) => {
-//   const batches = cloneDeep(state.batches)
-//   const timestamp = await loadTimestamp(blockNumber)
-//   const id = parseInt(batchId, 10)
-//   const { virtualBalance } = state.collaterals.get(collateral)
-//   const newBatch = {
-//     id,
-//     timestamp,
-//     collateral,
-//     supply,
-//     realSupply: metabatches.get(id).supply,
-//     balance,
-//     virtualBalance,
-//     reserveRatio,
-//     buyFeePct: metabatches.get(id).buyFeePct,
-//     sellFeePct: metabatches.get(id).sellFeePct,
-//     // realBalance, startPrice, buyPrice, sellPrice are calculated in the reducer
-//     // totalBuySpend, totalBuyReturn, totalSellReturn, totalSellSpend updated via updatePricing events
-//   }
-//   // because of chain re-orgs, events can be fired more than once
-//   // id makes a good uniqueness identifier
-//   const batchIndex = batches.findIndex(b => b.id === parseInt(id, 10))
-//   const batchFound = batchIndex !== -1
-//   // update the batch in place if already in the list
-//   if (batchFound) batches[batchIndex] = newBatch
-//   // add the batch if not in the list
-//   else batches.push(newBatch)
-//   return {
-//     ...state,
-//     batches,
-//   }
-// }
-
-// const newMetaBatch = (state, { id, supply, buyFeePct, sellFeePct }) => {
-//   metabatches.set(parseInt(id, 10), {supply, buyFeePct, sellFeePct})
-//   return state
-// }
-
-// const updatePricing = (state, { batchId, collateral, totalBuyReturn, totalBuySpend, totalSellReturn, totalSellSpend }) => {
-//   const batches = cloneDeep(state.batches).map(b => {
-//     if (b.id === parseInt(batchId, 10) && b.collateral === collateral) {
-//       return {
-//         ...b,
-//         totalBuySpend,
-//         totalBuyReturn,
-//         totalSellSpend,
-//         totalSellReturn,
-//       }
-//     } else return b
-//   })
-//   return {
-//     ...state,
-//     batches,
-//   }
-// }
 
 const updateFees = (state, { buyFeePct, sellFeePct }) => {
   return {
@@ -612,16 +484,6 @@ const removeContribution = (state, { contributor, value, amount, vestedPurchaseI
 const loadTokenBalance = (tokenAddress, { pool }) => {
   return app.call('balanceOf', pool.address, tokenAddress).toPromise()
 }
-
-/**
- * Get the current amount of collaterals to be claimed for the given collateral
- * @param {String} tokenAddress - the given token address
- * @param {Object} settings - the settings where the marketMaker contract is
- * @returns {Promise} a promise that resolves the collaterals to be claimed
- */
-// const loadCollateralsToBeClaimed = (tokenAddress, { marketMaker }) => {
-//   return marketMaker.contract.collateralsToBeClaimed(tokenAddress).toPromise()
-// }
 
 /**
  * Get the decimals of a given token contract
@@ -724,19 +586,3 @@ const updateBondedToken = async (bondedToken, settings) => {
     totalSupply,
   }
 }
-
-/**
- * Updates the collaterals tokens when an order or claim happens
- * @param {Map} collaterals - map of the collaterals
- * @param {String} collateral - current address of the collateral to update
- * @param {Object} settings - settings object where the needed contracts are
- * @returns {Object} the updated collaterals
- */
-// const updateCollateralsToken = async (collaterals, collateral, settings) => {
-//   const updatedCollaterals = cloneDeep(collaterals)
-//   updatedCollaterals.set(collateral, {
-//     ...updatedCollaterals.get(collateral),
-//     toBeClaimed: await loadCollateralsToBeClaimed(collateral, settings),
-//   })
-//   return updatedCollaterals
-// }

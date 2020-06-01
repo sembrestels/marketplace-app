@@ -1,5 +1,5 @@
 {
-  "name": "fundraising",
+  "name": "marketplace",
   "version": "0.1.0",
   "private": true,
   "author": "Aragon Black <contact@aragon.black>",
@@ -9,9 +9,9 @@
     "Xavier Seignard <xavier@aragon.black>",
     "Cory Dickson <cory@aragon.black>"
   ],
-  "repository": "github:AragonBlack/fundraising",
-  "homepage": "https://github.com/AragonBlack/fundraising",
-  "bugs": "https://github.com/AragonBlack/fundraising/issues",
+  "repository": "github:1Hive/marketplace-app",
+  "homepage": "https://github.com/1Hive/marketplace-app",
+  "bugs": "https://github.com/1Hive/marketplace-app/issues",
   "license": "(GPL-3.0-or-later OR MIT)",
   "scripts": {
     "lint": "eslint ./src",

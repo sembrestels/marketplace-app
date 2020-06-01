@@ -236,13 +236,13 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
         const amount = random.amount()
         const receipt = await this.controller.makeBuyOrder(ETH, amount, 0, { from: authorized, value: amount })
 
-        assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256)')
+        assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256,uint256)')
       })
 
       it('it should open buy order [ERC20]', async () => {
         const receipt = await this.controller.makeBuyOrder(this.collaterals.dai.address, random.amount(), 0, { from: authorized })
 
-        assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256)')
+        assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256,uint256)')
       })
     })
 
@@ -274,7 +274,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
 
         const receipt = await this.controller.makeSellOrder(ETH, balance, 0, { from: authorized })
 
-        assertExternalEvent(receipt, 'MakeSellOrder(address,address,uint256,uint256,uint256)')
+        assertExternalEvent(receipt, 'MakeSellOrder(address,address,uint256,uint256,uint256,uint256)')
       })
 
       it('it should open sell order [ERC20]', async () => {
@@ -283,7 +283,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
 
         const receipt = await this.controller.makeSellOrder(this.collaterals.dai.address, balance, 0, { from: authorized })
 
-        assertExternalEvent(receipt, 'MakeSellOrder(address,address,uint256,uint256,uint256)')
+        assertExternalEvent(receipt, 'MakeSellOrder(address,address,uint256,uint256,uint256,uint256)')
       })
     })
 
