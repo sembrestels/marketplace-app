@@ -3,7 +3,7 @@ cache:
   timeout: 600
   directories:
     - node_modules
-    - fundraising/apps/aragon-fundraising/node_modules
+    - fundraising/apps/marketplace-controller/node_modules
     - fundraising/apps/bancor-formula/node_modules
     - fundraising/apps/batched-bancor-market-maker/node_modules
     - fundraising/apps/presale/node_modules
@@ -23,7 +23,7 @@ jobs:
       script: npm run lint
       name: 'All'
     - stage: tests
-      script: npm run test:aragon-fundraising
+      script: npm run test:marketplace-controller
       name: 'Aragon Fundraising'
     - script: npm run test:batched-bancor-market-maker
       name: 'Batched Bancor Market Maker'
@@ -34,7 +34,7 @@ jobs:
     - script: npm run test:multisig-template
       name: 'Multisig Template'
     - stage: coverage
-      script: npm run coverage:aragon-fundraising
+      script: npm run coverage:marketplace-controller
       name: 'Aragon Fundraising'
     - script: npm run coverage:batched-bancor-market-maker
       name: 'Batched Bancor Market Maker'

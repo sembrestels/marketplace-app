@@ -226,14 +226,14 @@ contract('Fundraising with multisig', ([_, owner, boardMember1, boardMember2]) =
       assert.equal(installedAppsDuringFundraising.presale.length, 1, 'should have installed 1 presale app')
       presale = Presale.at(installedAppsDuringFundraising.presale[0])
 
-      assert.equal(installedAppsDuringFundraising['batched-bancor-market-maker'].length, 1, 'should have installed 1 market-maker app')
-      marketMaker = MarketMaker.at(installedAppsDuringFundraising['batched-bancor-market-maker'][0])
+      assert.equal(installedAppsDuringFundraising['bancor-market-maker'].length, 1, 'should have installed 1 market-maker app')
+      marketMaker = MarketMaker.at(installedAppsDuringFundraising['bancor-market-maker'][0])
 
       assert.equal(installedAppsDuringFundraising.tap.length, 1, 'should have installed 1 tap app')
       tap = Tap.at(installedAppsDuringFundraising.tap[0])
 
-      assert.equal(installedAppsDuringFundraising['aragon-fundraising'].length, 1, 'should have installed 1 aragon-fundraising app')
-      controller = Controller.at(installedAppsDuringFundraising['aragon-fundraising'][0])
+      assert.equal(installedAppsDuringFundraising['marketplace-controller'].length, 1, 'should have installed 1 marketplace-controller app')
+      controller = Controller.at(installedAppsDuringFundraising['marketplace-controller'][0])
     }
 
     const itCostsUpTo = expectedCost => {
@@ -478,8 +478,8 @@ contract('Fundraising with multisig', ([_, owner, boardMember1, boardMember2]) =
           await assertMissingRole(acl, tap, 'REMOVE_TAPPED_TOKEN_ROLE')
         })
 
-        it('should have aragon-fundraising app correctly setup', async () => {
-          assert.isTrue(await controller.hasInitialized(), 'aragon-fundraising not initialized')
+        it('should have marketplace-controller app correctly setup', async () => {
+          assert.isTrue(await controller.hasInitialized(), 'marketplace-controller not initialized')
 
           assert.equal(web3.toChecksumAddress(await controller.presale()), presale.address)
           assert.equal(web3.toChecksumAddress(await controller.marketMaker()), marketMaker.address)

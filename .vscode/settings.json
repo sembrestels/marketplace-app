@@ -1,6 +1,0 @@
-{
-  "eslint.workingDirectories": [
-    { "directory": "./apps/aragon-fundraising/app", "changeProcessCWD": true }
-  ],
-  "javascript.validate.enable": false
-}
