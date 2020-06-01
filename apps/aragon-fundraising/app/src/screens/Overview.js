@@ -1,9 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext } from 'react'
 import styled from 'styled-components'
 import { useAppState } from '@aragon/api-react'
 import { Box, useTheme, GU } from '@aragon/ui'
 import BigNumber from 'bignumber.js'
-import subMonths from 'date-fns/subMonths'
 import Chart from '../components/Chart'
 import { formatBigNumber } from '../utils/bn-utils'
 import { MainViewContext } from '../context'
@@ -15,11 +14,7 @@ export default () => {
   const {
     bondedToken: { decimals: tokenDecimals, realSupply },
     collaterals: {
-      primaryCollateral: {
-        address: primaryCollateralAddress,
-        decimals: primaryCollateralDecimals,
-        symbol: primaryCollateralSymbol
-      },
+      primaryCollateral: { address: primaryCollateralAddress, decimals: primaryCollateralDecimals, symbol: primaryCollateralSymbol },
     },
     orders,
   } = useAppState()
@@ -32,34 +27,10 @@ export default () => {
   const { reserveBalance, price } = useContext(MainViewContext)
 
   // *****************************
-  // internal state
-  // *****************************
-  // the batch we use to compute trends
-  const [trendBatch, setTrendBatch] = useState(null)
-
-  // *****************************
-  // effects
-  // *****************************
-  // update the base batch to compute trends
-  // useEffect(() => {
-  //   // search the closest batch from (now - 1 month) to create some trends
-  //   const oneMonthAgo = subMonths(new Date(), 1).getTime()
-  //   const trendBatch = batches.reduce(
-  //     (closest, b) => {
-  //       const currentClosest = Math.abs(closest.timestamp - oneMonthAgo)
-  //       const current = Math.abs(b.timestamp - oneMonthAgo)
-  //       return currentClosest < current ? closest : b
-  //     },
-  //     { timestamp: new Date() }
-  //   )
-  //   setTrendBatch(trendBatch)
-  // }, [batches])
-
-  // *****************************
   // human readable values
   // *****************************
   // numbers
-  const numberSuffix = ' ' + primaryCollateralSymbol;
+  const numberSuffix = ' ' + primaryCollateralSymbol
   const adjustedPrice = price ? formatBigNumber(price, 0, { numberSuffix }) : '...'
   const marketCap = price ? price.times(realSupply) : null
   const adjustedMarketCap = price && marketCap ? formatBigNumber(marketCap, primaryCollateralDecimals, { numberSuffix }) : '...'
@@ -74,43 +45,6 @@ export default () => {
   const adjustedTokenSupply = formatBigNumber(realSupply, tokenDecimals)
   const realReserve = reserveBalance
   const adjustedReserves = realReserve ? formatBigNumber(realReserve, primaryCollateralDecimals, { numberSuffix }) : '...'
-
-  // trends
-  /**
-   * Util to get the percentage variation
-   * @param {BigNumber} start - start of variation calculation
-   * @param {BigNumber} end - end of variation calculation
-   * @returns {BigNumber} the variation in percents
-   */
-  const variation = (start, end) => {
-    return end
-      .minus(start)
-      .div(start)
-      .times(100)
-  }
-
-  // TODO: Investigate how to include trended info. Think this is the green labels under the overview bar.
-  const adjustedPriceTrendPct =
-    price && trendBatch?.startPrice ? formatBigNumber(variation(trendBatch.startPrice, price), 0, { keepSign: true, numberSuffix: '%' }) : null
-  // if startPrice is here, realSupply too, since NewMetaBatch event occurs before NewBatch one
-  const trendBatchMarketCap = marketCap && trendBatch?.startPrice ? trendBatch.startPrice.times(trendBatch.realSupply) : null
-  const marketCapDiff = marketCap && trendBatch?.startPrice ? marketCap.minus(trendBatchMarketCap) : null
-  const adjustedMarketCapTrend = marketCapDiff ? formatBigNumber(marketCapDiff, primaryCollateralDecimals, { keepSign: true, numberSuffix }) : null
-  const tradingTrendVolume = trendBatch?.id
-    ? orders
-        // only keep primary collateral orders since the start of the trendBatch
-        .filter(o => o.collateral === primaryCollateralAddress && o.batchId >= trendBatch.id)
-        // keep values
-        .map(o => o.value)
-        // sum them and tada, you got the trading volume between now and the beginning of the trendBatch
-        .reduce((acc, current) => acc.plus(current), new BigNumber(0))
-    : null
-  const adjustedTradingVolumeTrend = tradingTrendVolume ? formatBigNumber(tradingTrendVolume, primaryCollateralDecimals, { keepSign: true, numberSuffix }) : null
-  const adjustedTokenSupplyTrend = trendBatch?.realSupply ? formatBigNumber(realSupply.minus(trendBatch.realSupply), tokenDecimals, { keepSign: true }) : null
-  const adjustedReservesTrend =
-    reserveBalance && trendBatch?.realBalance
-      ? formatBigNumber(realReserve.minus(trendBatch.realBalance), tokenDecimals, { keepSign: true, numberSuffix })
-      : null
 
   return (
     <div>
@@ -135,17 +69,11 @@ export default () => {
               <p className="title">Price</p>
               <p className="number">{adjustedPrice}</p>
             </div>
-            <div>
-              <Trend value={adjustedPriceTrendPct} suffix="M" />
-            </div>
           </li>
           <li>
             <div>
               <p className="title">Market Cap</p>
               <p className="number">{adjustedMarketCap}</p>
-            </div>
-            <div>
-              <Trend value={adjustedMarketCapTrend} suffix="M" />
             </div>
           </li>
           <li>
@@ -153,26 +81,17 @@ export default () => {
               <p className="title">Trading Volume</p>
               <p className="number">{adjustedTradingVolume}</p>
             </div>
-            <div>
-              <Trend value={adjustedTradingVolumeTrend} suffix="M" />
-            </div>
           </li>
           <li>
             <div>
               <p className="title">Share Supply</p>
               <p className="number">{adjustedTokenSupply}</p>
             </div>
-            <div>
-              <Trend value={adjustedTokenSupplyTrend} suffix="M" />
-            </div>
           </li>
           <li>
             <div>
               <p className="title">Reserves</p>
               <p className="number">{adjustedReserves}</p>
-            </div>
-            <div>
-              <Trend value={adjustedReservesTrend} suffix="M" />
             </div>
           </li>
         </ul>
@@ -219,10 +138,6 @@ const KeyMetrics = styled(Box)`
       margin-right: ${1 * GU}px;
     }
 
-    div:last-child {
-      display: flex;
-    }
-
     .title {
       display: flex;
       font-size: 16px;
@@ -261,11 +176,15 @@ const KeyMetrics = styled(Box)`
       padding: ${2 * GU}px;
       border-bottom: 1px solid ${props => props.theme.border};
 
-      div:last-child {
-        align-self: flex-end;
+      div {
+        width: 100%;
         display: flex;
-        flex-direction: column;
-        align-items: flex-end;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .title {
+        margin: 0;
       }
 
       .number {
@@ -278,13 +197,3 @@ const KeyMetrics = styled(Box)`
     }
   }
 `
-
-const Trend = ({ value, suffix }) => {
-  // helper to compute the trend color (green if positive, red if negative)
-  const getTrendColor = value => (value ? (value.startsWith('-') ? 'red' : 'green') : 'none')
-  return (
-    <p className={`sub-number ${getTrendColor(value)}`}>
-      {value} <span>({suffix})</span>
-    </p>
-  )
-}
