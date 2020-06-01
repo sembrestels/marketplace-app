@@ -1,7 +1,7 @@
-import React, { useEffect, useContext, useRef, useState } from 'react'
+import React, { useEffect, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { useApi, useAppState } from '@aragon/api-react'
-import { Button, DropDown, Info, Text, TextInput, theme, unselectable, GU } from '@aragon/ui'
+import { Button, DropDown, GU, Info, Text, TextInput, theme, unselectable, useTheme } from '@aragon/ui'
 import { MainViewContext } from '../../context'
 import Total from './Total'
 import Info_ from './Info'
@@ -19,7 +19,7 @@ const Order = ({ isBuyOrder }) => {
     collaterals,
     bondedToken: { decimals: bondedDecimals, symbol: bondedSymbol },
   } = useAppState()
-  const collateralItems = [collaterals.primaryCollateral]
+  const collateralItems = useMemo(() => [collaterals.primaryCollateral], [collaterals])
 
   // *****************************
   // aragon api
@@ -56,34 +56,35 @@ const Order = ({ isBuyOrder }) => {
       setErrorMessage(null)
       // focus the right input, given the order type
       // timeout to avoid some flicker
-      amountInput && setTimeout(() => amountInput.current.focus(), 100)
+      amountInput.current && setTimeout(() => amountInput.current.focus(), 100)
     }
   }, [orderPanel, isBuyOrder])
 
   // *****************************
   // handlers
   // *****************************
-  const handleAmountUpdate = event => {
+  const handleAmountUpdate = useCallback(event => {
     setAmount(event.target.value)
-  }
+  }, [])
 
-  const handleSlippageUpdated = event => {
+  const handleSlippageUpdated = useCallback(event => {
     const value = event.target.value
     if (value >= 0 && value <= 100) {
       setSlippagePercent(event.target.value)
     }
-  }
+  }, [])
 
-  const validate = (err, message) => {
+  const validate = useCallback((err, message) => {
     setValid(err)
     setErrorMessage(message)
-  }
+  }, [])
 
   const handleSubmit = event => {
     event.preventDefault()
     const address = collateralItems[selectedCollateral].address
     if (valid) {
       const amountBn = toDecimals(amount, isBuyOrder ? collateralItems[selectedCollateral].decimals : bondedDecimals).toFixed()
+
       const minReturnBn = toDecimals(minReturnAmount, isBuyOrder ? bondedDecimals : collateralItems[selectedCollateral].decimals).toFixed()
       if (isBuyOrder) {
         const intent = { token: { address, value: amountBn, spender: marketMaker } }
@@ -101,35 +102,47 @@ const Order = ({ isBuyOrder }) => {
     }
   }
 
-  const getDecimals = () => {
+  const getDecimals = useCallback(() => {
     return isBuyOrder ? collateralItems[selectedCollateral].decimals : bondedDecimals
-  }
+  }, [bondedDecimals, collateralItems, isBuyOrder, selectedCollateral])
 
-  const getSymbol = () => {
+  const getSymbol = useCallback(() => {
     return isBuyOrder ? collateralItems[selectedCollateral].symbol : bondedSymbol
-  }
+  }, [bondedSymbol, collateralItems, isBuyOrder, selectedCollateral])
 
-  const getConversionSymbol = () => {
+  const getConversionSymbol = useCallback(() => {
     return isBuyOrder ? bondedSymbol : collateralItems[selectedCollateral].symbol
-  }
+  }, [bondedSymbol, collateralItems, isBuyOrder, selectedCollateral])
 
-  const getReserveRatio = () => {
-    return collateralItems[selectedCollateral].reserveRatio
-  }
-
-  const getUserBalance = () => {
+  const getUserBalance = useCallback(() => {
     const balance = isBuyOrder ? [userPrimaryCollateralBalance][selectedCollateral] : userBondedTokenBalance
     const decimals = isBuyOrder ? collateralItems[selectedCollateral].decimals : bondedDecimals
     return formatBigNumber(balance, decimals)
-  }
+  }, [bondedDecimals, collateralItems, isBuyOrder, selectedCollateral, userBondedTokenBalance, userPrimaryCollateralBalance])
 
-  const percentageOf = (numberWithDecimals) => {
-    return numberWithDecimals.div(PCT_BASE).times(100).toFixed(2, 1)
-  }
+  const getFeePercentage = useCallback(() => {
+    const percentageOf = numberWithDecimals => {
+      return numberWithDecimals
+        .div(PCT_BASE)
+        .times(100)
+        .toFixed(2, 1)
+    }
 
-  const getFeePercentage = () => {
     return isBuyOrder ? percentageOf(buyFeePct) : percentageOf(sellFeePct)
-  }
+  }, [buyFeePct, isBuyOrder, PCT_BASE, sellFeePct])
+
+  const amountData = useMemo(() => {
+    const reserveRatio = collateralItems[selectedCollateral].reserveRatio
+
+    return {
+      value: amount,
+      decimals: getDecimals(),
+      symbol: getSymbol(),
+      reserveRatio,
+      feePercentage: getFeePercentage(),
+      slippagePercent,
+    }
+  }, [amount, collateralItems, getDecimals, getSymbol, getFeePercentage, selectedCollateral, slippagePercent])
 
   return (
     <form onSubmit={handleSubmit}>
@@ -139,8 +152,7 @@ const Order = ({ isBuyOrder }) => {
             {isBuyOrder && <StyledTextBlock>{collateralItems[selectedCollateral].symbol} TO SPEND</StyledTextBlock>}
             {!isBuyOrder && <StyledTextBlock>{bondedSymbol} TO SELL</StyledTextBlock>}
           </label>
-          <CombinedInput
-            css={`margin-bottom: 10px;`}>
+          <CombinedInput css="margin-bottom: 10px;">
             <TextInput type="number" value={amount} onChange={handleAmountUpdate} min={0} placeholder="0" step="any" required wide />
             {isBuyOrder ? (
               <span
@@ -161,24 +173,17 @@ const Order = ({ isBuyOrder }) => {
                 against
               </Text>
             )}
-            <DropDown items={[collaterals.primaryCollateral.symbol]} selected={selectedCollateral} onChange={setSelectedCollateral} />
+            <DropDown items={[collaterals.primaryCollateral.symbol]} selected={selectedCollateral} onChange={setSelectedCollateral} css="width: 130px;" />
           </CombinedInput>
           <label>
-            <StyledTextBlock>ACCEPTED SLIPPAGE %</StyledTextBlock>
+            <StyledTextBlock>ACCEPTED SLIPPAGE</StyledTextBlock>
           </label>
-          <TextInput type="number" value={slippagePercent} onChange={handleSlippageUpdated} min={0} max={100} placeholder="0" step="any" required wide />
+          <PercentageInput value={slippagePercent} onChange={handleSlippageUpdated} />
         </AmountField>
       </InputsWrapper>
       <Total
         isBuyOrder={isBuyOrder}
-        amount={{
-          value: amount,
-          decimals: getDecimals(),
-          symbol: getSymbol(),
-          reserveRatio: getReserveRatio(),
-          feePercentage: getFeePercentage(),
-          slippagePercent: slippagePercent
-        }}
+        amount={amountData}
         conversionSymbol={getConversionSymbol()}
         onError={validate}
         setMinReturnAmount={setMinReturnAmount}
@@ -201,7 +206,7 @@ const Order = ({ isBuyOrder }) => {
         `}
       >
         <Info
-          title="Your balance"
+          title={`Your ${isBuyOrder ? '' : 'spendable'} balance`}
           css={`
             margin-bottom: ${2 * GU}px;
           `}
@@ -216,19 +221,51 @@ const Order = ({ isBuyOrder }) => {
           tokenSymbol={isBuyOrder ? bondedSymbol : collateralItems[selectedCollateral].symbol}
         />
 
-        {getFeePercentage() > 0 && <Info
-          title={`Fee (${getFeePercentage()}%)`}
-          css={`
-            margin-top: ${2 * GU}px;
-          `}
-        >
-          <p>
-            {`A fee of ${feeAmount} ${collateralItems[selectedCollateral].symbol} will be sent directly to the organisation's funding pool.`}
-          </p>
-        </Info>}
-
+        {getFeePercentage() > 0 && (
+          <Info
+            title={`Fee (${getFeePercentage()}%)`}
+            css={`
+              margin-top: ${2 * GU}px;
+            `}
+          >
+            <p>{`A fee of ${formatBigNumber(feeAmount, 0)} ${
+              collateralItems[selectedCollateral].symbol
+            } will be sent directly to the organisation's funding pool.`}</p>
+          </Info>
+        )}
       </div>
     </form>
+  )
+}
+
+const PercentageInput = ({ value, onChange }) => {
+  const theme = useTheme()
+  const adornmentSettings = { padding: 1 }
+
+  return (
+    <TextInput
+      type="number"
+      value={value}
+      onChange={onChange}
+      wide
+      required
+      min={0}
+      max={100}
+      placeholder="0"
+      adornment={
+        <span
+          css={`
+            background: ${theme.background};
+            border-left: 1px solid ${theme.border};
+            padding: 7px ${2 * GU}px;
+          `}
+        >
+          %
+        </span>
+      }
+      adornmentPosition="end"
+      adornmentSettings={adornmentSettings}
+    />
   )
 }
 

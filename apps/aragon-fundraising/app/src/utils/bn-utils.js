@@ -1,5 +1,7 @@
 import BigNumber from 'bignumber.js'
 
+const FORMAT = { groupSize: 3, decimalSeparator: '.' }
+
 /**
  * Converts a monthly rate to its tap rate (wei/block)
  * @param {String|Number|BigNumber} value - value to convert
@@ -43,9 +45,10 @@ export const fromDecimals = (value, decimals) => {
  * @param {String} opts.numberSuffix - suffix to put at the end, default ''
  * @returns {String} the formatted value
  */
-export const formatBigNumber = (value, decimals, { dp = 2, rm = 1, keepSign = false, numberPrefix = '', numberSuffix = '' } = {}) => {
+export const formatBigNumber = (value, decimals, { dp = 2, rm = 1, keepSign = false, numberPrefix = '', numberSuffix = '', commify = true } = {}) => {
   const valueDecimals = fromDecimals(value, decimals)
   const sign = valueDecimals.isPositive() ? '+' : '-'
   const prefix = keepSign ? `${sign}${numberPrefix}` : `${numberPrefix}`
-  return `${prefix}${valueDecimals.abs().toFormat(dp, rm)}${numberSuffix}`
+
+  return `${prefix}${valueDecimals.abs().toFormat(dp, rm, { ...FORMAT, groupSeparator: commify ? ',' : '' })}${numberSuffix}`
 }

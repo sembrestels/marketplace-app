@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { unstable_batchedUpdates as batchedUpdates } from 'react-dom'
-import { useApi, useAppState, useConnectedAccount, useNetwork } from '@aragon/api-react'
+import { useApi, useAppState, useConnectedAccount } from '@aragon/api-react'
 import { Header, Tabs, Button, useLayout, ContextMenu, ContextMenuItem } from '@aragon/ui'
 import BigNumber from 'bignumber.js'
 import { useInterval } from '../hooks/use-interval'
 import NewOrder from '../components/NewOrder'
-import Disclaimer from '../components/Disclaimer'
 import Reserves from '../screens/Reserves'
 import Orders from '../screens/Orders'
 import Overview from '../screens/Overview'
@@ -13,6 +12,7 @@ import marketMaker from '../abi/BancorMarketMaker.json'
 import { MainViewContext } from '../context'
 import { Polling } from '../constants'
 import { IdentityProvider } from '../components/IdentityManager'
+import { spendableBalanceOf } from '../helpers.js/tokens'
 
 const tabs = ['Overview', 'Orders', 'My Orders', 'Settings']
 
@@ -32,7 +32,7 @@ export default () => {
         address: primaryCollateralAddress,
         reserveRatio,
         virtualBalance: primaryCollateralVirtualBalance,
-        overallBalance: primaryCollateralOverallBalance
+        overallBalance: primaryCollateralOverallBalance,
       },
     },
   } = useAppState()
@@ -48,7 +48,6 @@ export default () => {
   // *****************************
   const { name: layoutName } = useLayout()
   const connectedUser = useConnectedAccount()
-  const { type: networkType } = useNetwork()
 
   // *****************************
   // internal state, also shared through context
@@ -76,21 +75,33 @@ export default () => {
     userPrimaryCollateralBalance: userPrimaryCollateralBalance,
   }
 
+  const getUserBalances = useCallback(
+    async connectedUser => {
+      const primaryCollateralBalance = await api.call('balanceOf', connectedUser, primaryCollateralAddress).toPromise()
+
+      // get bonded spendable balance
+      const bondedBalance = await spendableBalanceOf(bondedTokenAddress, connectedUser, api)
+
+      return [new BigNumber(bondedBalance), new BigNumber(primaryCollateralBalance)]
+    },
+    [api, bondedTokenAddress, primaryCollateralAddress]
+  )
+
   // watch for a connected user and get its balances
   useEffect(() => {
-    const getUserBalances = async () => {
-      const balancesPromises = [bondedTokenAddress, primaryCollateralAddress].map(address => api.call('balanceOf', connectedUser, address).toPromise())
-      const [bondedBalance, primaryCollateralBalance] = await Promise.all(balancesPromises)
+    const fetchUserBalances = async connectedUser => {
+      const [bondedBalance, primaryCollateralBalance] = await getUserBalances(connectedUser)
+
       // TODO: keep an eye on React 17, since all updates will be batched by default
       batchedUpdates(() => {
-        setUserBondedTokenBalance(new BigNumber(bondedBalance))
-        setUserPrimaryCollateralBalance(new BigNumber(primaryCollateralBalance))
+        setUserBondedTokenBalance(bondedBalance)
+        setUserPrimaryCollateralBalance(primaryCollateralBalance)
       })
     }
     if (connectedUser) {
-      getUserBalances()
+      fetchUserBalances(connectedUser)
     }
-  }, [connectedUser])
+  }, [connectedUser, getUserBalances])
 
   // polls the balances and price
   useInterval(async () => {
@@ -103,13 +114,14 @@ export default () => {
     // poling user balances
     let newUserBondedTokenBalance, newUserPrimaryCollateralBalance
     if (connectedUser) {
-      const balancesPromises = [bondedTokenAddress, primaryCollateralAddress].map(address => api.call('balanceOf', connectedUser, address).toPromise())
-      const [bondedBalance, primaryCollateralBalance] = await Promise.all(balancesPromises)
-      newUserBondedTokenBalance = new BigNumber(bondedBalance)
-      newUserPrimaryCollateralBalance = new BigNumber(primaryCollateralBalance)
+      const userBalances = await getUserBalances(connectedUser)
+      newUserBondedTokenBalance = userBalances[0]
+      newUserPrimaryCollateralBalance = userBalances[1]
     }
     // polling price
-    const price = await marketMakerContract.getStaticPricePPM(primaryCollateralSupply.toFixed(), polledPrimaryCollateralBalance.toFixed(), reserveRatio.toFixed()).toPromise()
+    const price = await marketMakerContract
+      .getStaticPricePPM(primaryCollateralSupply.toFixed(), polledPrimaryCollateralBalance.toFixed(), reserveRatio.toFixed())
+      .toPromise()
     const newPrice = new BigNumber(price).div(PPM)
     // TODO: keep an eye on React 17, since all updates will be batched by default
     // see: https://stackoverflow.com/questions/48563650/does-react-keep-the-order-for-state-updates/48610973#48610973
