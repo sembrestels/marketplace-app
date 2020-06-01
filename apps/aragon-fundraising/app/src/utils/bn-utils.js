@@ -52,3 +52,23 @@ export const formatBigNumber = (value, decimals, { dp = 2, rm = 1, keepSign = fa
 
   return `${prefix}${valueDecimals.abs().toFormat(dp, rm, { ...FORMAT, groupSeparator: commify ? ',' : '' })}${numberSuffix}`
 }
+
+/**
+ * Adjusts the pct from pctBase
+ * @param {BigNum} pct The pct to adjust
+ * @param {BigNum} pctBase The base percentage
+ * @returns {Number} The percantage adjusted from pct base
+ */
+export const percentageFromBase = (pct, pctBase) => {
+  return parseInt(pct.div(pctBase.div(new BigNumber(100))))
+}
+
+/**
+ * Adjusts the pct to pctBase
+ * @param {Number} pct The pct to adjust
+ * @param {BigNum} pctBase The base percentage
+ * @returns {BigNum} The percantage adjusted to pct base
+ */
+export const percetangeToBase = (pct, pctBase) => {
+  return new BigNumber(pct).times(pctBase.div(new BigNumber(100)))
+}
