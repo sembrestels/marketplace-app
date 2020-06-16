@@ -9,9 +9,10 @@ import "@aragon/os/contracts/lib/token/ERC20.sol";
 import "@aragon/apps-vault/contracts/Vault.sol";
 import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
 import "../../bancor-market-maker/contracts/BancorMarketMaker.sol";
+import "./IERC777Recipient.sol";
 import "./IMarketplaceController.sol";
 
-contract MarketplaceController is EtherTokenConstant, IsContract, IMarketplaceController, AragonApp {
+contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipient, IMarketplaceController, AragonApp {
     using SafeERC20 for ERC20;
     using SafeMath  for uint256;
 
@@ -41,7 +42,11 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IMarketplaceCo
     bytes32 public constant MAKE_BUY_ORDER_ROLE                        = 0x0dfea6908176d96adbee7026b3fe9fbdaccfc17bc443ddf14734fd27c3136179;
     bytes32 public constant MAKE_SELL_ORDER_ROLE                       = 0x52e3ace6a83e0c810920056ccc32fed5aa1e86287545113b03a52ab5c84e3f66;
 
-    string private constant ERROR_CONTRACT_IS_EOA = "FUNDRAISING_CONTRACT_IS_EOA";
+    string private constant ERROR_CONTRACT_IS_EOA = "MARKETPLACE_CONTRACT_IS_EOA";
+    string private constant ERROR_NO_PERMISSION = "MARKETPLACE_NO_PERMISSION";
+    string private constant ERROR_BUYER_NOT_FROM = "MARKETPLACE_BUYER_NOT_FROM";
+    string private constant ERROR_COLLATERAL_NOT_SENDER = "MARKETPLACE_COLLATERAL_NOT_SENDER";
+    string private constant ERROR_DEPOSIT_NOT_AMOUNT = "MARKETPLACE_DEPOSIT_NOT_AMOUNT";
 
     IPresale public presale;
     BancorMarketMaker public marketMaker;
@@ -165,6 +170,51 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IMarketplaceCo
         external authP(MAKE_SELL_ORDER_ROLE, arr(msg.sender))
     {
         marketMaker.makeSellOrder(msg.sender, _collateral, _sellAmount, _minReturnAmountAfterFee);
+    }
+
+    event DEBUG(address collateralToken, uint256 transferAmount);
+
+    function tokensReceived(
+        address _operator,
+        address _from,
+        address _to,
+        uint256 _amount,
+        bytes _userData,
+        bytes _operatorData
+    ) external {
+        // _userData should be of the below function call
+        // makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
+        //
+        // locationOfFunctionSig: 32 (bytes array length)
+        // locationOfBuyerAddress: 32 + 4 = 36 (bytes array length + sig)
+        // locationOfCollateralAddress: 32 + 4 + 32 = 68 (bytes array length + sig + _buyer address)
+        // locationOfDepositAmount: 32 + 4 + 32 + 32 = 100 (bytes array length + sig + _buyer address + _collateral address)
+
+        require(canPerform(_from, MAKE_BUY_ORDER_ROLE, new uint256[](0)), ERROR_NO_PERMISSION);
+
+        bytes memory userDataMemory = _userData;
+
+        bytes4 functionSig;
+        address buyerAddress;
+        address collateralTokenAddress;
+        uint256 depositAmount;
+
+        assembly {
+            functionSig := mload(add(userDataMemory, 32))
+            buyerAddress := mload(add(userDataMemory, 36))
+            collateralTokenAddress := mload(add(userDataMemory, 68))
+            depositAmount := mload(add(userDataMemory, 100))
+        }
+
+        require(buyerAddress == _from, ERROR_BUYER_NOT_FROM);
+        require(collateralTokenAddress == msg.sender, ERROR_COLLATERAL_NOT_SENDER);
+        require(depositAmount == _amount, ERROR_DEPOSIT_NOT_AMOUNT);
+
+        marketMaker.call(_userData);
+    }
+
+    function hasBuyOrSellPermission(address _address) internal view returns (bool) {
+
     }
 
     /* collateral tokens related functions */

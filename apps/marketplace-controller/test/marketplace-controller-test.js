@@ -1,4 +1,5 @@
-const Controller = artifacts.require('AragonFundraisingController')
+const Controller = artifacts.require('MarketplaceController')
+const MarketMaker = artifacts.require('BancorMarketMaker')
 const BancorFormula = artifacts.require('BancorFormula')
 const TokenMock = artifacts.require('TokenMock')
 const {
@@ -232,14 +233,14 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
     })
 
     context('> sender has MAKE_BUY_ORDER_ROLE', () => {
-      it('it should open buy order [ETH]', async () => {
+      it('it should make buy order [ETH]', async () => {
         const amount = random.amount()
         const receipt = await this.controller.makeBuyOrder(ETH, amount, 0, { from: authorized, value: amount })
 
         assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256,uint256)')
       })
 
-      it('it should open buy order [ERC20]', async () => {
+      it('it should make buy order [ERC20]', async () => {
         const receipt = await this.controller.makeBuyOrder(this.collaterals.dai.address, random.amount(), 0, { from: authorized })
 
         assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256,uint256)')
@@ -305,6 +306,23 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
         await assertRevert(() => this.controller.makeSellOrder(this.collaterals.dai.address, balance, 0,
           { from: unauthorized }))
       })
+    })
+  })
+  // #endregion
+
+  // #region tokensReceived
+  context.only('> #tokensReceived', () => {
+    it('it should make buy order [ERC20]', async () => {
+      const amount = random.amount()
+
+      const makeBuyOrderData = this.marketMaker.contract.makeBuyOrder.getData(authorized, this.collaterals.dai.address, amount, 0)
+
+      await this.collaterals.dai.transfer(this.marketMaker.address, amount, { from: authorized })
+
+      const receipt = await this.controller.tokensReceived(
+        authorized, authorized, this.marketMaker.address, amount, makeBuyOrderData, "0x0", { from: authorized })
+
+      assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256,uint256)')
     })
   })
   // #endregion
