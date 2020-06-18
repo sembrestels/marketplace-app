@@ -78,7 +78,9 @@ const setup = {
     },
     collaterals: async (ctx, user) => {
       ctx.collaterals = ctx.collaterals || {}
-      ctx.collaterals.dai = await TokenMock.new(user, INITIAL_COLLATERAL_BALANCE)
+
+      ctx.collaterals.dai = await MiniMeToken.new(ZERO_ADDRESS, ZERO_ADDRESS, 0, 'Test', 0, 'TST', true)
+      ctx.collaterals.dai.generateTokens(user, INITIAL_COLLATERAL_BALANCE)
       ctx.collaterals.ant = await TokenMock.new(user, INITIAL_COLLATERAL_BALANCE)
     },
     dao: async (ctx, root) => {

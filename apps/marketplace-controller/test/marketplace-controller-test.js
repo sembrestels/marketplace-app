@@ -311,12 +311,31 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
   // #endregion
 
   // #region tokensReceived
-  context.only('> #tokensReceived', () => {
+  context.only('> #receiveApproval', () => {
+    beforeEach(async () => {
+      await this.controller.openTrading({ from: authorized })
+    })
+
     it('it should make buy order [ERC20]', async () => {
       const amount = random.amount()
-
       const makeBuyOrderData = this.marketMaker.contract.makeBuyOrder.getData(authorized, this.collaterals.dai.address, amount, 0)
 
+      const receipt = await this.collaterals.dai.approveAndCall(this.controller.address, amount, makeBuyOrderData, { from: authorized })
+
+      assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256,uint256)')
+    })
+  })
+  // #endregion
+
+  // #region tokensReceived
+  context('> #tokensReceived', () => {
+    beforeEach(async () => {
+      await this.controller.openTrading({ from: authorized })
+    })
+
+    it('it should make buy order [ERC20]', async () => {
+      const amount = random.amount()
+      const makeBuyOrderData = this.marketMaker.contract.makeBuyOrder.getData(authorized, this.collaterals.dai.address, amount, 0)
       await this.collaterals.dai.transfer(this.marketMaker.address, amount, { from: authorized })
 
       const receipt = await this.controller.tokensReceived(

@@ -7,12 +7,13 @@ import "@aragon/os/contracts/common/SafeERC20.sol";
 import "@aragon/os/contracts/lib/math/SafeMath.sol";
 import "@aragon/os/contracts/lib/token/ERC20.sol";
 import "@aragon/apps-vault/contracts/Vault.sol";
+import {ApproveAndCallFallBack} from "@aragon/apps-shared-minime/contracts/MiniMeToken.sol";
 import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
 import "../../bancor-market-maker/contracts/BancorMarketMaker.sol";
 import "./IERC777Recipient.sol";
 import "./IMarketplaceController.sol";
 
-contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipient, IMarketplaceController, AragonApp {
+contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipient, ApproveAndCallFallBack, IMarketplaceController, AragonApp {
     using SafeERC20 for ERC20;
     using SafeMath  for uint256;
 
@@ -47,6 +48,7 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipie
     string private constant ERROR_BUYER_NOT_FROM = "MARKETPLACE_BUYER_NOT_FROM";
     string private constant ERROR_COLLATERAL_NOT_SENDER = "MARKETPLACE_COLLATERAL_NOT_SENDER";
     string private constant ERROR_DEPOSIT_NOT_AMOUNT = "MARKETPLACE_DEPOSIT_NOT_AMOUNT";
+    string private constant ERROR_CALL_FAILED = "MARKETPLACE_CALL_FAILED";
 
     IPresale public presale;
     BancorMarketMaker public marketMaker;
@@ -172,7 +174,14 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipie
         marketMaker.makeSellOrder(msg.sender, _collateral, _sellAmount, _minReturnAmountAfterFee);
     }
 
-    event DEBUG(address collateralToken, uint256 transferAmount);
+    function receiveApproval(
+        address _from,
+        uint256 _amount,
+        address _token,
+        bytes _userData
+    ) public {
+        _nonApproveBuyOrder(_from, _amount, _userData);
+    }
 
     function tokensReceived(
         address _operator,
@@ -182,25 +191,26 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipie
         bytes _userData,
         bytes _operatorData
     ) external {
-        // _userData should be of the below function call
+        _nonApproveBuyOrder(_from, _amount, _userData);
+    }
+
+    function _nonApproveBuyOrder(address _from, uint256 _amount, bytes _userData) internal {
+        // _userData should be created from the below function call
         // makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
         //
-        // locationOfFunctionSig: 32 (bytes array length)
-        // locationOfBuyerAddress: 32 + 4 = 36 (bytes array length + sig)
-        // locationOfCollateralAddress: 32 + 4 + 32 = 68 (bytes array length + sig + _buyer address)
-        // locationOfDepositAmount: 32 + 4 + 32 + 32 = 100 (bytes array length + sig + _buyer address + _collateral address)
+        // buyerAddressByteLocation: 32 + 4 = 36 (bytes array length + sig)
+        // collateralAddressByteLocation: 32 + 4 + 32 = 68 (bytes array length + sig + _buyer address)
+        // depositAmountByteLocation: 32 + 4 + 32 + 32 = 100 (bytes array length + sig + _buyer address + _collateral address)
 
         require(canPerform(_from, MAKE_BUY_ORDER_ROLE, new uint256[](0)), ERROR_NO_PERMISSION);
 
         bytes memory userDataMemory = _userData;
 
-        bytes4 functionSig;
         address buyerAddress;
         address collateralTokenAddress;
         uint256 depositAmount;
 
         assembly {
-            functionSig := mload(add(userDataMemory, 32))
             buyerAddress := mload(add(userDataMemory, 36))
             collateralTokenAddress := mload(add(userDataMemory, 68))
             depositAmount := mload(add(userDataMemory, 100))
@@ -210,11 +220,7 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipie
         require(collateralTokenAddress == msg.sender, ERROR_COLLATERAL_NOT_SENDER);
         require(depositAmount == _amount, ERROR_DEPOSIT_NOT_AMOUNT);
 
-        marketMaker.call(_userData);
-    }
-
-    function hasBuyOrSellPermission(address _address) internal view returns (bool) {
-
+        require(address(marketMaker).call(_userData), ERROR_CALL_FAILED);
     }
 
     /* collateral tokens related functions */
