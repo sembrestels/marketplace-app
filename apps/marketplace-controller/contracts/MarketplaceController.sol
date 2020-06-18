@@ -174,6 +174,14 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipie
         marketMaker.makeSellOrder(msg.sender, _collateral, _sellAmount, _minReturnAmountAfterFee);
     }
 
+    /**
+     * @dev ApproveAndCallFallBack interface conformance
+     * @param _from Token sender
+     * @param _amount Token amount
+     * @param _token Token that received approval
+     * @param _userData Data for the below function call
+     *      makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
+    */
     function receiveApproval(
         address _from,
         uint256 _amount,
@@ -195,13 +203,6 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipie
     }
 
     function _nonApproveBuyOrder(address _from, uint256 _amount, bytes _userData) internal {
-        // _userData should be created from the below function call
-        // makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
-        //
-        // buyerAddressByteLocation: 32 + 4 = 36 (bytes array length + sig)
-        // collateralAddressByteLocation: 32 + 4 + 32 = 68 (bytes array length + sig + _buyer address)
-        // depositAmountByteLocation: 32 + 4 + 32 + 32 = 100 (bytes array length + sig + _buyer address + _collateral address)
-
         require(canPerform(_from, MAKE_BUY_ORDER_ROLE, new uint256[](0)), ERROR_NO_PERMISSION);
 
         bytes memory userDataMemory = _userData;
@@ -211,8 +212,13 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipie
         uint256 depositAmount;
 
         assembly {
+            // buyerAddressByteLocation: 32 + 4 = 36 (bytes array length + sig)
             buyerAddress := mload(add(userDataMemory, 36))
+
+            // collateralAddressByteLocation: 32 + 4 + 32 = 68 (bytes array length + sig + _buyer address)
             collateralTokenAddress := mload(add(userDataMemory, 68))
+
+            // depositAmountByteLocation: 32 + 4 + 32 + 32 = 100 (bytes array length + sig + _buyer address + _collateral address)
             depositAmount := mload(add(userDataMemory, 100))
         }
 

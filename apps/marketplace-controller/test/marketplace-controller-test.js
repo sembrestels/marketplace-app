@@ -324,6 +324,17 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
 
       assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256,uint256)')
     })
+
+    it('should revert if sender does not have permission', async () => {
+      this.acl.revokePermission(authorized, this.controller.address, this.roles.controller.MAKE_BUY_ORDER_ROLE)
+
+      const amount = random.amount()
+      const makeBuyOrderData = this.marketMaker.contract.makeBuyOrder.getData(authorized, this.collaterals.dai.address, amount, 0)
+
+      await assertRevert(this.collaterals.dai.approveAndCall(this.controller.address, amount, makeBuyOrderData, { from: authorized }), "MARKETPLACE_NO_PERMISSION")
+    })
+
+
   })
   // #endregion
 
