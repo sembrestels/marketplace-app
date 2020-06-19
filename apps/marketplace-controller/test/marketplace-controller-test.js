@@ -326,7 +326,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
     })
 
     it('should revert if sender does not have permission', async () => {
-      this.acl.revokePermission(authorized, this.controller.address, this.roles.controller.MAKE_BUY_ORDER_ROLE)
+      await this.acl.revokePermission(authorized, this.controller.address, this.roles.controller.MAKE_BUY_ORDER_ROLE)
 
       const amount = random.amount()
       const makeBuyOrderData = this.marketMaker.contract.makeBuyOrder.getData(authorized, this.collaterals.dai.address, amount, 0)
