@@ -311,7 +311,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
   // #endregion
 
   // #region tokensReceived
-  context.only('> #receiveApproval', () => {
+  context('> #receiveApproval', () => {
     beforeEach(async () => {
       await this.controller.openTrading({ from: authorized })
     })

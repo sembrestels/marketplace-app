@@ -45,11 +45,6 @@ contract MarketplaceController is EtherTokenConstant, IsContract, ApproveAndCall
     string private constant ERROR_CONTRACT_IS_EOA = "MARKETPLACE_CONTRACT_IS_EOA";
     string private constant ERROR_NO_PERMISSION = "MARKETPLACE_NO_PERMISSION";
 
-    string private constant ERROR_BUYER_NOT_FROM                 = "MARKETPLACE_BUYER_NOT_FROM";
-    string private constant ERROR_COLLATERAL_NOT_SENDER          = "MARKETPLACE_COLLATERAL_NOT_SENDER";
-    string private constant ERROR_DEPOSIT_NOT_AMOUNT             = "MARKETPLACE_DEPOSIT_NOT_AMOUNT";
-    string private constant ERROR_CALL_FAILED                    = "MARKETPLACE_CALL_FAILED";
-
     IPresale public presale;
     BancorMarketMaker public marketMaker;
     Vault public reserve;

@@ -49,8 +49,7 @@
     "@ablack/fundraising-shared-interfaces": "^1.0.0",
     "@ablack/fundraising-tap": "^1.0.0",
     "@aragon/apps-agent": "^2.0.0-rc.1",
-    "@aragon/os": "4.4.0",
-    "@openzeppelin/contracts": "2.5.1"
+    "@aragon/os": "4.4.0"
   },
   "devDependencies": {
     "@ablack/fundraising-bancor-formula": "^1.0.0",
@@ -69,7 +68,6 @@
     "solidity-coverage": "0.6.2",
     "solium": "^1.2.3",
     "truffle": "4.1.14",
-    "truffle-extract": "^1.2.1",
-    "@openzeppelin/test-helpers": "^0.5.6"
+    "truffle-extract": "^1.2.1"
   }
 }
