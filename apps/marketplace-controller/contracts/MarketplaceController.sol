@@ -10,10 +10,9 @@ import "@aragon/apps-vault/contracts/Vault.sol";
 import {ApproveAndCallFallBack} from "@aragon/apps-shared-minime/contracts/MiniMeToken.sol";
 import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
 import "../../bancor-market-maker/contracts/BancorMarketMaker.sol";
-import "./IERC777Recipient.sol";
 import "./IMarketplaceController.sol";
 
-contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipient, ApproveAndCallFallBack, IMarketplaceController, AragonApp {
+contract MarketplaceController is EtherTokenConstant, IsContract, ApproveAndCallFallBack, IMarketplaceController, AragonApp {
     using SafeERC20 for ERC20;
     using SafeMath  for uint256;
 
@@ -45,10 +44,11 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipie
 
     string private constant ERROR_CONTRACT_IS_EOA = "MARKETPLACE_CONTRACT_IS_EOA";
     string private constant ERROR_NO_PERMISSION = "MARKETPLACE_NO_PERMISSION";
-    string private constant ERROR_BUYER_NOT_FROM = "MARKETPLACE_BUYER_NOT_FROM";
-    string private constant ERROR_COLLATERAL_NOT_SENDER = "MARKETPLACE_COLLATERAL_NOT_SENDER";
-    string private constant ERROR_DEPOSIT_NOT_AMOUNT = "MARKETPLACE_DEPOSIT_NOT_AMOUNT";
-    string private constant ERROR_CALL_FAILED = "MARKETPLACE_CALL_FAILED";
+
+    string private constant ERROR_BUYER_NOT_FROM                 = "MARKETPLACE_BUYER_NOT_FROM";
+    string private constant ERROR_COLLATERAL_NOT_SENDER          = "MARKETPLACE_COLLATERAL_NOT_SENDER";
+    string private constant ERROR_DEPOSIT_NOT_AMOUNT             = "MARKETPLACE_DEPOSIT_NOT_AMOUNT";
+    string private constant ERROR_CALL_FAILED                    = "MARKETPLACE_CALL_FAILED";
 
     IPresale public presale;
     BancorMarketMaker public marketMaker;
@@ -179,54 +179,12 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IERC777Recipie
      * @param _from Token sender
      * @param _amount Token amount
      * @param _token Token that received approval
-     * @param _userData Data for the below function call
+     * @param _buyOrderData Data for the below function call
      *      makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
     */
-    function receiveApproval(
-        address _from,
-        uint256 _amount,
-        address _token,
-        bytes _userData
-    ) public {
-        _nonApproveBuyOrder(_from, _amount, _userData);
-    }
-
-    function tokensReceived(
-        address _operator,
-        address _from,
-        address _to,
-        uint256 _amount,
-        bytes _userData,
-        bytes _operatorData
-    ) external {
-        _nonApproveBuyOrder(_from, _amount, _userData);
-    }
-
-    function _nonApproveBuyOrder(address _from, uint256 _amount, bytes _userData) internal {
+    function receiveApproval(address _from, uint256 _amount, address _token, bytes _buyOrderData) public {
         require(canPerform(_from, MAKE_BUY_ORDER_ROLE, new uint256[](0)), ERROR_NO_PERMISSION);
-
-        bytes memory userDataMemory = _userData;
-
-        address buyerAddress;
-        address collateralTokenAddress;
-        uint256 depositAmount;
-
-        assembly {
-            // buyerAddressByteLocation: 32 + 4 = 36 (bytes array length + sig)
-            buyerAddress := mload(add(userDataMemory, 36))
-
-            // collateralAddressByteLocation: 32 + 4 + 32 = 68 (bytes array length + sig + _buyer address)
-            collateralTokenAddress := mload(add(userDataMemory, 68))
-
-            // depositAmountByteLocation: 32 + 4 + 32 + 32 = 100 (bytes array length + sig + _buyer address + _collateral address)
-            depositAmount := mload(add(userDataMemory, 100))
-        }
-
-        require(buyerAddress == _from, ERROR_BUYER_NOT_FROM);
-        require(collateralTokenAddress == msg.sender, ERROR_COLLATERAL_NOT_SENDER);
-        require(depositAmount == _amount, ERROR_DEPOSIT_NOT_AMOUNT);
-
-        require(address(marketMaker).call(_userData), ERROR_CALL_FAILED);
+        marketMaker.makeBuyOrderRaw(_from, msg.sender, _amount, _buyOrderData);
     }
 
     /* collateral tokens related functions */

@@ -280,6 +280,7 @@ const setup = {
       ctx.roles.marketMaker = ctx.roles.marketMaker || {}
       ctx.roles.marketMaker.CONTROLLER_ROLE = await ctx.base.marketMaker.CONTROLLER_ROLE()
       await ctx.acl.createPermission(ctx.controller.address, ctx.marketMaker.address, ctx.roles.marketMaker.CONTROLLER_ROLE, root, { from: root })
+      await ctx.acl.grantPermission(ctx.marketMaker.address, ctx.marketMaker.address, ctx.roles.marketMaker.CONTROLLER_ROLE, { from: root })
     },
     reserve: async (ctx, root) => {
       ctx.roles.reserve = ctx.roles.reserve || {}
