@@ -44,6 +44,7 @@ contract MarketplaceController is EtherTokenConstant, IsContract, ApproveAndCall
 
     string private constant ERROR_CONTRACT_IS_EOA = "MARKETPLACE_CONTRACT_IS_EOA";
     string private constant ERROR_NO_PERMISSION = "MARKETPLACE_NO_PERMISSION";
+    string private constant ERROR_TRANSFER_FAILED = "MARKETPLACE_TRANSFER_FAILED";
 
     IPresale public presale;
     BancorMarketMaker public marketMaker;
@@ -179,6 +180,8 @@ contract MarketplaceController is EtherTokenConstant, IsContract, ApproveAndCall
     */
     function receiveApproval(address _from, uint256 _amount, address _token, bytes _buyOrderData) public {
         require(canPerform(_from, MAKE_BUY_ORDER_ROLE, new uint256[](0)), ERROR_NO_PERMISSION);
+        require(ERC20(msg.sender).transferFrom(_from, address(marketMaker), _amount), ERROR_TRANSFER_FAILED);
+
         marketMaker.makeBuyOrderRaw(_from, msg.sender, _amount, _buyOrderData);
     }
 

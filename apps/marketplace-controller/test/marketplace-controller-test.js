@@ -1,5 +1,4 @@
 const Controller = artifacts.require('MarketplaceController')
-const MarketMaker = artifacts.require('BancorMarketMaker')
 const BancorFormula = artifacts.require('BancorFormula')
 const TokenMock = artifacts.require('TokenMock')
 const {
@@ -319,6 +318,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
     it('should make buy order [ERC20]', async () => {
       const amount = random.amount()
       const makeBuyOrderData = this.marketMaker.contract.makeBuyOrder.getData(authorized, this.collaterals.dai.address, amount, 0)
+      await this.collaterals.dai.approve(this.marketMaker.address, 0, { from: authorized })
 
       const receipt = await this.collaterals.dai.approveAndCall(this.controller.address, amount, makeBuyOrderData, { from: authorized })
 
