@@ -1,4 +1,4 @@
-const Controller = artifacts.require('AragonFundraisingController')
+const Controller = artifacts.require('MarketplaceController')
 const BancorFormula = artifacts.require('BancorFormula')
 const TokenMock = artifacts.require('TokenMock')
 const {
@@ -32,7 +32,6 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
     await setup.deploy.organization(this, root, authorized)
   })
 
-  // #region initialize
   context('> #initialize', () => {
     context('> initialization parameters are valid', () => {
       it('it should initialize controller', async () => {
@@ -73,9 +72,8 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       await assertRevert(() => setup.initialize.controller(this, root))
     })
   })
-  // #endregion
+  
 
-  // #region updateFormula
   context('> #updateFormula', () => {
     context('> sender has UPDATE_FORMULA_ROLE', () => {
       it('it should update the formula', async () => {
@@ -95,9 +93,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 
-  // #region updateBeneficiary
   context('> #updateBeneficiary', () => {
     context('> sender has UPDATE_BENEFICIARY_ROLE', () => {
       it('it should update beneficiary', async () => {
@@ -115,9 +111,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 
-  // #region updateFees
   context('> #updateFees', () => {
     context('> sender has UPDATE_FEES_ROLE', () => {
       it('it should update fees', async () => {
@@ -133,9 +127,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 
-  // #region openPresale
   context('> #openPresale', () => {
     context('> sender has OPEN_PRESALE_ROLE', () => {
       it('it should open presale', async () => {
@@ -151,9 +143,8 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
+  
 
-  // #region closePresale
   context('> #closePresale', () => {
     beforeEach(async () => {
       await this.controller.openPresale({ from: authorized })
@@ -166,9 +157,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.CLOSED)
     })
   })
-  // #endregion
 
-  // #region contribute
   context('> #contribute', () => {
     beforeEach(async () => {
       await this.controller.openPresale({ from: authorized })
@@ -188,9 +177,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 
-  // #region refund
   context('> #refund', () => {
     beforeEach(async () => {
       await this.controller.openPresale({ from: authorized })
@@ -204,9 +191,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       assertExternalEvent(receipt, 'Refund(address,uint256,uint256,uint256)')
     })
   })
-  // #endregion
 
-  // #region openTrading
   context('> #openTrading', () => {
     context('> sender has OPEN_TRADING_ROLE', () => {
       it('it should open trading', async () => {
@@ -223,23 +208,21 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 
-  // #region makeBuyOrder
   context('> #makeBuyOrder', () => {
     beforeEach(async () => {
       await this.controller.openTrading({ from: authorized })
     })
 
     context('> sender has MAKE_BUY_ORDER_ROLE', () => {
-      it('it should open buy order [ETH]', async () => {
+      it('it should make buy order [ETH]', async () => {
         const amount = random.amount()
         const receipt = await this.controller.makeBuyOrder(ETH, amount, 0, { from: authorized, value: amount })
 
         assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256,uint256)')
       })
 
-      it('it should open buy order [ERC20]', async () => {
+      it('it should make buy order [ERC20]', async () => {
         const receipt = await this.controller.makeBuyOrder(this.collaterals.dai.address, random.amount(), 0, { from: authorized })
 
         assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256,uint256)')
@@ -258,9 +241,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 
-  // #region makeSellOrder
   context('> #makeSellOrder', () => {
     beforeEach(async () => {
       await this.controller.openTrading({ from: authorized })
@@ -307,9 +288,32 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 
-  // #region addCollateralToken
+  context('> #receiveApproval', () => {
+    beforeEach(async () => {
+      await this.controller.openTrading({ from: authorized })
+    })
+
+    it('should make buy order [ERC20]', async () => {
+      const amount = random.amount()
+      const makeBuyOrderData = this.marketMaker.contract.makeBuyOrder.getData(authorized, this.collaterals.dai.address, amount, 0)
+      await this.collaterals.dai.approve(this.marketMaker.address, 0, { from: authorized })
+
+      const receipt = await this.collaterals.dai.approveAndCall(this.controller.address, amount, makeBuyOrderData, { from: authorized })
+
+      assertExternalEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256,uint256)')
+    })
+
+    it('should revert if sender does not have permission', async () => {
+      await this.acl.revokePermission(authorized, this.controller.address, this.roles.controller.MAKE_BUY_ORDER_ROLE)
+
+      const amount = random.amount()
+      const makeBuyOrderData = this.marketMaker.contract.makeBuyOrder.getData(authorized, this.collaterals.dai.address, amount, 0)
+
+      await assertRevert(this.collaterals.dai.approveAndCall(this.controller.address, amount, makeBuyOrderData, { from: authorized }), "MARKETPLACE_NO_PERMISSION")
+    })
+  })
+
   context('> #addCollateralToken', () => {
     context('> sender has ADD_COLLATERAL_TOKEN_ROLE', () => {
       context('> and rate is superior to zero', () => {
@@ -361,9 +365,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 
-  // #region reAddCollateralToken
   context('> #reAddCollateralToken', () => {
     beforeEach(async () => {
       await this.controller.removeCollateralToken(this.collaterals.dai.address, { from: authorized })
@@ -401,9 +403,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 
-  // #region removeCollateralToken
   context('> #removeCollateralToken', () => {
     context('> sender has REMOVE_COLLATERAL_TOKEN_ROLE', () => {
       it('it should remove collateral token', async () => {
@@ -419,9 +419,7 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 
-  // #region updateCollateralToken
   context('> #updateCollateralToken', () => {
     context('> sender has UPDATE_COLLATERAL_TOKEN_ROLE', () => {
       it('it should update collateral token', async () => {
@@ -451,25 +449,19 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 
-  // #region token
   context('> #token', () => {
     it('it should return bonded token address', async () => {
       assert.equal(await this.controller.token(), this.token.address)
     })
   })
-  // #endregion
 
-  // #region contributionToken
   context('> #contributionToken', () => {
     it('it should return contribution token address', async () => {
       assert.equal(await this.controller.contributionToken(), this.collaterals.dai.address)
     })
   })
-  // #endregion
 
-  // #region balanceOf
   context('> #balanceOf', () => {
     context('> reserve', () => {
       it('it should return available reserve balance [ETH]', async () => {
@@ -502,5 +494,4 @@ contract('AragonFundraisingController app', ([root, authorized, unauthorized]) =
       })
     })
   })
-  // #endregion
 })

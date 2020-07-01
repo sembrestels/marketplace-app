@@ -4,7 +4,7 @@ const Kernel = artifacts.require('Kernel')
 const ACL = artifacts.require('ACL')
 const TokenManager = artifacts.require('TokenManager')
 const MiniMeToken = artifacts.require('MiniMeToken')
-const Controller = artifacts.require('AragonFundraisingController')
+const Controller = artifacts.require('MarketplaceController')
 const Presale = artifacts.require('PresaleMock')
 const MarketMaker = artifacts.require('BancorMarketMaker')
 const Formula = artifacts.require('BancorFormula')
@@ -78,7 +78,8 @@ const setup = {
     },
     collaterals: async (ctx, user) => {
       ctx.collaterals = ctx.collaterals || {}
-      ctx.collaterals.dai = await TokenMock.new(user, INITIAL_COLLATERAL_BALANCE)
+      ctx.collaterals.dai = await MiniMeToken.new(ZERO_ADDRESS, ZERO_ADDRESS, 0, 'Test', 0, 'TST', true)
+      ctx.collaterals.dai.generateTokens(user, INITIAL_COLLATERAL_BALANCE)
       ctx.collaterals.ant = await TokenMock.new(user, INITIAL_COLLATERAL_BALANCE)
     },
     dao: async (ctx, root) => {

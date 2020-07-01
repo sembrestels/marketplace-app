@@ -38,7 +38,7 @@ const RESERVE_RATIOS = [(PPM * 10) / 100, (PPM * 1) / 100]
 
 const { ETH } = require('@ablack/fundraising-shared-test-helpers/constants')
 
-contract('BatchedBancorMarketMaker app', accounts => {
+contract('BancorMarketMaker app', accounts => {
   let factory, dao, acl, cBase, tBase, rBase, mBase, token, tokenManager, controller, reserve, formula, marketMaker,
     collateral, collaterals
   let APP_MANAGER_ROLE,
@@ -215,16 +215,12 @@ contract('BatchedBancorMarketMaker app', accounts => {
   beforeEach(async () => {
     await initialize(true)
   })
-
-  // #region deploy
   context('> #deploy', () => {
     it('> it should deploy', async () => {
       await BancorMarketMaker.new()
     })
   })
-  // #endregion
 
-  // #region initialize
   context('> #initialize', () => {
     context('> initialization parameters are correct', () => {
       it('it should initialize batched bancor market maker', async () => {
@@ -417,9 +413,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       )
     })
   })
-  // #endregion
 
-  // #region open
   context('> #open', () => {
     context('> sender has CONTROLLER_ROLE', () => {
       context('> and market making is not yet open', () => {
@@ -453,9 +447,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
   })
-  // #endregion
 
-  // #region addCollateralToken
   context('> #addCollateralToken', () => {
     context('> sender has CONTROLLER_ROLE', () => {
       context('> and collateral token has not yet been added', () => {
@@ -526,9 +518,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
   })
-  // #endregion
 
-  // #region removeCollateralToken
   context('> #removeCollateralToken', () => {
     context('> sender has CONTROLLER_ROLE', () => {
       context('> and collateral token is whitelisted', () => {
@@ -560,9 +550,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
   })
-  // #endregion
 
-  // #region updateCollateralToken
   context('> #updateCollateralToken', () => {
     context('> sender has CONTROLLER_ROLE', () => {
       context('> and collateral token is whitelisted', () => {
@@ -619,9 +607,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
   })
-  // #endregion
 
-  // #region updateBeneficiary
   context('> #updateBeneficiary', () => {
     context('> sender has CONTROLLER_ROLE', () => {
       context('> and beneficiary is valid', () => {
@@ -646,9 +632,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
   })
-  // #endregion
 
-  // #region updateFormula
   context('> #updateFormula', () => {
     context('> sender has CONTROLLER_ROLE', () => {
       context('> and formula is a contract', () => {
@@ -676,9 +660,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
   })
-  // #endregion
 
-  // #region updateFees
   context('> #updateFees', () => {
     context('> sender has CONTROLLER_ROLE', () => {
       context('> and new fees are valid', () => {
@@ -708,9 +690,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
   })
-  // #endregion
 
-  // #region makeBuyOrder
   context('> #makeBuyOrder', () => {
     forEach(['ETH', 'ERC20']).describe(`> %s`, round => {
       const index = round === 'ETH' ? 0 : 1
@@ -835,9 +815,7 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
   })
-  // #endregion
 
-  // #region makeSellOrder
   context('> #makeSellOrder', () => {
     // forEach(['ETH']).describe(`> %s`, round => {
       forEach(['ETH', 'ERC20']).describe(`> %s`, round => {
@@ -969,6 +947,60 @@ contract('BatchedBancorMarketMaker app', accounts => {
       })
     })
   })
-  // #endregion
+
+  context('> #makeBuyOrderRaw', () => {
+
+    let amount
+
+    beforeEach(async () => {
+      amount = random.amount()
+      await collateral.transfer(marketMaker.address, amount, { from: authorized })
+    })
+
+    it('successfully calls makeBuyOrderRaw()', async () => {
+      const makeBuyOrderData = marketMaker.contract.makeBuyOrder.getData(authorized, collaterals[1], amount, 0)
+
+      const receipt = await marketMaker.makeBuyOrderRaw(authorized, collaterals[1], amount, makeBuyOrderData, { from: authorized })
+
+      assertEvent(receipt, 'MakeBuyOrder(address,address,uint256,uint256,uint256,uint256)')
+    })
+
+    it('reverts when does not have CONTROLLER_ROLE', async () => {
+      const makeBuyOrderData = marketMaker.contract.makeBuyOrder.getData(authorized, collaterals[1], amount, 0)
+      await acl.revokePermission(authorized, marketMaker.address, CONTROLLER_ROLE, { from: root })
+
+      await assertRevert(marketMaker.makeBuyOrderRaw(authorized, collaterals[1], amount, makeBuyOrderData, { from: authorized }),
+        "APP_AUTH_FAILED")
+    })
+
+    it('reverts when data is for function other than makeBuyOrder', async () => {
+      const makeBuyOrderData = marketMaker.contract.makeSellOrder.getData(authorized, collaterals[1], amount, 0)
+
+      await assertRevert(marketMaker.makeBuyOrderRaw(authorized, collaterals[1], amount, makeBuyOrderData, { from: authorized }),
+        "MM_NOT_BUY_FUNCTION")
+    })
+
+    it('reverts when buyer in data is not equal to from address', async () => {
+      const makeBuyOrderData = marketMaker.contract.makeBuyOrder.getData(authorized2, collaterals[1], amount, 0)
+
+      await assertRevert(marketMaker.makeBuyOrderRaw(authorized, collaterals[1], amount, makeBuyOrderData, { from: authorized }),
+        "MM_BUYER_NOT_FROM")
+    })
+
+    it('reverts when collateral in data is not equal to token address', async () => {
+      const makeBuyOrderData = marketMaker.contract.makeBuyOrder.getData(authorized, authorized, amount, 0)
+
+      await assertRevert(marketMaker.makeBuyOrderRaw(authorized, collaterals[1], amount, makeBuyOrderData, { from: authorized }),
+        "MM_COLLATERAL_NOT_SENDER")
+    })
+
+    it('reverts when deposit amount in data is not equal to token amount', async () => {
+      const makeBuyOrderData = marketMaker.contract.makeBuyOrder.getData(authorized, collaterals[1], amount.add(1), 0)
+
+      await assertRevert(marketMaker.makeBuyOrderRaw(authorized, collaterals[1], amount, makeBuyOrderData, { from: authorized }),
+        "MM_DEPOSIT_NOT_AMOUNT")
+    })
+  })
+  
 
 })

@@ -7,11 +7,12 @@ import "@aragon/os/contracts/common/SafeERC20.sol";
 import "@aragon/os/contracts/lib/math/SafeMath.sol";
 import "@aragon/os/contracts/lib/token/ERC20.sol";
 import "@aragon/apps-vault/contracts/Vault.sol";
+import {ApproveAndCallFallBack} from "@aragon/apps-shared-minime/contracts/MiniMeToken.sol";
 import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
 import "../../bancor-market-maker/contracts/BancorMarketMaker.sol";
 import "./IMarketplaceController.sol";
 
-contract MarketplaceController is EtherTokenConstant, IsContract, IMarketplaceController, AragonApp {
+contract MarketplaceController is EtherTokenConstant, IsContract, ApproveAndCallFallBack, IMarketplaceController, AragonApp {
     using SafeERC20 for ERC20;
     using SafeMath  for uint256;
 
@@ -41,7 +42,9 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IMarketplaceCo
     bytes32 public constant MAKE_BUY_ORDER_ROLE                        = 0x0dfea6908176d96adbee7026b3fe9fbdaccfc17bc443ddf14734fd27c3136179;
     bytes32 public constant MAKE_SELL_ORDER_ROLE                       = 0x52e3ace6a83e0c810920056ccc32fed5aa1e86287545113b03a52ab5c84e3f66;
 
-    string private constant ERROR_CONTRACT_IS_EOA = "FUNDRAISING_CONTRACT_IS_EOA";
+    string private constant ERROR_CONTRACT_IS_EOA = "MARKETPLACE_CONTRACT_IS_EOA";
+    string private constant ERROR_NO_PERMISSION = "MARKETPLACE_NO_PERMISSION";
+    string private constant ERROR_TRANSFER_FAILED = "MARKETPLACE_TRANSFER_FAILED";
 
     IPresale public presale;
     BancorMarketMaker public marketMaker;
@@ -165,6 +168,21 @@ contract MarketplaceController is EtherTokenConstant, IsContract, IMarketplaceCo
         external authP(MAKE_SELL_ORDER_ROLE, arr(msg.sender))
     {
         marketMaker.makeSellOrder(msg.sender, _collateral, _sellAmount, _minReturnAmountAfterFee);
+    }
+
+    /**
+     * @dev ApproveAndCallFallBack interface conformance
+     * @param _from Token sender
+     * @param _amount Token amount
+     * @param _token Token that received approval
+     * @param _buyOrderData Data for the below function call
+     *      makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
+    */
+    function receiveApproval(address _from, uint256 _amount, address _token, bytes _buyOrderData) public {
+        require(canPerform(_from, MAKE_BUY_ORDER_ROLE, new uint256[](0)), ERROR_NO_PERMISSION);
+        require(ERC20(msg.sender).transferFrom(_from, address(marketMaker), _amount), ERROR_TRANSFER_FAILED);
+
+        marketMaker.makeBuyOrderRaw(_from, msg.sender, _amount, _buyOrderData);
     }
 
     /* collateral tokens related functions */

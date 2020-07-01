@@ -13,6 +13,7 @@ import retryEvery from './utils/retryEvery'
 import { Order, Presale } from './constants'
 
 const DEBUG = true
+const MINI_ME_TOKEN_VERSION = "MMT_0.1"
 
 // abis used to call decimals, name and symbol on a token
 const tokenAbi = [].concat(tokenDecimalsAbi, tokenNameAbi, tokenSymbolAbi)
@@ -302,11 +303,12 @@ const handleCollateralToken = async (state, { collateral, reserveRatio, virtualB
   const tokenContract = tokenContracts.has(collateral) ? tokenContracts.get(collateral) : app.external(collateral, tokenAbi)
   tokenContracts.set(collateral, tokenContract)
   // loads data related to the collateral token
-  const [symbol, name, decimals, actualBalance] = await Promise.all([
+  const [symbol, name, decimals, actualBalance, isMiniMeToken] = await Promise.all([
     loadTokenSymbol(tokenContract, collateral, settings),
     loadTokenName(tokenContract, collateral, settings),
     loadTokenDecimals(tokenContract, collateral, settings),
     loadTokenBalance(collateral, settings),
+    isAddressMiniMeToken(collateral),
   ])
   collaterals.set(collateral, {
     ...collaterals.get(collateral),
@@ -317,6 +319,7 @@ const handleCollateralToken = async (state, { collateral, reserveRatio, virtualB
     virtualSupply,
     virtualBalance,
     actualBalance, // will be polled on the frontend too, until aragon.js PR#361 gets merged
+    isMiniMeToken,
   })
   return {
     ...state,
@@ -552,6 +555,18 @@ const loadTokenSymbol = async (tokenContract, tokenAddress, { network }) => {
     symbol = fallback
   }
   return symbol
+}
+
+const isAddressMiniMeToken = async (collateralAddress) => {
+  try {
+    return await app
+      .external(collateralAddress, miniMeTokenAbi)
+      .version()
+      .toPromise() === MINI_ME_TOKEN_VERSION
+  } catch (error) {
+    console.log(`Collateral ${collateralAddress} not minime token:`, error)
+    return false
+  }
 }
 
 /**

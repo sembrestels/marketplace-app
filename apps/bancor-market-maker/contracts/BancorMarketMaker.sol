@@ -34,7 +34,12 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
     string private constant ERROR_COLLATERAL_ALREADY_WHITELISTED = "MM_COLLATERAL_ALREADY_WHITELISTED";
     string private constant ERROR_COLLATERAL_NOT_WHITELISTED     = "MM_COLLATERAL_NOT_WHITELISTED";
     string private constant ERROR_SLIPPAGE_EXCEEDS_LIMIT         = "MM_SLIPPAGE_EXCEEDS_LIMIT";
+    string private constant ERROR_TRANSFER_FAILED                = "MM_TRANSFER_FAILED";
     string private constant ERROR_TRANSFER_FROM_FAILED           = "MM_TRANSFER_FROM_FAILED";
+    string private constant ERROR_NOT_BUY_FUNCTION               = "MM_NOT_BUY_FUNCTION";
+    string private constant ERROR_BUYER_NOT_FROM                 = "MM_BUYER_NOT_FROM";
+    string private constant ERROR_COLLATERAL_NOT_SENDER          = "MM_COLLATERAL_NOT_SENDER";
+    string private constant ERROR_DEPOSIT_NOT_AMOUNT             = "MM_DEPOSIT_NOT_AMOUNT";
 
     struct Collateral {
         bool    whitelisted;
@@ -230,11 +235,70 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
      * @param _minReturnAmountAfterFee The minimum amount of the returned bonded tokens
      */
     function makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
-        external payable nonReentrant auth(CONTROLLER_ROLE)
+        external payable auth(CONTROLLER_ROLE)
+    {
+        _makeBuyOrder(_buyer, _collateral, _depositAmount, _minReturnAmountAfterFee, false);
+    }
+
+    /**
+     * @dev Make a buy order using makeBuyOrder() function data. Used for single transaction ERC20 buy orders, ones
+     *      without a pre-approval transaction, but that have been approved in this transaction.
+     * @param _from Token sender
+     * @param _token Token that received approval
+     * @param _amount Token amount
+     * @param _buyOrderData Data for the below function call
+     *      makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
+    */
+    function makeBuyOrderRaw(address _from, address _token, uint256 _amount, bytes _buyOrderData)
+        external auth(CONTROLLER_ROLE)
+    {
+        bytes memory buyOrderDataMemory = _buyOrderData;
+
+        bytes4 functionSig;
+        address buyerAddress;
+        address collateralTokenAddress;
+        uint256 depositAmount;
+        uint256 minReturnAmountAfterFee;
+
+        assembly {
+            // functionSigByteLocation: 32 (bytes array length)
+            functionSig := mload(add(buyOrderDataMemory, 32))
+
+            // buyerAddressByteLocation: 32 + 4 = 36 (bytes array length + sig)
+            buyerAddress := mload(add(buyOrderDataMemory, 36))
+
+            // collateralAddressByteLocation: 32 + 4 + 32 = 68 (bytes array length + sig + address _buyer)
+            collateralTokenAddress := mload(add(buyOrderDataMemory, 68))
+
+            // depositAmountByteLocation: 32 + 4 + 32 + 32 = 100 (bytes array length + sig + address _buyer + address _collateral)
+            depositAmount := mload(add(buyOrderDataMemory, 100))
+
+            // minReturnAmountAfterFeeByteLocation: 32 + 4 + 32 + 32 + 32 = 132 (bytes array length + sig + address _buyer + address _collateral + uint256 _depositAmount)
+            minReturnAmountAfterFee := mload(add(buyOrderDataMemory, 132))
+        }
+
+        require(functionSig == this.makeBuyOrder.selector, ERROR_NOT_BUY_FUNCTION);
+        require(buyerAddress == _from, ERROR_BUYER_NOT_FROM);
+        require(collateralTokenAddress == _token, ERROR_COLLATERAL_NOT_SENDER);
+        require(depositAmount == _amount, ERROR_DEPOSIT_NOT_AMOUNT);
+
+        _makeBuyOrder(buyerAddress, collateralTokenAddress, depositAmount, minReturnAmountAfterFee, true);
+    }
+
+    /**
+     * @dev Make a buy order
+     * @param _buyer The address of the buyer
+     * @param _collateral The address of the collateral token to be deposited
+     * @param _depositAmount The amount of collateral token to be deposited
+     * @param _minReturnAmountAfterFee The minimum amount of the returned bonded tokens
+     * @param _noPreApproval Whether or not funds should have already been transferred
+     */
+    function _makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee, bool _noPreApproval)
+        internal nonReentrant
     {
         require(isOpen, ERROR_NOT_OPEN);
         require(_collateralIsWhitelisted(_collateral), ERROR_COLLATERAL_NOT_WHITELISTED);
-        require(_collateralValueIsValid(_buyer, _collateral, _depositAmount, msg.value), ERROR_INVALID_COLLATERAL_VALUE);
+        require(_collateralValueIsValid(_buyer, _collateral, _depositAmount, msg.value, _noPreApproval), ERROR_INVALID_COLLATERAL_VALUE);
 
         // deduct fee
         uint256 fee = _depositAmount.mul(buyFeePct).div(PCT_BASE);
@@ -242,9 +306,9 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
 
         // collect fee and collateral
         if (fee > 0) {
-            _transfer(_buyer, beneficiary, _collateral, fee);
+            _transfer(_buyer, beneficiary, _collateral, fee, _noPreApproval);
         }
-        _transfer(_buyer, address(reserve), _collateral, depositAmountLessFee);
+        _transfer(_buyer, address(reserve), _collateral, depositAmountLessFee, _noPreApproval);
 
         uint256 collateralSupply = token.totalSupply().add(collaterals[_collateral].virtualSupply);
         uint256 collateralBalanceOfReserve = controller.balanceOf(address(reserve), _collateral).add(collaterals[_collateral].virtualBalance);
@@ -330,7 +394,7 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
         return _tokenManager.maxAccountTokens() == uint256(-1);
     }
 
-    function _collateralValueIsValid(address _buyer, address _collateral, uint256 _value, uint256 _msgValue)
+    function _collateralValueIsValid(address _buyer, address _collateral, uint256 _value, uint256 _msgValue, bool _noPreApproval)
         internal view returns (bool)
     {
         if (_value == 0) {
@@ -341,11 +405,13 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
             return _msgValue == _value;
         }
 
-        return (
-            _msgValue == 0 &&
-            controller.balanceOf(_buyer, _collateral) >= _value &&
-            ERC20(_collateral).allowance(_buyer, address(this)) >= _value
-        );
+        bool buyerAllowanceAvailable = !_noPreApproval
+            && controller.balanceOf(_buyer, _collateral) >= _value
+            && ERC20(_collateral).allowance(_buyer, address(this)) >= _value;
+
+        bool fundsAlreadyDeposited = _noPreApproval && controller.balanceOf(address(this), _collateral) >= _value;
+
+        return _msgValue == 0 && (buyerAllowanceAvailable || fundsAlreadyDeposited);
     }
 
     function _bondAmountIsValid(address _seller, uint256 _amount) internal view returns (bool) {
@@ -421,9 +487,11 @@ contract BancorMarketMaker is EtherTokenConstant, IsContract, AragonApp {
         emit UpdateCollateralToken(_collateral, _virtualSupply, _virtualBalance, _reserveRatio);
     }
 
-    function _transfer(address _from, address _to, address _collateralToken, uint256 _amount) internal {
+    function _transfer(address _from, address _to, address _collateralToken, uint256 _amount, bool _noPreApproval) internal {
         if (_collateralToken == ETH) {
             _to.transfer(_amount);
+        } else if (_noPreApproval) {
+            require(ERC20(_collateralToken).transfer(_to, _amount), ERROR_TRANSFER_FAILED);
         } else {
             require(ERC20(_collateralToken).safeTransferFrom(_from, _to, _amount), ERROR_TRANSFER_FROM_FAILED);
         }
