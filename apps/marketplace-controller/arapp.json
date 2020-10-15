@@ -70,7 +70,10 @@
     {
       "name": "Contribute to presale",
       "id": "CONTRIBUTE_ROLE",
-      "params": []
+      "params": [
+        "Contributor",
+        "Amount"
+      ]
     },
     {
       "name": "Make buy orders",
