@@ -35,10 +35,10 @@ const {
   BATCH_BLOCKS,
   MAXIMUM_TAP_RATE_INCREASE_PCT,
   MAXIMUM_TAP_FLOOR_DECREASE_PCT,
-} = require('@ablack/fundraising-shared-test-helpers/constants')
+} = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 
 const { hash } = require('eth-ens-namehash')
-const getProxyAddress = require('@ablack/fundraising-shared-test-helpers/getProxyAddress')
+const getProxyAddress = require('@1hive/apps-marketplace-shared-test-helpers/getProxyAddress')
 
 const setup = {
   ids: {

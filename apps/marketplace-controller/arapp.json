@@ -78,13 +78,14 @@
     {
       "name": "Make buy orders",
       "id": "MAKE_BUY_ORDER_ROLE",
-      "params": []
+      "params": ["Buyer"]
     },
     {
       "name": "Make sell orders",
       "id": "MAKE_SELL_ORDER_ROLE",
-      "params": []
+      "params": ["Seller"]
     }
   ],
+  "appName": "marketplace-controller.aragonpm.eth",
   "path": "contracts/MarketplaceController.sol"
 }

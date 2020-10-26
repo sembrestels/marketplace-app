@@ -4,7 +4,7 @@ const { hash: namehash } = require('eth-ens-namehash')
 
 const APPS = [
   { name: 'agent', contractName: 'Agent' },
-  { name: 'aragon-fundraising', contractName: 'AragonFundraisingController' },
+  { name: 'aragon-fundraising', contractName: 'MarketplaceController' },
   { name: 'bancor-formula', contractName: 'BancorFormula' },
   { name: 'batched-bancor-market-maker', contractName: 'BatchedBancorMarketMaker' },
   { name: 'finance', contractName: 'Finance' },

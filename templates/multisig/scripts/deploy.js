@@ -12,7 +12,7 @@ const APPS = [
   { name: 'bancor-formula', contractName: 'BancorFormula' },
   { name: 'batched-bancor-market-maker', contractName: 'BatchedBancorMarketMaker' },
   { name: 'tap', contractName: 'Tap' },
-  { name: 'aragon-fundraising', contractName: 'AragonFundraisingController' },
+  { name: 'aragon-fundraising', contractName: 'MarketplaceController' },
   { name: 'presale', contractName: 'Presale' },
 ]
 

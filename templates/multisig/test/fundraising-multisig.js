@@ -7,7 +7,7 @@ const { getEventArgument } = require('@aragon/test-helpers/events')
 
 const ACL = artifacts.require('ACL')
 const Agent = artifacts.require('Agent')
-const Controller = artifacts.require('AragonFundraisingController')
+const Controller = artifacts.require('MarketplaceController')
 const ENS = artifacts.require('ENS')
 const EVMScriptRegistry = artifacts.require('EVMScriptRegistry')
 const Finance = artifacts.require('Finance')
@@ -45,8 +45,8 @@ const {
   BATCH_BLOCKS,
   MAXIMUM_TAP_RATE_INCREASE_PCT,
   MAXIMUM_TAP_FLOOR_DECREASE_PCT,
-} = require('@ablack/fundraising-shared-test-helpers/constants')
-const ANY_ADDRESS = { address: require('@ablack/fundraising-shared-test-helpers/constants').ANY_ADDRESS }
+} = require('@1hive/apps-marketplace-shared-test-helpers/constants')
+const ANY_ADDRESS = { address: require('@1hive/apps-marketplace-shared-test-helpers/constants').ANY_ADDRESS }
 const START_DATE = new Date().getTime() + MONTHS
 
 contract('Fundraising with multisig', ([_, owner, boardMember1, boardMember2]) => {

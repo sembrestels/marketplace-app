@@ -1,4 +1,4 @@
-const { PRESALE_PERIOD, PRESALE_GOAL, PRESALE_STATE } = require('@ablack/fundraising-shared-test-helpers/constants')
+const { PRESALE_PERIOD, PRESALE_GOAL, PRESALE_STATE } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale } = require('./common/deploy')
 const { getEvent, now } = require('./common/utils')
 

@@ -3,11 +3,11 @@ pragma solidity 0.4.24;
 import "@aragon/os/contracts/common/EtherTokenConstant.sol";
 import "@aragon/templates-shared/contracts/BaseTemplate.sol";
 import "@aragon/apps-agent/contracts/Agent.sol";
-import "@ablack/fundraising-bancor-formula/contracts/BancorFormula.sol";
-import {AragonFundraisingController as Controller} from "@ablack/fundraising-aragon-fundraising/contracts/AragonFundraisingController.sol";
-import {BatchedBancorMarketMaker as MarketMaker} from "@ablack/fundraising-batched-bancor-market-maker/contracts/BatchedBancorMarketMaker.sol";
-import "@ablack/fundraising-presale/contracts/Presale.sol";
-import "@ablack/fundraising-tap/contracts/Tap.sol";
+import "@1hive/apps-marketplace-bancor-formula/contracts/BancorFormula.sol";
+import {MarketplaceController as Controller} from "@1hive/apps-marketplace-aragon-fundraising/contracts/MarketplaceController.sol";
+import {BatchedBancorMarketMaker as MarketMaker} from "@1hive/apps-marketplace-batched-bancor-market-maker/contracts/BatchedBancorMarketMaker.sol";
+import "@1hive/apps-marketplace-presale/contracts/Presale.sol";
+import "@1hive/apps-marketplace-tap/contracts/Tap.sol";
 
 
 contract FundraisingMultisigTemplate is EtherTokenConstant, BaseTemplate {

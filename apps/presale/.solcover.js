@@ -7,8 +7,8 @@ module.exports = {
     '@aragon/apps-shared-minime',
     '@aragon/apps-token-manager',
     '@aragon/apps-vault',
-    '@ablack/fundraising-shared-interfaces',
-    '@ablack/fundraising-shared-test-helpers',
+    '@1hive/apps-marketplace-shared-interfaces',
+    '@1hive/apps-marketplace-shared-test-helpers',
   ],
   skipFiles: [
     'test',
@@ -18,7 +18,7 @@ module.exports = {
     '@aragon/apps-shared-minime',
     '@aragon/apps-token-manager',
     '@aragon/apps-vault',
-    '@ablack/fundraising-shared-interfaces',
-    '@ablack/fundraising-shared-test-helpers',
+    '@1hive/apps-marketplace-shared-interfaces',
+    '@1hive/apps-marketplace-shared-test-helpers',
   ],
 }

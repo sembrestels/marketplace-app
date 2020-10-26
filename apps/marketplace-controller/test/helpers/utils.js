@@ -1,4 +1,4 @@
-const { ETH } = require('@ablack/fundraising-shared-test-helpers/constants')
+const { ETH } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const allEvents = require('web3/lib/web3/allevents')
 
 const now = () => {
@@ -32,7 +32,7 @@ const getSellOrderBatchId = (ctx, tx) => {
 }
 
 const openAndClaimBuyOrder = (web3, BATCH_BLOCKS) => async (ctx, collateral, amount, { from } = {}) => {
-  const progressToNextBatch = require('@ablack/fundraising-shared-test-helpers/progressToNextBatch')(web3, BATCH_BLOCKS)
+  const progressToNextBatch = require('@1hive/apps-marketplace-shared-test-helpers/progressToNextBatch')(web3, BATCH_BLOCKS)
   // create buy order
   const receipt = await ctx.controller.openBuyOrder(collateral, amount, { from, value: collateral === ETH ? amount : 0 })
   const batchId = getBuyOrderBatchId(ctx, receipt)

@@ -8,9 +8,9 @@ import "@aragon/os/contracts/lib/math/SafeMath.sol";
 import "@aragon/os/contracts/lib/token/ERC20.sol";
 import "@aragon/apps-vault/contracts/Vault.sol";
 import {ApproveAndCallFallBack} from "@aragon/apps-shared-minime/contracts/MiniMeToken.sol";
-import "@ablack/fundraising-shared-interfaces/contracts/IPresale.sol";
-import "../../bancor-market-maker/contracts/BancorMarketMaker.sol";
-import "./IMarketplaceController.sol";
+import "@1hive/apps-marketplace-shared-interfaces/contracts/IPresale.sol";
+import "@1hive/apps-marketplace-bancor-market-maker/contracts/BancorMarketMaker.sol";
+import "@1hive/apps-marketplace-shared-interfaces/contracts/IMarketplaceController.sol";
 
 contract MarketplaceController is EtherTokenConstant, IsContract, ApproveAndCallFallBack, IMarketplaceController, AragonApp {
     using SafeERC20 for ERC20;

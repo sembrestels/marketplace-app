@@ -10,7 +10,7 @@ const ERC20 = artifacts.require('@aragon/core/contracts/lib/token/ERC20')
 
 const TokenManager = artifacts.require('TokenManager.sol')
 const Vault = artifacts.require('Vault.sol')
-const FundraisingController = artifacts.require('AragonFundraisingControllerMock.sol')
+const FundraisingController = artifacts.require('MarketplaceControllerMock.sol')
 const Presale = artifacts.require('PresaleMock.sol')
 
 const {
@@ -26,7 +26,7 @@ const {
   RESERVE_RATIOS,
   BUY_FEE_PCT,
   SELL_FEE_PCT,
-} = require('@ablack/fundraising-shared-test-helpers/constants')
+} = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 
 const deploy = {
   getProxyAddress: receipt => receipt.logs.filter(l => l.event === 'NewAppProxy')[0].args.proxy,

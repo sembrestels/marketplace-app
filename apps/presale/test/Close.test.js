@@ -4,12 +4,12 @@ const {
   PERCENT_FUNDING_FOR_BENEFICIARY,
   PERCENT_SUPPLY_OFFERED,
   PPM,
-} = require('@ablack/fundraising-shared-test-helpers/constants')
+} = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale } = require('./common/deploy')
 const { getEvent, now } = require('./common/utils')
 const { assertRevert } = require('@aragon/test-helpers/assertThrow')
 
-const assertExternalEvent = require('@ablack/fundraising-shared-test-helpers/assertExternalEvent')
+const assertExternalEvent = require('@1hive/apps-marketplace-shared-test-helpers/assertExternalEvent')
 
 const BUYER_BALANCE = 2 * PRESALE_GOAL
 

@@ -1,4 +1,4 @@
-const { VESTING_CLIFF_PERIOD, VESTING_COMPLETE_PERIOD } = require('@ablack/fundraising-shared-test-helpers/constants')
+const { VESTING_CLIFF_PERIOD, VESTING_COMPLETE_PERIOD } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale } = require('./common/deploy')
 const { contributionToProjectTokens, now } = require('./common/utils')
 

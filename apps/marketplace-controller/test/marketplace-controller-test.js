@@ -10,20 +10,20 @@ const {
   BATCH_BLOCKS,
   RATES,
   FLOORS,
-} = require('@ablack/fundraising-shared-test-helpers/constants')
+} = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const setup = require('./helpers/setup')
 const { now, getBuyOrderBatchId, getSellOrderBatchId } = require('./helpers/utils')
 const openAndClaimBuyOrder = require('./helpers/utils').openAndClaimBuyOrder(web3, BATCH_BLOCKS)
-const assertExternalEvent = require('@ablack/fundraising-shared-test-helpers/assertExternalEvent')
-const forceSendETH = require('@ablack/fundraising-shared-test-helpers/forceSendETH')
-const getProxyAddress = require('@ablack/fundraising-shared-test-helpers/getProxyAddress')
-const random = require('@ablack/fundraising-shared-test-helpers/random')
-const increaseBlocks = require('@ablack/fundraising-shared-test-helpers/increaseBlocks')(web3)
-const progressToNextBatch = require('@ablack/fundraising-shared-test-helpers/progressToNextBatch')(web3, BATCH_BLOCKS)
+const assertExternalEvent = require('@1hive/apps-marketplace-shared-test-helpers/assertExternalEvent')
+const forceSendETH = require('@1hive/apps-marketplace-shared-test-helpers/forceSendETH')
+const getProxyAddress = require('@1hive/apps-marketplace-shared-test-helpers/getProxyAddress')
+const random = require('@1hive/apps-marketplace-shared-test-helpers/random')
+const increaseBlocks = require('@1hive/apps-marketplace-shared-test-helpers/increaseBlocks')(web3)
+const progressToNextBatch = require('@1hive/apps-marketplace-shared-test-helpers/progressToNextBatch')(web3, BATCH_BLOCKS)
 const timeTravel = require('@aragon/test-helpers/timeTravel')(web3)
 const { assertRevert } = require('@aragon/test-helpers/assertThrow')
 
-contract('AragonFundraisingController app', ([root, authorized, unauthorized]) => {
+contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
   before(async () => {
     await setup.deploy.infrastructure(this)
   })

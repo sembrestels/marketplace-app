@@ -1,4 +1,4 @@
-const { PRESALE_STATE, PRESALE_PERIOD, PRESALE_GOAL, ZERO_ADDRESS } = require('@ablack/fundraising-shared-test-helpers/constants')
+const { PRESALE_STATE, PRESALE_PERIOD, PRESALE_GOAL, ZERO_ADDRESS } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { sendTransaction, contributionToProjectTokens, getEvent, now } = require('./common/utils')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale, deployDefaultSetup } = require('./common/deploy')
 const { assertRevert } = require('@aragon/test-helpers/assertThrow')

@@ -8,9 +8,8 @@ import "@aragon/apps-shared-minime/contracts/MiniMeToken.sol";
 import "@aragon/apps-token-manager/contracts/TokenManager.sol";
 import "@aragon/apps-agent/contracts/Agent.sol";
 import "@aragon/test-helpers/contracts/TokenMock.sol";
-import "@ablack/fundraising-tap/contracts/Tap.sol";
-import "@ablack/fundraising-bancor-formula/contracts/BancorFormula.sol";
-import "@ablack/fundraising-shared-test-helpers/contracts/ForceSendETH.sol";
+import "@1hive/apps-marketplace-bancor-formula/contracts/BancorFormula.sol";
+import "@1hive/apps-marketplace-shared-test-helpers/contracts/ForceSendETH.sol";
 
 
 // HACK to workaround truffle artifact loading on dependencies

@@ -1,4 +1,4 @@
-const { PRESALE_GOAL, PRESALE_EXCHANGE_RATE, RESERVE_RATIOS, PERCENT_SUPPLY_OFFERED, PPM } = require('@ablack/fundraising-shared-test-helpers/constants')
+const { PRESALE_GOAL, PRESALE_EXCHANGE_RATE, RESERVE_RATIOS, PERCENT_SUPPLY_OFFERED, PPM } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 
 const utils = {
   getEvent: (tx, eventName) => tx.logs.filter(log => log.event.includes(eventName))[0],

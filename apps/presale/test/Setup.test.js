@@ -9,7 +9,7 @@ const {
   PRESALE_PERIOD,
   ZERO_ADDRESS,
   PERCENT_FUNDING_FOR_BENEFICIARY,
-} = require('@ablack/fundraising-shared-test-helpers/constants')
+} = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { prepareDefaultSetup, initializePresale, defaultDeployParams } = require('./common/deploy')
 const { tokenExchangeRate, now } = require('./common/utils')
 const { assertRevert } = require('@aragon/test-helpers/assertThrow')
