@@ -1,27 +1,20 @@
 const Controller = artifacts.require('MarketplaceController')
 const BancorFormula = artifacts.require('BancorFormula')
-const TokenMock = artifacts.require('TokenMock')
 const {
   ETH,
   INITIAL_COLLATERAL_BALANCE,
   PRESALE_GOAL,
   PRESALE_PERIOD,
   PRESALE_STATE,
-  BATCH_BLOCKS,
-  RATES,
-  FLOORS,
 } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const setup = require('./helpers/setup')
-const { now, getBuyOrderBatchId, getSellOrderBatchId } = require('./helpers/utils')
-const openAndClaimBuyOrder = require('./helpers/utils').openAndClaimBuyOrder(web3, BATCH_BLOCKS)
+const { now } = require('./helpers/utils')
 const assertExternalEvent = require('@1hive/apps-marketplace-shared-test-helpers/assertExternalEvent')
 const forceSendETH = require('@1hive/apps-marketplace-shared-test-helpers/forceSendETH')
-const getProxyAddress = require('@1hive/apps-marketplace-shared-test-helpers/getProxyAddress')
 const random = require('@1hive/apps-marketplace-shared-test-helpers/random')
-const increaseBlocks = require('@1hive/apps-marketplace-shared-test-helpers/increaseBlocks')(web3)
-const progressToNextBatch = require('@1hive/apps-marketplace-shared-test-helpers/progressToNextBatch')(web3, BATCH_BLOCKS)
-const timeTravel = require('@aragon/test-helpers/timeTravel')(web3)
-const { assertRevert } = require('@aragon/test-helpers/assertThrow')
+const { assertRevert, assertBn } = require('@aragon/contract-helpers-test/src/asserts')
+const { installNewApp } = require('@aragon/contract-helpers-test/src/aragon-os')
+const { bn } = require('@aragon/contract-helpers-test/src/numbers')
 
 contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
   before(async () => {
@@ -45,8 +38,7 @@ contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
       let uninitialized
 
       beforeEach(async () => {
-        const receipt = await this.dao.newAppInstance(setup.ids.controller, this.base.controller.address, '0x', false)
-        uninitialized = await Controller.at(getProxyAddress(receipt))
+        uninitialized = await Controller.at(await installNewApp(this.dao, setup.ids.controller, this.base.controller.address, root))
       })
 
       it('it should revert [presale is not a contract]', async () => {
@@ -165,7 +157,7 @@ contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
 
     context('> sender has CONTRIBUTE_ROLE', () => {
       it('it should forward contribution', async () => {
-        const receipt = await this.controller.contribute(PRESALE_GOAL / 2, { from: authorized })
+        const receipt = await this.controller.contribute(PRESALE_GOAL.div(bn(2)), { from: authorized })
 
         assertExternalEvent(receipt, 'Contribute(address,uint256,uint256,uint256)')
       })
@@ -173,16 +165,17 @@ contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
 
     context('> sender does not have CONTRIBUTE_ROLE', () => {
       it('it should revert', async () => {
-        await assertRevert(() => this.controller.contribute(PRESALE_GOAL / 2, { from: unauthorized }))
+        await assertRevert(() => this.controller.contribute(PRESALE_GOAL.div(bn(2)), { from: unauthorized }))
       })
     })
   })
 
   context('> #refund', () => {
     beforeEach(async () => {
+      this.presale.mockSetTimestamp(now())
       await this.controller.openPresale({ from: authorized })
-      await this.controller.contribute(PRESALE_GOAL / 2, { from: authorized })
-      await this.presale.mockSetTimestamp(now() + PRESALE_PERIOD)
+      await this.controller.contribute(PRESALE_GOAL.div(bn(2)), { from: authorized })
+      this.presale.mockSetTimestamp(now() + PRESALE_PERIOD)
     })
 
     it('it should refund buyer', async () => {
@@ -296,7 +289,7 @@ contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
 
     it('should make buy order [ERC20]', async () => {
       const amount = random.amount()
-      const makeBuyOrderData = this.marketMaker.contract.makeBuyOrder.getData(authorized, this.collaterals.dai.address, amount, 0)
+      const makeBuyOrderData = this.marketMaker.contract.methods.makeBuyOrder(authorized, this.collaterals.dai.address, amount, 0).encodeABI()
       await this.collaterals.dai.approve(this.marketMaker.address, 0, { from: authorized })
 
       const receipt = await this.collaterals.dai.approveAndCall(this.controller.address, amount, makeBuyOrderData, { from: authorized })
@@ -308,7 +301,7 @@ contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
       await this.acl.revokePermission(authorized, this.controller.address, this.roles.controller.MAKE_BUY_ORDER_ROLE)
 
       const amount = random.amount()
-      const makeBuyOrderData = this.marketMaker.contract.makeBuyOrder.getData(authorized, this.collaterals.dai.address, amount, 0)
+      const makeBuyOrderData = this.marketMaker.contract.methods.makeBuyOrder(authorized, this.collaterals.dai.address, amount, 0).encodeABI()
 
       await assertRevert(this.collaterals.dai.approveAndCall(this.controller.address, amount, makeBuyOrderData, { from: authorized }), "MARKETPLACE_NO_PERMISSION")
     })
@@ -467,29 +460,26 @@ contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
       it('it should return available reserve balance [ETH]', async () => {
         // note requires running devchain/testrpc with account values more than INITIAL_COLLATERAL_BALANCE / 2
         // using -e <Account Balances>
-        await forceSendETH(this.reserve.address, INITIAL_COLLATERAL_BALANCE / 2)
+        await forceSendETH(this.reserve.address, INITIAL_COLLATERAL_BALANCE.div(bn(2)))
 
-        assert.equal((await this.controller.balanceOf(this.reserve.address, ETH)).toNumber(), INITIAL_COLLATERAL_BALANCE / 2 - RATES[0] * 3 * BATCH_BLOCKS)
+        assertBn(await this.controller.balanceOf(this.reserve.address, ETH), INITIAL_COLLATERAL_BALANCE.div(bn(2)))
       })
 
       it('it should return available reserve balance [ERC20]', async () => {
         await this.collaterals.dai.transfer(this.reserve.address, INITIAL_COLLATERAL_BALANCE, { from: authorized })
 
-        assert.equal(
-          (await this.controller.balanceOf(this.reserve.address, this.collaterals.dai.address)).toNumber(),
-          INITIAL_COLLATERAL_BALANCE - RATES[1] * 3 * BATCH_BLOCKS
-        )
+        assertBn(await this.controller.balanceOf(this.reserve.address, this.collaterals.dai.address), INITIAL_COLLATERAL_BALANCE)
       })
     })
     context('> others', () => {
       it('it should return balance [ETH]', async () => {
-        assert.equal((await this.controller.balanceOf(authorized, ETH)).toNumber(), (await web3.eth.getBalance(authorized)).toNumber())
+        assertBn(await this.controller.balanceOf(authorized, ETH), await web3.eth.getBalance(authorized))
       })
 
       it('it should return balance [ETH]', async () => {
-        assert.equal(
-          (await this.controller.balanceOf(authorized, this.collaterals.dai.address)).toNumber(),
-          (await this.collaterals.dai.balanceOf(authorized)).toNumber()
+        assertBn(
+          await this.controller.balanceOf(authorized, this.collaterals.dai.address),
+          await this.collaterals.dai.balanceOf(authorized)
         )
       })
     })

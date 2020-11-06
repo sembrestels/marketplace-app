@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import "@aragon/test-helpers/contracts/TimeHelpersMock.sol";
+import "@aragon/contract-helpers-test/contracts/0.4/aragonOS/TimeHelpersMock.sol";
 import "@1hive/apps-marketplace-presale/contracts/Presale.sol";
 
 

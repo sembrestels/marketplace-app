@@ -3,7 +3,7 @@ const { randomId } = require('@aragon/templates-shared/helpers/aragonId')
 const assertRevert = require('@aragon/templates-shared/helpers/assertRevert')(web3)
 const { assertRole, assertMissingRole } = require('@aragon/templates-shared/helpers/assertRole')(web3)
 const { deployedAddresses } = require('@aragon/templates-shared/lib/arapp-file')(web3)
-const { getEventArgument } = require('@aragon/test-helpers/events')
+const { getEventArgument } = require('@aragon/contract-helpers-test/src/events')
 
 const ACL = artifacts.require('ACL')
 const Agent = artifacts.require('Agent')
@@ -74,8 +74,8 @@ contract('Fundraising with multisig', ([_, owner, boardMember1, boardMember2]) =
 
   before('fetch fundraising multisig template and ENS', async () => {
     const { registry, address } = await deployedAddresses()
-    ens = ENS.at(registry)
-    template = Template.at(address)
+    ens = await ENS.at(registry)
+    template = await Template.at(address)
   })
 
   before('fetch collateral tokens', async () => {
@@ -194,11 +194,11 @@ contract('Fundraising with multisig', ([_, owner, boardMember1, boardMember2]) =
     let prepareReceipt, shareReceipt, fundraisingReceipt, finalizationReceipt
 
     const loadDAO = async () => {
-      dao = Kernel.at(getEventArgument(prepareReceipt, 'DeployDao', 'dao'))
-      acl = ACL.at(await dao.acl())
+      dao = await Kernel.at(getEventArgument(prepareReceipt, 'DeployDao', 'dao'))
+      acl = await ACL.at(await dao.acl())
 
-      boardToken = MiniMeToken.at(getEventArgument(prepareReceipt, 'DeployToken', 'token', 0))
-      shareToken = MiniMeToken.at(getEventArgument(shareReceipt, 'DeployToken', 'token', 0))
+      boardToken = await MiniMeToken.at(getEventArgument(prepareReceipt, 'DeployToken', 'token', 0))
+      shareToken = await MiniMeToken.at(getEventArgument(shareReceipt, 'DeployToken', 'token', 0))
 
       const installedAppsDuringPrepare = getInstalledAppsById(prepareReceipt)
       const installedAppsDuringShare = getInstalledAppsById(shareReceipt)
@@ -206,34 +206,34 @@ contract('Fundraising with multisig', ([_, owner, boardMember1, boardMember2]) =
 
       assert.equal(installedAppsDuringPrepare['token-manager'].length, 1, 'should have installed 1 token-manager apps during prepare')
       assert.equal(installedAppsDuringShare['token-manager'].length, 1, 'should have installed 1 token-manager apps during share')
-      boardTokenManager = TokenManager.at(installedAppsDuringPrepare['token-manager'][0])
-      shareTokenManager = TokenManager.at(installedAppsDuringShare['token-manager'][0])
+      boardTokenManager = await TokenManager.at(installedAppsDuringPrepare['token-manager'][0])
+      shareTokenManager = await TokenManager.at(installedAppsDuringShare['token-manager'][0])
 
       assert.equal(installedAppsDuringPrepare.voting.length, 1, 'should have installed 1 voting apps during prepare')
       assert.equal(installedAppsDuringShare.voting.length, 1, 'should have installed 1 voting apps during share')
-      boardVoting = Voting.at(installedAppsDuringPrepare.voting[0])
-      shareVoting = Voting.at(installedAppsDuringShare.voting[0])
+      boardVoting = await Voting.at(installedAppsDuringPrepare.voting[0])
+      shareVoting = await Voting.at(installedAppsDuringShare.voting[0])
 
       assert.equal(installedAppsDuringPrepare.vault.length, 1, 'should have installed 1 vault app')
-      vault = Vault.at(installedAppsDuringPrepare.vault[0])
+      vault = await Vault.at(installedAppsDuringPrepare.vault[0])
 
       assert.equal(installedAppsDuringPrepare.finance.length, 1, 'should have installed 1 finance app')
-      finance = Finance.at(installedAppsDuringPrepare.finance[0])
+      finance = await Finance.at(installedAppsDuringPrepare.finance[0])
 
       assert.equal(installedAppsDuringFundraising.agent.length, 1, 'should have installed 1 agent app')
-      reserve = Agent.at(installedAppsDuringFundraising.agent[0])
+      reserve = await Agent.at(installedAppsDuringFundraising.agent[0])
 
       assert.equal(installedAppsDuringFundraising.presale.length, 1, 'should have installed 1 presale app')
-      presale = Presale.at(installedAppsDuringFundraising.presale[0])
+      presale = await Presale.at(installedAppsDuringFundraising.presale[0])
 
       assert.equal(installedAppsDuringFundraising['bancor-market-maker'].length, 1, 'should have installed 1 market-maker app')
-      marketMaker = MarketMaker.at(installedAppsDuringFundraising['bancor-market-maker'][0])
+      marketMaker = await MarketMaker.at(installedAppsDuringFundraising['bancor-market-maker'][0])
 
       assert.equal(installedAppsDuringFundraising.tap.length, 1, 'should have installed 1 tap app')
-      tap = Tap.at(installedAppsDuringFundraising.tap[0])
+      tap = await Tap.at(installedAppsDuringFundraising.tap[0])
 
       assert.equal(installedAppsDuringFundraising['marketplace-controller'].length, 1, 'should have installed 1 marketplace-controller app')
-      controller = Controller.at(installedAppsDuringFundraising['marketplace-controller'][0])
+      controller = await Controller.at(installedAppsDuringFundraising['marketplace-controller'][0])
     }
 
     const itCostsUpTo = expectedCost => {
@@ -255,7 +255,7 @@ contract('Fundraising with multisig', ([_, owner, boardMember1, boardMember2]) =
     const itSetupsDAOCorrectly = financePeriod => {
       context('ENS', () => {
         it('should have registered a new DAO on ENS', async () => {
-          const ens = ENS.at((await deployedAddresses()).registry)
+          const ens = await ENS.at((await deployedAddresses()).registry)
           const aragonIdNameHash = namehash(`${daoID}.aragonid.eth`)
           const resolvedAddress = await PublicResolver.at(await ens.resolver(aragonIdNameHash)).addr(aragonIdNameHash)
           assert.equal(resolvedAddress, dao.address, 'aragonId ENS name does not match')

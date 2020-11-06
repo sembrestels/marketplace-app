@@ -1,6 +1,7 @@
 const Template = artifacts.require('FundraisingMultisigTemplate')
 
-const { getEventArgument } = require('@aragon/test-helpers/events')
+const { bn } = require('@aragon/contract-helpers-test/src/numbers')
+const { getEventArgument } = require('@aragon/contract-helpers-test/src/events')
 
 const HOURS = 3600
 const DAYS = 24 * 3600
@@ -19,7 +20,7 @@ const SHARE_SUPPORT_REQUIRED = 50e16
 const SHARE_MIN_ACCEPTANCE_QUORUM = 5e16
 const SHARE_VOTING_SETTINGS = [SHARE_SUPPORT_REQUIRED, SHARE_MIN_ACCEPTANCE_QUORUM, SHARE_VOTE_DURATION]
 
-const PRESALE_GOAL = 100e18
+const PRESALE_GOAL = bn('100e18')
 const PRESALE_EXCHANGE_RATE = 2 * PPM
 // const PRESALE_PERIOD = 14 * DAYS
 const PRESALE_PERIOD = 0.17 * HOURS

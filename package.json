@@ -11,7 +11,7 @@
       "@aragon/os",
       "@aragon/apps-*",
       "@aragon/ppf-contracts",
-      "@aragon/test-helpers",
+      "@aragon/contract-helpers-test",
       "@aragon/templates-shared",
       "@1hive/apps-marketplace-*"
     ]
