@@ -22,12 +22,8 @@ const {
   VIRTUAL_SUPPLIES,
   VIRTUAL_BALANCES,
   RESERVE_RATIOS,
-  SLIPPAGES,
   BUY_FEE_PCT,
   SELL_FEE_PCT,
-  RATES,
-  FLOORS,
-  BATCH_BLOCKS,
 } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 
 const { newDao, installNewApp } = require('@aragon/contract-helpers-test/src/aragon-os')

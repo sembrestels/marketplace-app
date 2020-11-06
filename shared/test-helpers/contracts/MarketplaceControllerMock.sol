@@ -21,22 +21,6 @@ contract MarketplaceControllerMock is IMarketplaceController, AragonApp {
         emit OpenTrading();
     }
 
-    function resetTokenTap(address _token) external {
-        emit ResetTokenTap();
-    }
-
-    function updateTappedAmount(address _token) external {
-        emit UpdateTappedAmount();
-    }
-
-    function collateralsToBeClaimed(address _collateral) public view returns (uint256) {
-        if (_collateral == ETH) {
-            return uint256(5);
-        } else {
-            return uint256(10);
-        }
-    }
-
     function balanceOf(address _who, address _token) public view returns (uint256) {
         if (_token == ETH) {
             return _who.balance;

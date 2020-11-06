@@ -1,4 +1,4 @@
-const { PRESALE_GOAL, PRESALE_EXCHANGE_RATE, RESERVE_RATIOS, PERCENT_SUPPLY_OFFERED, PPM } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
+const { PRESALE_EXCHANGE_RATE, PPM } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { bn } = require('@aragon/contract-helpers-test/src/numbers')
 
 const utils = {

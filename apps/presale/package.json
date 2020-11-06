@@ -31,8 +31,7 @@
   "dependencies": {
     "@1hive/apps-marketplace-shared-interfaces": "^1.0.0",
     "@aragon/apps-token-manager": "^2.1.0",
-    "@aragon/os": "4.2.1",
-    "@1hive/apps-marketplace-shared-test-helpers": "^1.0.0"
+    "@aragon/os": "4.2.1"
   },
   "devDependencies": {
     "@1hive/apps-marketplace-shared-test-helpers": "^1.0.0",

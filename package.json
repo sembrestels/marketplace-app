@@ -12,7 +12,6 @@
       "@aragon/apps-*",
       "@aragon/ppf-contracts",
       "@aragon/contract-helpers-test",
-      "@aragon/templates-shared",
       "@1hive/apps-marketplace-*"
     ]
   },
@@ -36,17 +35,14 @@
     "test": "npm run test:all",
     "test:all": "lerna run --scope=@1hive/apps-marketplace-* --concurrency=1 --stream test",
     "test:all:gas": "lerna run --scope=@1hive/apps-marketplace-* --concurrency=1 --stream test:gas",
-    "test:aragon-fundraising": "lerna run --scope=@1hive/apps-marketplace-aragon-fundraising --stream test",
-    "test:batched-bancor-market-maker": "lerna run --scope=@1hive/apps-marketplace-batched-bancor-market-maker --stream test",
+    "test:marketplace": "lerna run --scope=@1hive/apps-marketplace --stream test",
+    "test:bancor-market-maker": "lerna run --scope=@1hive/apps-marketplace-bancor-market-maker --stream test",
     "test:presale": "lerna run --scope=@1hive/apps-marketplace-presale --stream test",
-    "test:tap": "lerna run --scope=@1hive/apps-marketplace-tap --stream test",
-    "test:multisig-template": "lerna run --scope=@1hive/apps-marketplace-templates-multisig --stream test",
     "coverage": "npm run coverage:all",
     "coverage:all": "lerna run --scope=@1hive/apps-marketplace-* --concurrency=1 --stream test:coverage",
     "coverage:aragon-fundraising": "lerna run --scope=@1hive/apps-marketplace-aragon-fundraising --stream test:coverage",
-    "coverage:batched-bancor-market-maker": "lerna run --scope=@1hive/apps-marketplace-batched-bancor-market-maker --stream test:coverage",
+    "coverage:bancor-market-maker": "lerna run --scope=@1hive/apps-marketplace-bancor-market-maker --stream test:coverage",
     "coverage:presale": "lerna run --scope=@1hive/apps-marketplace-presale --stream test:coverage",
-    "coverage:tap": "lerna run --scope=@1hive/apps-marketplace-tap --stream test:coverage",
     "publish": "lerna run --scope=@1hive/apps-marketplace-* --concurrency=1 --stream publish"
   },
   "devDependencies": {

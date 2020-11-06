@@ -1,5 +1,5 @@
 pragma solidity 0.4.24;
-import './interfaces/IBancorFormula.sol';
+import "@1hive/apps-marketplace-shared-interfaces/contracts/IBancorFormula.sol";
 import "@aragon/os/contracts/lib/math/SafeMath.sol";
 import './utility/Utils.sol';
 

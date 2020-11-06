@@ -13,8 +13,8 @@ contract('Presale, vesting functionality', ([anyone, appManager, buyer]) => {
 
       before(async () => {
         await prepareDefaultSetup(this, appManager)
-        await initializePresale(this, { ...defaultDeployParams(this, appManager), startDate })
         const _now = now()
+        await initializePresale(this, { ...defaultDeployParams(this, appManager), startDate })
 
         await this.contributionToken.generateTokens(buyer, BUYER_BALANCE)
         await this.contributionToken.approve(this.presale.address, BUYER_BALANCE, { from: buyer })

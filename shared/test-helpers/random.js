@@ -19,18 +19,6 @@ module.exports = {
     return Math.floor(Math.random() * 999999) + 1
   },
 
-  slippage: () => {
-    return Math.floor(Math.random() * PCT_BASE) + 1
-  },
-
-  rate: () => {
-    return Math.floor(Math.random() * 999) + 1
-  },
-
-  floor: () => {
-    return Math.floor(Math.random() * 999999) + 1
-  },
-
   fee: () => {
     return bigExp(Math.floor(Math.random() * Math.pow(10, 8)) + 1, 9)
   },
