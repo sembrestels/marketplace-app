@@ -1,3 +1,7 @@
+const { injectWeb3, injectArtifacts } = require('@aragon/contract-helpers-test')
+injectWeb3(web3)
+injectArtifacts(artifacts)
+
 const Controller = artifacts.require('MarketplaceController')
 const BancorFormula = artifacts.require('BancorFormula')
 const {
@@ -457,7 +461,7 @@ contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
 
   context('> #balanceOf', () => {
     context('> reserve', () => {
-      it('it should return available reserve balance [ETH]', async () => {
+      it('it should return available reserve balance [ETH] [@skip-on-coverage]', async () => {
         // note requires running devchain/testrpc with account values more than INITIAL_COLLATERAL_BALANCE / 2
         // using -e <Account Balances>
         await forceSendETH(this.reserve.address, INITIAL_COLLATERAL_BALANCE.div(bn(2)))

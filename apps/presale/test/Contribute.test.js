@@ -190,7 +190,7 @@ contract('Presale, contribute() functionality', ([anyone, appManager, buyer1, bu
       await deployDefaultSetup(this, appManager)
     })
 
-    it('Reverts', async () => {
+    it('Reverts [@skip-on-coverage]', async () => {
       await assertRevert(sendTransaction({ from: anyone, to: this.presale.address, value: web3.utils.toWei('1', 'ether') }))
     })
   })

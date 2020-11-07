@@ -9,6 +9,7 @@
   "license": "(GPL-3.0-or-later OR AGPL-3.0-or-later)",
   "homepage": "https://github.com/AragonBlack/fundraising",
   "scripts": {
+    "lint": "solium --dir ./contracts --config ../../.soliumrc.json --no-soliumignore",
     "compile": "buidler compile --force",
     "abi:extract": "buidler-extract --output abi/ --keys abi",
     "publish": "buidler publish major"
@@ -28,6 +29,7 @@
     "@nomiclabs/buidler-solhint": "^1.3.3",
     "@nomiclabs/buidler-truffle5": "^1.3.4",
     "@nomiclabs/buidler-web3": "^1.3.4",
+    "solium": "^1.2.3",
     "buidler-extract": "^1.0.0",
     "buidler-gas-reporter": "^0.1.3"
   }

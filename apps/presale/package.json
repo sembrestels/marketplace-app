@@ -19,7 +19,7 @@
     "publish:patch": "buidler publish patch",
     "publish:minor": "buidler publish minor",
     "publish:major": "buidler publish major",
-    "publish": "npm run publish:major"
+    "publish": "yarn publish:major"
   },
   "files": [
     "/abi",

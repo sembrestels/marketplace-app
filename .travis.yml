@@ -21,15 +21,15 @@ jobs:
       script: npm run lint
       name: 'All'
     - stage: tests
-      script: npm run test:marketplace
-      name: 'Aragon Fundraising'
+      script: npm run test:controller
+      name: 'Marketplace Controller'
     - script: npm run test:bancor-market-maker
       name: 'Bancor Market Maker'
     - script: npm run test:presale
       name: 'Presale'
     - stage: coverage
-      script: npm run coverage:marketplace
-      name: 'Aragon Fundraising'
+      script: npm run coverage:controller
+      name: 'Marketplace Controller'
     - script: npm run coverage:bancor-market-maker
       name: 'Bancor Market Maker'
     - script: npm run coverage:presale

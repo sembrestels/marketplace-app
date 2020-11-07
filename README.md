@@ -28,7 +28,7 @@ This module provides market liquidity to the marketplacee by automatically match
 | [`@1hive/apps-marketplace-bancor-formula`](/apps/bancor-formula)                           |         | `BancorFormula` computation contract                                                                          |
 | [`@1hive/apps-marketplace-bancor-market-maker`](/apps/bancor-market-maker) |         | Automated market-maker batching orders filled through the `BancorFormula`                                     |
 | [`@1hive/apps-marketplace-presale`](/apps/presale)                                                 |         | Initial fundraising to hatch the bonding curve                                             |
-| [`@1hive/apps-marketplace`](/apps/marketplace-controller)                   |         | `API` contract providing a single entry-point to interact consistently with all marketplace-related contracts |
+| [`@1hive/apps-marketplace-controller`](/apps/marketplace-controller)                   |         | `API` contract providing a single entry-point to interact consistently with all marketplace-related contracts |
 
 
 ## Contributing
