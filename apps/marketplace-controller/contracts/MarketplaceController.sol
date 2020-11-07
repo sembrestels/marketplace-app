@@ -11,6 +11,7 @@ import "@1hive/apps-marketplace-shared-interfaces/contracts/IPresale.sol";
 import "@1hive/apps-marketplace-bancor-market-maker/contracts/BancorMarketMaker.sol";
 import "@1hive/apps-marketplace-shared-interfaces/contracts/IMarketplaceController.sol";
 
+
 contract MarketplaceController is EtherTokenConstant, IsContract, ApproveAndCallFallBack, IMarketplaceController, AragonApp {
     using SafeERC20 for ERC20;
     using SafeMath  for uint256;
@@ -169,21 +170,6 @@ contract MarketplaceController is EtherTokenConstant, IsContract, ApproveAndCall
         marketMaker.makeSellOrder(msg.sender, _collateral, _sellAmount, _minReturnAmountAfterFee);
     }
 
-    /**
-     * @dev ApproveAndCallFallBack interface conformance
-     * @param _from Token sender
-     * @param _amount Token amount
-     * @param _token Token that received approval
-     * @param _buyOrderData Data for the below function call
-     *      makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
-    */
-    function receiveApproval(address _from, uint256 _amount, address _token, bytes _buyOrderData) public {
-        require(canPerform(_from, MAKE_BUY_ORDER_ROLE, new uint256[](0)), ERROR_NO_PERMISSION);
-        require(ERC20(msg.sender).transferFrom(_from, address(marketMaker), _amount), ERROR_TRANSFER_FAILED);
-
-        marketMaker.makeBuyOrderRaw(_from, msg.sender, _amount, _buyOrderData);
-    }
-
     /* collateral tokens related functions */
 
     /**
@@ -251,7 +237,22 @@ contract MarketplaceController is EtherTokenConstant, IsContract, ApproveAndCall
         marketMaker.updateCollateralToken(_collateral, _virtualSupply, _virtualBalance, _reserveRatio);
     }
 
-    /***** public view functions *****/
+    /***** public functions *****/
+
+    /**
+     * @dev ApproveAndCallFallBack interface conformance
+     * @param _from Token sender
+     * @param _amount Token amount
+     * @param _token Token that received approval
+     * @param _buyOrderData Data for the below function call
+     *      makeBuyOrder(address _buyer, address _collateral, uint256 _depositAmount, uint256 _minReturnAmountAfterFee)
+    */
+    function receiveApproval(address _from, uint256 _amount, address _token, bytes _buyOrderData) public {
+        require(canPerform(_from, MAKE_BUY_ORDER_ROLE, new uint256[](0)), ERROR_NO_PERMISSION);
+        require(ERC20(msg.sender).transferFrom(_from, address(marketMaker), _amount), ERROR_TRANSFER_FAILED);
+
+        marketMaker.makeBuyOrderRaw(_from, msg.sender, _amount, _buyOrderData);
+    }
 
     function token() public view isInitialized returns (address) {
         return marketMaker.token();
