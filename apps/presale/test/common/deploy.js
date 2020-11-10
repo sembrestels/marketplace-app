@@ -17,6 +17,7 @@ const {
   ANY_ADDRESS,
   ZERO_ADDRESS,
   PRESALE_GOAL,
+  PRESALE_MIN_GOAL,
   PRESALE_PERIOD,
   PRESALE_EXCHANGE_RATE,
   VESTING_CLIFF_PERIOD,
@@ -24,7 +25,6 @@ const {
   PERCENT_SUPPLY_OFFERED,
   PERCENT_FUNDING_FOR_BENEFICIARY,
 } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
-
 
 const { now } = require('./utils')
 
@@ -129,6 +129,7 @@ const deploy = {
       params.beneficiary,
       params.contributionToken,
       params.presaleGoal,
+      params.presaleMinGoal,
       params.presalePeriod,
       params.presaleExchangeRate,
       params.vestingCliffPeriod,
@@ -148,6 +149,7 @@ const deploy = {
       vestingCliffPeriod: VESTING_CLIFF_PERIOD,
       vestingCompletePeriod: VESTING_COMPLETE_PERIOD,
       presaleGoal: PRESALE_GOAL,
+      presaleMinGoal: PRESALE_MIN_GOAL,
       presaleExchangeRate: PRESALE_EXCHANGE_RATE,
       percentSupplyOffered: PERCENT_SUPPLY_OFFERED,
       presalePeriod: PRESALE_PERIOD,
