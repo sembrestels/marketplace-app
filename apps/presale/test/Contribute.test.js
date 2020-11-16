@@ -1,4 +1,4 @@
-const { PRESALE_STATE, PRESALE_PERIOD, PRESALE_GOAL, ZERO_ADDRESS } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
+const { PRESALE_STATE, PRESALE_PERIOD, PRESALE_GOAL, ZERO_ADDRESS, PRESALE_MIN_GOAL } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { sendTransaction, contributionToProjectTokens, getEvent, now } = require('./common/utils')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale, deployDefaultSetup } = require('./common/deploy')
 const { assertRevert, assertBn } = require('@aragon/contract-helpers-test/src/asserts')
@@ -22,6 +22,7 @@ contract('Presale, contribute() functionality', ([anyone, appManager, buyer1, bu
     await initializePresale(this, { ...defaultDeployParams(this, appManager), startDate, contributionToken: ZERO_ADDRESS })
   }
 
+  // Whats the difference between contribute/_contribute??
   const contribute = (sender, amount, useETH) => {
     return this.presale.contribute(sender, amount, { from: sender, value: useETH ? amount : 0 })
   }
@@ -142,6 +143,8 @@ contract('Presale, contribute() functionality', ([anyone, appManager, buyer1, bu
 
         describe('When the sale is Refunding', () => {
           before(async () => {
+            const leftToRaise = await this.presale.minGoal() - await this.presale.totalRaised()
+            contribute(buyer2, leftToRaise, useETH)
             this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD)
           })
 

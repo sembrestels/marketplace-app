@@ -43,6 +43,7 @@ contract('Presale, refund() functionality', ([anyone, appManager, buyer1, buyer2
       })
 
       it('Sale state is Refunding', async () => {
+        // why is the state not changing??
         assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.REFUNDING)
       })
 
