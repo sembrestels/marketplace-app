@@ -1,5 +1,6 @@
 const {
   PRESALE_GOAL,
+  PRESALE_MIN_GOAL,
   PERCENT_SUPPLY_OFFERED,
   VESTING_CLIFF_PERIOD,
   VESTING_COMPLETE_PERIOD,
@@ -43,9 +44,15 @@ contract('Presale, setup', ([anyone, appManager, someEOA]) => {
         assert.equal((await this.presale.openDate()).toNumber(), startDate)
       })
 
-      it('Funding goal and percentage offered are set', async () => {
-        assert.equal((await this.presale.goal()).toNumber(), Number(PRESALE_GOAL))
+      it('Max funding goal and percentage offered are set', async () => {
+        assert.equal((await this.presale.maxGoal()).toNumber(), Number(PRESALE_GOAL))
         assert.equal((await this.presale.supplyOfferedPct()).toNumber(), PERCENT_SUPPLY_OFFERED)
+      })
+
+      it('Min funding goal is set', async () => {
+        assert.equal((await this.presale.minGoal()).toNumber(), Number(PRESALE_MIN_GOAL))
+        // Do i need a min/max supplyOfferedPct?
+        // assert.equal((await this.presale.supplyOfferedPct()).toNumber(), PERCENT_SUPPLY_OFFERED)
       })
 
       it('Dates and time periods are set', async () => {
@@ -122,9 +129,13 @@ contract('Presale, setup', ([anyone, appManager, someEOA]) => {
         'PRESALE_INVALID_TIME_PERIOD'
       )
     })
+    
+    it('Reverts when setting an invalid min funding goal', async () => {
+      await assertRevert(initializePresale(this, { ...defaultParams, presaleMinGoal: 0 }), 'PRESALE_INVALID_MIN_GOAL')
+    })
 
-    it('Reverts when setting an invalid funding goal', async () => {
-      await assertRevert(initializePresale(this, { ...defaultParams, presaleGoal: 0 }), 'PRESALE_INVALID_GOAL')
+    it('Reverts when setting an invalid max funding goal', async () => {
+      await assertRevert(initializePresale(this, { ...defaultParams, presaleGoal: 0 }), 'PRESALE_INVALID_MAX_GOAL')
     })
 
     it('Reverts when setting an invalid percent supply offered', async () => {
