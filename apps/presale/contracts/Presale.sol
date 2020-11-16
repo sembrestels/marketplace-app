@@ -45,7 +45,7 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
     enum State {
         Pending,     // presale is idle and pending to be started
         Funding,     // presale has started and contributors can purchase tokens
-        Refunding,   // presale has not reached goal within period and contributors can claim refunds
+        Refunding,   // presale has not reached min goal within period and contributors can claim refunds
         GoalReached, // presale has reached goal within period and trading is ready to be open
         Closed       // presale has reached goal within period, has been closed and trading has been open
     }
@@ -233,7 +233,7 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
 
         if (_timeSinceOpen() < period) {
             return State.Funding;
-        } else if (totalRaised < minGoal) {
+        } else if (totalRaised >= minGoal) {
             return State.Refunding;
         }
     }
