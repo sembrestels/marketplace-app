@@ -234,7 +234,11 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
         if (_timeSinceOpen() < period) {
             return State.Funding;
         } else if (totalRaised >= minGoal) {
-            return State.GoalReached;
+            if (isClosed) {
+                return State.Closed;
+            } else {
+                return State.GoalReached;
+            }
         } else {
             return State.Refunding;
         }
