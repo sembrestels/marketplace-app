@@ -119,7 +119,7 @@ contract('Presale, refund() functionality', ([anyone, appManager, buyer1, buyer2
         this.presale.mockSetTimestamp(startDate)
         await this.contributionToken.generateTokens(buyer4, PRESALE_GOAL)
         await this.contributionToken.approve(this.presale.address, PRESALE_GOAL, { from: buyer4 })
-        
+
         const leftToMinGoal = bn(PRESALE_MIN_GOAL).sub(bn(await this.presale.totalRaised()))
         await this.presale.contribute(buyer4, leftToMinGoal, { from: buyer4 })
       })

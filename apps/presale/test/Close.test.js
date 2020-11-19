@@ -34,7 +34,7 @@ contract('Presale, close() functionality', ([anyone, appManager, buyer1]) => {
         // Make a single purchase that reaches the min funding goal
         await this.presale.contribute(buyer1, PRESALE_MIN_GOAL)
       })
-      
+
       it('Sale state is Funding', async () => {
         assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.FUNDING)
       })
@@ -68,7 +68,7 @@ contract('Presale, close() functionality', ([anyone, appManager, buyer1]) => {
   
           it('Raised funds are transferred to the fundraising reserve and the beneficiary address', async () => {
             assert.equal((await this.contributionToken.balanceOf(this.presale.address)).toNumber(), 0)
-  
+
             const totalRaised = (await this.presale.totalRaised()).toNumber()
             const tokensForBeneficiary = Math.floor((totalRaised * PERCENT_FUNDING_FOR_BENEFICIARY) / PPM)
             const tokensForReserve = totalRaised - tokensForBeneficiary
@@ -97,7 +97,6 @@ contract('Presale, close() functionality', ([anyone, appManager, buyer1]) => {
           })
         })
       })
-
     })
   }
 

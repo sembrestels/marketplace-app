@@ -30,8 +30,8 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
     string private constant ERROR_CONTRACT_IS_EOA          = "PRESALE_CONTRACT_IS_EOA";
     string private constant ERROR_INVALID_BENEFICIARY      = "PRESALE_INVALID_BENEFICIARY";
     string private constant ERROR_INVALID_CONTRIBUTE_TOKEN = "PRESALE_INVALID_CONTRIBUTE_TOKEN";
-    string private constant ERROR_INVALID_MIN_GOAL             = "PRESALE_INVALID_MIN_GOAL";
-    string private constant ERROR_INVALID_MAX_GOAL             = "PRESALE_INVALID_MAX_GOAL";
+    string private constant ERROR_INVALID_MIN_GOAL         = "PRESALE_INVALID_MIN_GOAL";
+    string private constant ERROR_INVALID_MAX_GOAL         = "PRESALE_INVALID_MAX_GOAL";
     string private constant ERROR_INVALID_EXCHANGE_RATE    = "PRESALE_INVALID_EXCHANGE_RATE";
     string private constant ERROR_INVALID_TIME_PERIOD      = "PRESALE_INVALID_TIME_PERIOD";
     string private constant ERROR_INVALID_PCT              = "PRESALE_INVALID_PCT";

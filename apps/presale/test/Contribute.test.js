@@ -22,7 +22,6 @@ contract('Presale, contribute() functionality', ([anyone, appManager, buyer1, bu
     await initializePresale(this, { ...defaultDeployParams(this, appManager), startDate, contributionToken: ZERO_ADDRESS })
   }
 
-  // Whats the difference between contribute/_contribute??
   const contribute = (sender, amount, useETH) => {
     return this.presale.contribute(sender, amount, { from: sender, value: useETH ? amount : 0 })
   }
