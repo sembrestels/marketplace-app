@@ -143,8 +143,6 @@ contract('Presale, contribute() functionality', ([anyone, appManager, buyer1, bu
 
         describe('When the sale is Refunding', () => {
           before(async () => {
-            const leftToRaise = await this.presale.minGoal() - await this.presale.totalRaised()
-            contribute(buyer2, leftToRaise, useETH)
             this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD)
           })
 
