@@ -146,6 +146,10 @@ contract('Presale, contribute() functionality', ([anyone, appManager, buyer1, bu
             this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD)
           })
 
+          it('Only refunds if totalRaised didnt reach the minGoal', async () => {
+            assert.isTrue(await this.presale.totalRaised() < await this.presale.minGoal())
+          })
+
           it('Sale state is Refunding', async () => {
             assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.REFUNDING)
           })
