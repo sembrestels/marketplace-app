@@ -128,15 +128,24 @@ contract('Presale, refund() functionality', ([anyone, appManager, buyer1, buyer2
         assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.FUNDING)
       })
 
-      it('Sale state is GoalReached', async () => {
+      describe('When is GoalReached with minGoal', async () => {
         before(async () => {
           this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD)
         })
-        assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.GOAL_REACHED)
-      })
-
-      it('Should revert if a buyer attempts to get a refund', async () => {
-        await assertRevert(this.presale.refund(buyer4, 0), 'PRESALE_INVALID_STATE')
+  
+        it('Is GoalReached if totalRaised is greater or equal to minGoal', async () => {
+          const totalRaised = bn(await this.presale.totalRaised())
+          const minGoal = bn(await this.presale.minGoal())
+          assert.isTrue(totalRaised.gte(minGoal))
+        })
+  
+        it('Sale state is GoalReached', async () => {
+          assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.GOAL_REACHED)
+        })
+  
+        it('Should revert if a buyer attempts to get a refund', async () => {
+          await assertRevert(this.presale.refund(buyer4, 0), 'PRESALE_INVALID_STATE')
+        })
       })
     })
   }

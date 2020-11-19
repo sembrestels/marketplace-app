@@ -180,6 +180,12 @@ contract('Presale, contribute() functionality', ([anyone, appManager, buyer1, bu
             assert.isTrue(tokensUsedInPurchase.lt(remainingToFundingGoal.add(acceptableGasDiff)))
           })
 
+          it('Is GoalReached if totalRaised is greater or equal to maxGoal', async () => {
+            const totalRaised = bn(await this.presale.totalRaised())
+            const maxGoal = bn(await this.presale.maxGoal())
+            assert.isTrue(totalRaised.gte(maxGoal))
+          })
+
           it('Sale state is GoalReached', async () => {
             assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.GOAL_REACHED)
           })

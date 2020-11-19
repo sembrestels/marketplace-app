@@ -51,7 +51,6 @@ contract('Presale, setup', ([anyone, appManager, someEOA]) => {
 
       it('Min funding goal is set', async () => {
         assert.equal((await this.presale.minGoal()).toNumber(), Number(PRESALE_MIN_GOAL))
-        // Do i need a min/max supplyOfferedPct?
         // assert.equal((await this.presale.supplyOfferedPct()).toNumber(), PERCENT_SUPPLY_OFFERED)
       })
 
