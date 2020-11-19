@@ -1,4 +1,4 @@
-const { PRESALE_PERIOD, PRESALE_STATE, PRESALE_GOAL } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
+const { PRESALE_PERIOD, PRESALE_STATE, PRESALE_GOAL, PRESALE_MIN_GOAL } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { contributionToProjectTokens, getEvent, now } = require('./common/utils')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale } = require('./common/deploy')
 const { assertRevert, assertBn } = require('@aragon/contract-helpers-test/src/asserts')
@@ -42,8 +42,13 @@ contract('Presale, refund() functionality', ([anyone, appManager, buyer1, buyer2
         this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD)
       })
 
+      it('Only refunds if totalRaised didnt reach the minGoal', async () => {
+        const totalRaised = bn(await this.presale.totalRaised())
+        const minGoal = bn(await this.presale.minGoal())
+        assert.isTrue(totalRaised.lt(minGoal))
+      })
+
       it('Sale state is Refunding', async () => {
-        // why is the state not changing??
         assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.REFUNDING)
       })
 
@@ -114,12 +119,19 @@ contract('Presale, refund() functionality', ([anyone, appManager, buyer1, buyer2
         this.presale.mockSetTimestamp(startDate)
         await this.contributionToken.generateTokens(buyer4, PRESALE_GOAL)
         await this.contributionToken.approve(this.presale.address, PRESALE_GOAL, { from: buyer4 })
+        
+        const leftToMinGoal = bn(PRESALE_MIN_GOAL).sub(bn(await this.presale.totalRaised()))
+        await this.presale.contribute(buyer4, leftToMinGoal, { from: buyer4 })
+      })
 
-        const totalRaised = (await this.presale.totalRaised()).toNumber()
-        await this.presale.contribute(buyer4, PRESALE_GOAL - totalRaised, { from: buyer4 })
+      it('Sale state is Funding if period hasnt ended', async () => {
+        assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.FUNDING)
       })
 
       it('Sale state is GoalReached', async () => {
+        before(async () => {
+          this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD)
+        })
         assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.GOAL_REACHED)
       })
 

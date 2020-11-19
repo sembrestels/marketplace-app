@@ -147,7 +147,9 @@ contract('Presale, contribute() functionality', ([anyone, appManager, buyer1, bu
           })
 
           it('Only refunds if totalRaised didnt reach the minGoal', async () => {
-            assert.isTrue(await this.presale.totalRaised() < await this.presale.minGoal())
+            const totalRaised = bn(await this.presale.totalRaised())
+            const minGoal = bn(await this.presale.minGoal())
+            assert.isTrue(totalRaised.lt(minGoal))
           })
 
           it('Sale state is Refunding', async () => {
