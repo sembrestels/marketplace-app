@@ -46,8 +46,8 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
         Pending,     // presale is idle and pending to be started
         Funding,     // presale has started and contributors can purchase tokens
         Refunding,   // presale has not reached min goal within period and contributors can claim refunds
-        GoalReached, // presale has reached goal within period and trading is ready to be open
-        Closed       // presale has reached goal within period, has been closed and trading has been open
+        GoalReached, // presale has reached min goal within period and trading is ready to be open
+        Closed       // presale has reached min goal within period, has been closed and trading has been open
     }
 
     IMarketplaceController                          public controller;
@@ -123,7 +123,7 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
         require(_beneficiary != address(0),                                         ERROR_INVALID_BENEFICIARY);
         require(isContract(_contributionToken) || _contributionToken == ETH,        ERROR_INVALID_CONTRIBUTE_TOKEN);
         require(_minGoal > 0,                                                       ERROR_INVALID_MIN_GOAL);
-        require(_maxGoal > _minGoal,                                                ERROR_INVALID_MAX_GOAL);
+        require(_maxGoal >= _minGoal,                                               ERROR_INVALID_MAX_GOAL);
         require(_period > 0,                                                        ERROR_INVALID_TIME_PERIOD);
         require(_exchangeRate > 0,                                                  ERROR_INVALID_EXCHANGE_RATE);
         require(_vestingCliffPeriod > _period,                                      ERROR_INVALID_TIME_PERIOD);

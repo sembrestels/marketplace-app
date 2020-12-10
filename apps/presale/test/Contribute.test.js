@@ -1,4 +1,4 @@
-const { PRESALE_STATE, PRESALE_PERIOD, PRESALE_GOAL, ZERO_ADDRESS, PRESALE_MIN_GOAL } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
+const { PRESALE_STATE, PRESALE_PERIOD, PRESALE_MAX_GOAL, ZERO_ADDRESS } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { sendTransaction, contributionToProjectTokens, getEvent, now } = require('./common/utils')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale, deployDefaultSetup } = require('./common/deploy')
 const { assertRevert, assertBn } = require('@aragon/contract-helpers-test/src/asserts')
@@ -145,12 +145,6 @@ contract('Presale, contribute() functionality', ([anyone, appManager, buyer1, bu
             this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD)
           })
 
-          it('Only refunds if totalRaised didnt reach the minGoal', async () => {
-            const totalRaised = bn(await this.presale.totalRaised())
-            const minGoal = bn(await this.presale.minGoal())
-            assert.isTrue(totalRaised.lt(minGoal))
-          })
-
           it('Sale state is Refunding', async () => {
             assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.REFUNDING)
           })
@@ -165,24 +159,18 @@ contract('Presale, contribute() functionality', ([anyone, appManager, buyer1, bu
             this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD / 2)
           })
 
-          it('A purchase cannot cause totalRaised to be greater than the presaleGoal', async () => {
+          it('A purchase cannot cause totalRaised to be greater than the presaleMaxGoal', async () => {
             const raised = bn(await this.presale.totalRaised())
-            const remainingToFundingGoal = PRESALE_GOAL.sub(raised)
+            const remainingToFundingGoal = PRESALE_MAX_GOAL.sub(raised)
             const userBalanceBeforePurchase = bn(await this.contributionToken.balanceOf(buyer2))
 
-            const amount = PRESALE_GOAL * 2
+            const amount = PRESALE_MAX_GOAL * 2
             await contribute(buyer2, amount, useETH)
             const userBalanceAfterPurchase = bn(await this.contributionToken.balanceOf(buyer2))
 
             const tokensUsedInPurchase = userBalanceBeforePurchase.sub(userBalanceAfterPurchase)
 
             assert.isTrue(tokensUsedInPurchase.lt(remainingToFundingGoal.add(acceptableGasDiff)))
-          })
-
-          it('Is GoalReached if totalRaised is greater or equal to maxGoal', async () => {
-            const totalRaised = bn(await this.presale.totalRaised())
-            const maxGoal = bn(await this.presale.maxGoal())
-            assert.isTrue(totalRaised.gte(maxGoal))
           })
 
           it('Sale state is GoalReached', async () => {

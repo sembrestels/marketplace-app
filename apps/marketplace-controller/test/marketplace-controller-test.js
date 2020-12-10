@@ -7,7 +7,7 @@ const BancorFormula = artifacts.require('BancorFormula')
 const {
   ETH,
   INITIAL_COLLATERAL_BALANCE,
-  PRESALE_GOAL,
+  PRESALE_MAX_GOAL,
   PRESALE_PERIOD,
   PRESALE_STATE,
 } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
@@ -144,7 +144,7 @@ contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
   context('> #closePresale', () => {
     beforeEach(async () => {
       await this.controller.openPresale({ from: authorized })
-      await this.controller.contribute(PRESALE_GOAL, { from: authorized })
+      await this.controller.contribute(PRESALE_MAX_GOAL, { from: authorized })
     })
 
     it('it should close presale', async () => {
@@ -161,7 +161,7 @@ contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
 
     context('> sender has CONTRIBUTE_ROLE', () => {
       it('it should forward contribution', async () => {
-        const receipt = await this.controller.contribute(PRESALE_GOAL.div(bn(2)), { from: authorized })
+        const receipt = await this.controller.contribute(PRESALE_MAX_GOAL.div(bn(2)), { from: authorized })
 
         assertExternalEvent(receipt, 'Contribute(address,uint256,uint256,uint256)')
       })
@@ -169,7 +169,7 @@ contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
 
     context('> sender does not have CONTRIBUTE_ROLE', () => {
       it('it should revert', async () => {
-        await assertRevert(() => this.controller.contribute(PRESALE_GOAL.div(bn(2)), { from: unauthorized }))
+        await assertRevert(() => this.controller.contribute(PRESALE_MAX_GOAL.div(bn(2)), { from: unauthorized }))
       })
     })
   })
@@ -178,7 +178,7 @@ contract('MarketplaceController app', ([root, authorized, unauthorized]) => {
     beforeEach(async () => {
       this.presale.mockSetTimestamp(now())
       await this.controller.openPresale({ from: authorized })
-      await this.controller.contribute(PRESALE_GOAL.div(bn(2)), { from: authorized })
+      await this.controller.contribute(PRESALE_MAX_GOAL.div(bn(2)), { from: authorized })
       this.presale.mockSetTimestamp(now() + PRESALE_PERIOD)
     })
 

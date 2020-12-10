@@ -1,6 +1,6 @@
-const { PRESALE_PERIOD, PRESALE_GOAL, PRESALE_STATE, PRESALE_MIN_GOAL } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
+const { PRESALE_PERIOD, PRESALE_MAX_GOAL, PRESALE_STATE, PRESALE_MIN_GOAL } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale } = require('./common/deploy')
-const { getEvent, now } = require('./common/utils')
+const { now } = require('./common/utils')
 
 const getState = async test => {
   return (await test.presale.state()).toNumber()
@@ -13,8 +13,8 @@ contract('Presale, states validation', ([anyone, appManager, buyer]) => {
         await prepareDefaultSetup(this, appManager)
         await initializePresale(this, { ...defaultDeployParams(this, appManager), startDate })
 
-        await this.contributionToken.generateTokens(buyer, PRESALE_GOAL)
-        await this.contributionToken.approve(this.presale.address, PRESALE_GOAL, { from: buyer })
+        await this.contributionToken.generateTokens(buyer, PRESALE_MAX_GOAL)
+        await this.contributionToken.approve(this.presale.address, PRESALE_MAX_GOAL, { from: buyer })
       })
 
       it('Initial state is Pending', async () => {
@@ -43,7 +43,7 @@ contract('Presale, states validation', ([anyone, appManager, buyer]) => {
             assert.equal(await getState(this), PRESALE_STATE.FUNDING)
           })
 
-          describe('When purchases are made, not reaching the funding goal', () => {
+          describe('When purchases are made, not reaching the min funding goal', () => {
             before(async () => {
               await this.presale.contribute(buyer, PRESALE_MIN_GOAL / 2, { from: buyer })
             })
@@ -79,6 +79,27 @@ contract('Presale, states validation', ([anyone, appManager, buyer]) => {
               })
 
               it('The state is GoalReached', async () => {
+                assert.equal(await getState(this), PRESALE_STATE.GOAL_REACHED)
+              })
+            })
+
+            describe('When within the funding period and having reached the max funding goal', () => {
+              before(async () => {
+                this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD / 2)
+                await this.presale.contribute(buyer, PRESALE_MAX_GOAL, { from: buyer })
+              })
+
+              it('The state is GoalReached', async () => {
+                assert.equal(await getState(this), PRESALE_STATE.GOAL_REACHED)
+              })
+            })
+
+            describe('When the funding period elapses having reached the max funding goal', () => {
+              before(async () => {
+                this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD)
+              })
+  
+              it('The state is still GoalReached', async () => {
                 assert.equal(await getState(this), PRESALE_STATE.GOAL_REACHED)
               })
             })

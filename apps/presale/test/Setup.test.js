@@ -1,5 +1,5 @@
 const {
-  PRESALE_GOAL,
+  PRESALE_MAX_GOAL,
   PRESALE_MIN_GOAL,
   PERCENT_SUPPLY_OFFERED,
   VESTING_CLIFF_PERIOD,
@@ -12,6 +12,7 @@ const {
 const { prepareDefaultSetup, initializePresale, defaultDeployParams } = require('./common/deploy')
 const { tokenExchangeRate, now } = require('./common/utils')
 const { assertRevert, assertBn } = require('@aragon/contract-helpers-test/src/asserts')
+const { bn } = require('@aragon/contract-helpers-test/src/numbers')
 
 contract('Presale, setup', ([anyone, appManager, someEOA]) => {
   describe('When deploying the app with valid parameters', () => {
@@ -44,14 +45,10 @@ contract('Presale, setup', ([anyone, appManager, someEOA]) => {
         assert.equal((await this.presale.openDate()).toNumber(), startDate)
       })
 
-      it('Max funding goal and percentage offered are set', async () => {
-        assert.equal((await this.presale.maxGoal()).toNumber(), Number(PRESALE_GOAL))
-        assert.equal((await this.presale.supplyOfferedPct()).toNumber(), PERCENT_SUPPLY_OFFERED)
-      })
-
-      it('Min funding goal is set', async () => {
+      it('Funding goals and percentage offered are set', async () => {
+        assert.equal((await this.presale.maxGoal()).toNumber(), Number(PRESALE_MAX_GOAL))
         assert.equal((await this.presale.minGoal()).toNumber(), Number(PRESALE_MIN_GOAL))
-        // assert.equal((await this.presale.supplyOfferedPct()).toNumber(), PERCENT_SUPPLY_OFFERED)
+        assert.equal((await this.presale.supplyOfferedPct()).toNumber(), PERCENT_SUPPLY_OFFERED)
       })
 
       it('Dates and time periods are set', async () => {
@@ -134,7 +131,7 @@ contract('Presale, setup', ([anyone, appManager, someEOA]) => {
     })
 
     it('Reverts when setting an invalid max funding goal', async () => {
-      await assertRevert(initializePresale(this, { ...defaultParams, presaleGoal: 0 }), 'PRESALE_INVALID_MAX_GOAL')
+      await assertRevert(initializePresale(this, { ...defaultParams, presaleMaxGoal: PRESALE_MIN_GOAL.sub(bn(1)) }), 'PRESALE_INVALID_MAX_GOAL')
     })
 
     it('Reverts when setting an invalid percent supply offered', async () => {
@@ -147,7 +144,7 @@ contract('Presale, setup', ([anyone, appManager, someEOA]) => {
     })
 
     it('Reverts when setting an invalid beneficiary address', async () => {
-      initializePresale(this, { ...defaultParams, beneficiary: ZERO_ADDRESS }), 'PRESALE_INVALID_BENEFIC_ADDRESS'
+      await assertRevert(initializePresale(this, { ...defaultParams, beneficiary: ZERO_ADDRESS }), 'PRESALE_INVALID_BENEFICIARY')
     })
   })
 })
