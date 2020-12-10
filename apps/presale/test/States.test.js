@@ -1,4 +1,4 @@
-const { PRESALE_PERIOD, PRESALE_GOAL, PRESALE_STATE } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
+const { PRESALE_PERIOD, PRESALE_GOAL, PRESALE_STATE, PRESALE_MIN_GOAL } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale } = require('./common/deploy')
 const { getEvent, now } = require('./common/utils')
 
@@ -45,7 +45,7 @@ contract('Presale, states validation', ([anyone, appManager, buyer]) => {
 
           describe('When purchases are made, not reaching the funding goal', () => {
             before(async () => {
-              await this.presale.contribute(buyer, PRESALE_GOAL / 2, { from: buyer })
+              await this.presale.contribute(buyer, PRESALE_MIN_GOAL / 2, { from: buyer })
             })
 
             it('The state is still Funding', async () => {
@@ -63,22 +63,22 @@ contract('Presale, states validation', ([anyone, appManager, buyer]) => {
             })
           })
 
-          describe('When purchases are made, reaching the funding goal before the funding period elapsed', () => {
+          describe('When purchases are made, reaching the min funding goal before the funding period elapsed', () => {
             before(async () => {
               this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD / 2)
-              await this.presale.contribute(buyer, PRESALE_GOAL / 2, { from: buyer })
+              await this.presale.contribute(buyer, PRESALE_MIN_GOAL / 2, { from: buyer })
             })
 
-            it('The state is GoalReached', async () => {
-              assert.equal(await getState(this), PRESALE_STATE.GOAL_REACHED)
+            it('The state is Funding', async () => {
+              assert.equal(await getState(this), PRESALE_STATE.FUNDING)
             })
 
-            describe('When the funding period elapses having reached the funding goal', () => {
+            describe('When the funding period elapses having reached the min funding goal', () => {
               before(async () => {
                 this.presale.mockSetTimestamp(startDate + PRESALE_PERIOD)
               })
 
-              it('The state is still GoalReached', async () => {
+              it('The state is GoalReached', async () => {
                 assert.equal(await getState(this), PRESALE_STATE.GOAL_REACHED)
               })
             })

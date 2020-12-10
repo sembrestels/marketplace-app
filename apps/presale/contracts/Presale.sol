@@ -30,7 +30,8 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
     string private constant ERROR_CONTRACT_IS_EOA          = "PRESALE_CONTRACT_IS_EOA";
     string private constant ERROR_INVALID_BENEFICIARY      = "PRESALE_INVALID_BENEFICIARY";
     string private constant ERROR_INVALID_CONTRIBUTE_TOKEN = "PRESALE_INVALID_CONTRIBUTE_TOKEN";
-    string private constant ERROR_INVALID_GOAL             = "PRESALE_INVALID_GOAL";
+    string private constant ERROR_INVALID_MIN_GOAL         = "PRESALE_INVALID_MIN_GOAL";
+    string private constant ERROR_INVALID_MAX_GOAL         = "PRESALE_INVALID_MAX_GOAL";
     string private constant ERROR_INVALID_EXCHANGE_RATE    = "PRESALE_INVALID_EXCHANGE_RATE";
     string private constant ERROR_INVALID_TIME_PERIOD      = "PRESALE_INVALID_TIME_PERIOD";
     string private constant ERROR_INVALID_PCT              = "PRESALE_INVALID_PCT";
@@ -44,7 +45,7 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
     enum State {
         Pending,     // presale is idle and pending to be started
         Funding,     // presale has started and contributors can purchase tokens
-        Refunding,   // presale has not reached goal within period and contributors can claim refunds
+        Refunding,   // presale has not reached min goal within period and contributors can claim refunds
         GoalReached, // presale has reached goal within period and trading is ready to be open
         Closed       // presale has reached goal within period, has been closed and trading has been open
     }
@@ -56,7 +57,8 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
     address                                         public beneficiary;
     address                                         public contributionToken;
 
-    uint256                                         public goal;
+    uint256                                         public maxGoal;
+    uint256                                         public minGoal;
     uint64                                          public period;
     uint256                                         public exchangeRate;
     uint64                                          public vestingCliffPeriod;
@@ -86,7 +88,8 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
      * @param _reserve                  The address of the reserve [pool] contract
      * @param _beneficiary              The address of the beneficiary [to whom a percentage of the raised funds is be to be sent]
      * @param _contributionToken        The address of the token to be used to contribute
-     * @param _goal                     The goal to be reached by the end of that presale [in contribution token wei]
+     * @param _maxGoal                  The max goal to be reached by the end of that presale [in contribution token wei]
+     * @param _minGoal                  The min goal to be reached by the end of that presale [in contribution token wei]
      * @param _period                   The period within which to accept contribution for that presale
      * @param _exchangeRate             The exchangeRate [= 1/price] at which [bonded] tokens are to be purchased for that presale [in PPM]
      * @param _vestingCliffPeriod       The period during which purchased [bonded] tokens are to be cliffed
@@ -101,7 +104,8 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
         address                      _reserve,
         address                      _beneficiary,
         address                      _contributionToken,
-        uint256                      _goal,
+        uint256                      _maxGoal,
+        uint256                      _minGoal,
         uint64                       _period,
         uint256                      _exchangeRate,
         uint64                       _vestingCliffPeriod,
@@ -118,7 +122,8 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
         require(isContract(_reserve),                                               ERROR_CONTRACT_IS_EOA);
         require(_beneficiary != address(0),                                         ERROR_INVALID_BENEFICIARY);
         require(isContract(_contributionToken) || _contributionToken == ETH,        ERROR_INVALID_CONTRIBUTE_TOKEN);
-        require(_goal > 0,                                                          ERROR_INVALID_GOAL);
+        require(_minGoal > 0,                                                       ERROR_INVALID_MIN_GOAL);
+        require(_maxGoal > _minGoal,                                                ERROR_INVALID_MAX_GOAL);
         require(_period > 0,                                                        ERROR_INVALID_TIME_PERIOD);
         require(_exchangeRate > 0,                                                  ERROR_INVALID_EXCHANGE_RATE);
         require(_vestingCliffPeriod > _period,                                      ERROR_INVALID_TIME_PERIOD);
@@ -134,7 +139,8 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
         reserve = _reserve;
         beneficiary = _beneficiary;
         contributionToken = _contributionToken;
-        goal = _goal;
+        maxGoal = _maxGoal;
+        minGoal = _minGoal;
         period = _period;
         exchangeRate = _exchangeRate;
         vestingCliffPeriod = _vestingCliffPeriod;
@@ -217,7 +223,7 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
             return State.Pending;
         }
 
-        if (totalRaised >= goal) {
+        if (totalRaised >= maxGoal) {
             if (isClosed) {
                 return State.Closed;
             } else {
@@ -227,6 +233,12 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
 
         if (_timeSinceOpen() < period) {
             return State.Funding;
+        } else if (totalRaised >= minGoal) {
+            if (isClosed) {
+                return State.Closed;
+            } else {
+                return State.GoalReached;
+            }
         } else {
             return State.Refunding;
         }
@@ -261,7 +273,7 @@ contract Presale is IPresale, EtherTokenConstant, IsContract, AragonApp {
     }
 
     function _contribute(address _contributor, uint256 _value) internal {
-        uint256 value = totalRaised.add(_value) > goal ? goal.sub(totalRaised) : _value;
+        uint256 value = totalRaised.add(_value) > maxGoal ? maxGoal.sub(totalRaised) : _value;
         if (contributionToken == ETH && _value > value) {
             msg.sender.transfer(_value.sub(value));
         }

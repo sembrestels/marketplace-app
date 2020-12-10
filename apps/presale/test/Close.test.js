@@ -4,10 +4,12 @@ const {
   PERCENT_FUNDING_FOR_BENEFICIARY,
   PERCENT_SUPPLY_OFFERED,
   PPM,
+  PRESALE_MIN_GOAL,
 } = require('@1hive/apps-marketplace-shared-test-helpers/constants')
 const { prepareDefaultSetup, defaultDeployParams, initializePresale } = require('./common/deploy')
 const { getEvent, now } = require('./common/utils')
 const { assertRevert } = require('@aragon/contract-helpers-test/src/asserts')
+const { bn } = require('@aragon/contract-helpers-test/src/numbers')
 
 const assertExternalEvent = require('@1hive/apps-marketplace-shared-test-helpers/assertExternalEvent')
 
@@ -29,53 +31,70 @@ contract('Presale, close() functionality', ([anyone, appManager, buyer1]) => {
         }
         this.presale.mockSetTimestamp(startDate + 1)
 
-        // Make a single purchase that reaches the funding goal
-        await this.presale.contribute(buyer1, PRESALE_GOAL)
+        // Make a single purchase that reaches the min funding goal
+        await this.presale.contribute(buyer1, PRESALE_MIN_GOAL)
       })
 
-      it('Sale state is GoalReached', async () => {
-        assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.GOAL_REACHED)
+      it('Sale state is Funding', async () => {
+        assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.FUNDING)
       })
 
-      describe('When the sale is closed', () => {
-        let closeReceipt
-
+      describe('When the sale reached the max goal and can be closed before period ended', () => {
         before(async () => {
-          closeReceipt = await this.presale.close()
+          const leftToRaise = bn(PRESALE_GOAL).sub(PRESALE_MIN_GOAL)
+          await this.presale.contribute(buyer1, leftToRaise)
         })
 
-        it('Sale state is Closed', async () => {
-          assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.CLOSED)
+        it('Is GoalReached if totalRaised is greater or equal to maxGoal', async () => {
+          const totalRaised = bn(await this.presale.totalRaised())
+          const maxGoal = bn(await this.presale.maxGoal())
+          assert.isTrue(totalRaised.eq(maxGoal))
         })
-
-        it('Raised funds are transferred to the fundraising reserve and the beneficiary address', async () => {
-          assert.equal((await this.contributionToken.balanceOf(this.presale.address)).toNumber(), 0)
-
-          const totalRaised = (await this.presale.totalRaised()).toNumber()
-          const tokensForBeneficiary = Math.floor((totalRaised * PERCENT_FUNDING_FOR_BENEFICIARY) / PPM)
-          const tokensForReserve = totalRaised - tokensForBeneficiary
-          const reserve = await this.presale.reserve()
-          assert.equal((await this.contributionToken.balanceOf(appManager)).toNumber(), tokensForBeneficiary)
-          assert.equal((await this.contributionToken.balanceOf(reserve)).toNumber(), tokensForReserve)
+  
+        it('Sale state is GoalReached', async () => {
+          assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.GOAL_REACHED)
         })
+  
+        describe('When the sale is closed', () => {
+          let closeReceipt
+  
+          before(async () => {
+            closeReceipt = await this.presale.close()
+          })
+  
+          it('Sale state is Closed', async () => {
+            assert.equal((await this.presale.state()).toNumber(), PRESALE_STATE.CLOSED)
+          })
+  
+          it('Raised funds are transferred to the fundraising reserve and the beneficiary address', async () => {
+            assert.equal((await this.contributionToken.balanceOf(this.presale.address)).toNumber(), 0)
 
-        it('Tokens are minted to the beneficiary address', async () => {
-          const supply = await this.projectToken.totalSupply()
-          const balanceOfBeneficiary = await this.projectToken.balanceOf(appManager)
-
-          assert.equal(parseInt(balanceOfBeneficiary.toNumber()), parseInt(Math.floor(supply.toNumber() * (1 - PERCENT_SUPPLY_OFFERED / PPM))))
-        })
-
-        it('Continuous fundraising campaign is started', async () => {
-          assertExternalEvent(closeReceipt, 'OpenTrading()')
-        })
-
-        it('Sale cannot be closed again', async () => {
-          await assertRevert(this.presale.close(), 'PRESALE_INVALID_STATE')
-        })
-
-        it('Emitted a Close event', async () => {
-          assert.isTrue(!!getEvent(closeReceipt, 'Close'))
+            const totalRaised = (await this.presale.totalRaised()).toNumber()
+            const tokensForBeneficiary = Math.floor((totalRaised * PERCENT_FUNDING_FOR_BENEFICIARY) / PPM)
+            const tokensForReserve = totalRaised - tokensForBeneficiary
+            const reserve = await this.presale.reserve()
+            assert.equal((await this.contributionToken.balanceOf(appManager)).toNumber(), tokensForBeneficiary)
+            assert.equal((await this.contributionToken.balanceOf(reserve)).toNumber(), tokensForReserve)
+          })
+  
+          it('Tokens are minted to the beneficiary address', async () => {
+            const supply = await this.projectToken.totalSupply()
+            const balanceOfBeneficiary = await this.projectToken.balanceOf(appManager)
+  
+            assert.equal(parseInt(balanceOfBeneficiary.toNumber()), parseInt(Math.floor(supply.toNumber() * (1 - PERCENT_SUPPLY_OFFERED / PPM))))
+          })
+  
+          it('Continuous fundraising campaign is started', async () => {
+            assertExternalEvent(closeReceipt, 'OpenTrading()')
+          })
+  
+          it('Sale cannot be closed again', async () => {
+            await assertRevert(this.presale.close(), 'PRESALE_INVALID_STATE')
+          })
+  
+          it('Emitted a Close event', async () => {
+            assert.isTrue(!!getEvent(closeReceipt, 'Close'))
+          })
         })
       })
     })
